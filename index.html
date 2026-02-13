@@ -156,9 +156,12 @@
                     <h3 class="text-3xl font-black text-slate-800 mt-1"><span id="dashboard-counseling-rate">0</span>%</h3>
                     <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2"><div id="dashboard-counseling-rate-bar" class="bg-red-500 h-full" style="width: 0%"></div></div>
                 </div>
-                <div class="gu-card p-6 border-t-4 border-t-emerald-500">
+                <div class="gu-card p-6 border-t-4 border-t-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">누적 예산 절감액</p>
-                    <h3 class="text-3xl font-black text-slate-800 mt-1"><span id="dashboard-total-savings">₩ 0</span></h3>
+                    <h3 class="text-3xl font-black text-amber-700 mt-1"><span id="dashboard-total-savings">₩ 0</span></h3>
+                    <p class="text-xs font-bold text-amber-600 mt-2 flex items-center gap-1">
+                        <i class="fas fa-chart-line"></i> 자동 집계 중
+                    </p>
                 </div>
             </div>
             <!-- 금월 건강상담 대상자 명단 -->
@@ -777,7 +780,8 @@
                 applyDataFromServer(data);
                 hideDataLoadingOverlay();
                 // 데이터 적용 직후 즉시 UI 갱신 (initApp 전에 먼저 실행)
-                updateSavingsBasedOnExpenses();
+                calculateDynamicSavings();
+                updateTotalSavingsUI();
                 renderCharts();
                 renderHealthNews();
                 renderSchedule();
@@ -792,7 +796,8 @@
                 initApp();
                 // 추가로 한 번 더 강제 갱신 (Race Condition 완전 방지)
                 setTimeout(function() {
-                    updateSavingsBasedOnExpenses();
+                    calculateDynamicSavings();
+                    updateTotalSavingsUI();
                     renderCharts();
                     renderHealthNews();
                     renderSchedule();
@@ -809,7 +814,7 @@
                 initApp();
             });
     }
-
+    
     function apiPost(action, payload) {
         if (!GAS_URL || GAS_URL.trim() === '') {
             if (typeof console !== 'undefined') console.warn('GAS_URL이 비어 있어 저장되지 않습니다.');
@@ -830,12 +835,17 @@
         const listTotal = document.getElementById('list-total-members');
         if (listTotal) listTotal.textContent = total;
         updateDashboardCounselingRate();
+        
         if (SYSTEM_CONFIG && SYSTEM_CONFIG.announcements) {
             const t = document.getElementById('announcement-title');
             const d = document.getElementById('announcement-desc');
             if (t) t.textContent = SYSTEM_CONFIG.announcements.title;
             if (d) d.textContent = SYSTEM_CONFIG.announcements.description;
         }
+        // 절감액 계산 및 UI 업데이트 (화면 그리기 전에 먼저 실행)
+        calculateDynamicSavings();
+        updateTotalSavingsUI();
+        
         renderCharts();
         renderRiskFactors();
         renderInnovations();
@@ -860,6 +870,7 @@
         }
     }
 
+    // ========== 안전 명언 렌더링 (백엔드 API 우선 사용) ==========
     function renderSafetyQuote() {
         const el = document.getElementById('safety-quote-text');
         if (!el || !SAFETY_QUOTES.length) return;
@@ -869,41 +880,127 @@
         el.textContent = SAFETY_QUOTES[idx];
     }
 
-    function updateSavingsBasedOnExpenses() {
-        var hospitalDiscount = 0;
-        var mouHospitals = ['W병원', '우리허브병원', '우리허브'];
-        var allExpenses = (APP_DATA.expenses_2025 || []).concat(APP_DATA.expenses_2026 || []);
-        allExpenses.forEach(function(monthData) {
-            if (monthData.items && Array.isArray(monthData.items)) {
-                monthData.items.forEach(function(item) {
-                    if (item.hospital && item.amount) {
-                        var hospitalName = String(item.hospital).trim();
-                        var isMOU = mouHospitals.some(function(h) { return hospitalName.indexOf(h) >= 0; });
-                        if (isMOU && !isNaN(item.amount)) {
-                            hospitalDiscount += Math.round(item.amount * 0.1);
+    // ========== 병원비 10% 자동 할인 계산 함수 (순수 JavaScript) ==========
+    function calculateDynamicSavings() {
+        // 협력병원 목록
+        var mouHospitals = ['W병원', '우리허브', '우리허브병원'];
+        var totalDiscount = 0;
+        
+        // 모든 연도의 병원비 데이터 순회
+        var allExpenses = [];
+        
+        // 2025년 데이터 수집
+        if (APP_DATA.expenses_2025 && Array.isArray(APP_DATA.expenses_2025)) {
+            APP_DATA.expenses_2025.forEach(function(monthData) {
+                if (monthData.items && Array.isArray(monthData.items)) {
+                    monthData.items.forEach(function(item) {
+                        if (item.hospital && item.amount) {
+                            allExpenses.push({
+                                hospital: String(item.hospital).trim(),
+                                amount: Number(item.amount) || 0
+                            });
                         }
-                    }
-                });
+                    });
+                }
+            });
+        }
+        
+        // 2026년 데이터 수집
+        if (APP_DATA.expenses_2026 && Array.isArray(APP_DATA.expenses_2026)) {
+            APP_DATA.expenses_2026.forEach(function(monthData) {
+                if (monthData.items && Array.isArray(monthData.items)) {
+                    monthData.items.forEach(function(item) {
+                        if (item.hospital && item.amount) {
+                            allExpenses.push({
+                                hospital: String(item.hospital).trim(),
+                                amount: Number(item.amount) || 0
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        
+        // 협력병원 지출 항목 찾기 및 10% 할인액 계산
+        allExpenses.forEach(function(expense) {
+            var hospitalName = expense.hospital.toLowerCase();
+            var isMouHospital = false;
+            
+            // 협력병원인지 확인
+            for (var i = 0; i < mouHospitals.length; i++) {
+                if (hospitalName.indexOf(mouHospitals[i].toLowerCase()) >= 0) {
+                    isMouHospital = true;
+                    break;
+                }
+            }
+            
+            // 협력병원이면 10% 할인액 누적
+            if (isMouHospital && expense.amount > 0) {
+                totalDiscount += Math.round(expense.amount * 0.1);
             }
         });
-        var mouItem = (APP_DATA.innovations || []).find(function(item) { return item.id === 'hospital_mou'; });
-        if (mouItem) {
-            mouItem.savings = hospitalDiscount;
+        
+        // APP_DATA.innovations에서 hospital_mou 항목 찾아서 업데이트
+        if (APP_DATA.innovations && Array.isArray(APP_DATA.innovations)) {
+            var mouItem = APP_DATA.innovations.find(function(item) {
+                return item.id === 'hospital_mou';
+            });
+            
+            if (mouItem) {
+                mouItem.savings = totalDiscount;
+            } else {
+                // 없으면 추가
+                APP_DATA.innovations.push({
+                    category: "Cost",
+                    title: "협력병원(W병원, 우리허브) MOU 할인",
+                    desc: "임직원 진료비 10% 할인 혜택 적용 (자동 집계)",
+                    date: "2025.01",
+                    savings: totalDiscount,
+                    id: "hospital_mou",
+                    imageUrl: ""
+                });
+            }
         }
+        
+        return totalDiscount;
+    }
+    
+    // ========== 총 절감액 합산 및 UI 반영 함수 ==========
+    function updateTotalSavingsUI() {
+        var totalSavings = 0;
+        
+        // APP_DATA.innovations 배열을 순회하며 savings 합산
+        if (APP_DATA.innovations && Array.isArray(APP_DATA.innovations)) {
+            APP_DATA.innovations.forEach(function(item) {
+                if (item.savings && !isNaN(item.savings)) {
+                    totalSavings += Number(item.savings);
+                }
+            });
+        }
+        
+        // 대시보드 UI 업데이트
+        var dashboardEl = document.getElementById('dashboard-total-savings');
+        if (dashboardEl) {
+            dashboardEl.textContent = '₩ ' + totalSavings.toLocaleString();
+        }
+        
+        // 혁신성과 페이지의 총 절감액도 업데이트
+        var innovationEl = document.getElementById('innovation-total-savings');
+        if (innovationEl) {
+            innovationEl.textContent = '₩ ' + totalSavings.toLocaleString();
+        }
+        
+        return totalSavings;
+    }
+    
+    function updateSavingsBasedOnExpenses() {
+        calculateDynamicSavings();
+        updateTotalSavingsUI();
     }
 
     function calculateTotalSavings() {
-        updateSavingsBasedOnExpenses();
-        var total = 0;
-        (APP_DATA.innovations || []).forEach(function(item) {
-            if (item.savings && !isNaN(item.savings)) {
-                total += Number(item.savings);
-            }
-        });
-        var dashboardEl = document.getElementById('dashboard-total-savings');
-        if (dashboardEl) dashboardEl.textContent = '₩ ' + total.toLocaleString();
-        var innovationEl = document.getElementById('innovation-total-savings');
-        if (innovationEl) innovationEl.textContent = '₩ ' + total.toLocaleString();
+        calculateDynamicSavings();
+        var total = updateTotalSavingsUI();
         return total;
     }
 
@@ -1694,8 +1791,9 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
             });
         }
-        updateSavingsBasedOnExpenses();
-        calculateTotalSavings();
+        // 병원비 데이터 변경 시 절감액 재계산
+        calculateDynamicSavings();
+        updateTotalSavingsUI();
     }
 
     // ========== 인증 ==========
@@ -1750,7 +1848,9 @@
         });
         updateWorkerOnlyElements();
         renderRiskFactors();
-        renderInnovations();
+        (async function() {
+            await renderInnovations();
+        })();
         renderEmergencyContacts();
         renderStretchingVideos();
         renderMedicineSurveyUserArea();
