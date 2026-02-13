@@ -1262,7 +1262,7 @@ const AUTH_TIMESTAMP_KEY = 'g_auth_timestamp';
 
 // 권한별 메뉴 정의
 const MENU_CONFIG = {
-    public: ['dashboard', 'risk-factors', 'medicine-survey', 'innovation', 'emergency', 'ai-counseling', 'health-checkup', 'stretching'],
+    public: ['dashboard', 'list', 'risk-factors', 'medicine-survey', 'innovation', 'emergency', 'ai-counseling', 'health-checkup', 'stretching'],
     admin: ['dashboard', 'list', 'expense', 'risk-factors', 'medicine-survey', 'innovation', 'emergency', 'survey-results', 'ai-counseling', 'counseling-monitor', 'health-checkup', 'stretching']
 };
 
@@ -1387,17 +1387,14 @@ function renderNavigation() {
         });
     }
 
-    // 일반 모드에서 집중관리명단(list)과 병원비 지출(expense) 섹션 완전 숨김
-    if (!isAdmin) {
-        const listSection = document.getElementById('list');
-        const expenseSection = document.getElementById('expense');
-        if (listSection) listSection.style.display = 'none';
-        if (expenseSection) expenseSection.style.display = 'none';
-    } else {
-        const listSection = document.getElementById('list');
-        const expenseSection = document.getElementById('expense');
-        if (listSection) listSection.style.display = '';
-        if (expenseSection) expenseSection.style.display = '';
+    // 일반 모드에서 병원비 지출(expense) 섹션 완전 숨김 (list는 모바일 공개됨)
+    const expenseSection = document.getElementById('expense');
+    if (expenseSection) {
+        if (!isAdmin) {
+            expenseSection.style.display = 'none';
+        } else {
+            expenseSection.style.display = '';
+        }
     }
 }
 
