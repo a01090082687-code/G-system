@@ -837,8 +837,12 @@
                 elements.registerBtn.disabled = true;
                 elements.registerBtn.textContent = '등록 중...';
 
+                // CORS Preflight 방지를 위해 text/plain으로 전송
                 fetch(GAS_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    },
                     body: JSON.stringify({
                         action: 'saveRanking',
                         payload: {

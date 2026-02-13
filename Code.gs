@@ -41,7 +41,25 @@ function doOptions(e) {
 }
 
 function doPost(e) {
-  var params = e && e.postData && e.postData.contents ? JSON.parse(e.postData.contents) : {};
+  // text/plain으로 받은 데이터를 JSON으로 파싱
+  var params = {};
+  try {
+    if (e && e.postData && e.postData.contents) {
+      var contentType = e.postData.type || '';
+      var contents = e.postData.contents;
+      
+      // text/plain 또는 application/json 모두 처리
+      if (contentType.indexOf('application/json') !== -1 || contentType.indexOf('text/plain') !== -1) {
+        params = JSON.parse(contents);
+      } else {
+        // 기본적으로 JSON 파싱 시도
+        params = JSON.parse(contents);
+      }
+    }
+  } catch (err) {
+    return createJsonResponse({ ok: false, message: 'Invalid JSON: ' + err.toString() });
+  }
+  
   var action = params.action;
   var payload = params.payload || {};
   var out = { ok: false, message: '' };
