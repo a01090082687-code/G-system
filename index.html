@@ -50,7 +50,7 @@
             </div>
             <nav class="space-y-1">
                 <button onclick="changeTab('dashboard')"
-                    class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
                     id="nav-dashboard"><i class="fas fa-chart-pie w-5 text-center"></i> 대시보드</button>
                 <button onclick="changeTab('list')"
                     class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
@@ -127,7 +127,7 @@
                     class="worker-only block w-full text-left font-bold text-slate-600"><i class="fas fa-home"></i>
                     홈으로</button>
                 <button onclick="changeTab('dashboard'); document.getElementById('mobile-menu').classList.add('hidden')"
-                    class="admin-only hidden block w-full text-left font-bold text-slate-600">대시보드</button>
+                    class="block w-full text-left font-bold text-slate-600">대시보드</button>
                 <button onclick="changeTab('list'); document.getElementById('mobile-menu').classList.add('hidden')"
                     class="admin-only hidden block w-full text-left font-bold text-slate-600">집중관리</button>
                 <button onclick="changeTab('expense'); document.getElementById('mobile-menu').classList.add('hidden')"
@@ -218,7 +218,7 @@
             </div>
         </section>
 
-        <section id="dashboard" class="tab-content admin-only max-w-7xl mx-auto space-y-8">
+        <section id="dashboard" class="tab-content max-w-7xl mx-auto space-y-8">
             <div class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white">
                 <div class="p-8 md:p-10 relative z-10">
                     <div

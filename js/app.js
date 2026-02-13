@@ -931,10 +931,10 @@ function renderInnovations() {
     const isAdmin = isAdminLoggedIn();
     const html = APP_DATA.innovations.map((item, i) => `
                 <div class="p-4 hover:bg-slate-50 rounded-xl border-b last:border-0">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold flex-shrink-0">${i + 1}</div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1 justify-between">
+                    <div class="flex flex-col md:flex-row items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold flex-shrink-0 mb-2 md:mb-0">${i + 1}</div>
+                        <div class="flex-1 w-full">
+                            <div class="flex flex-wrap items-center gap-2 mb-1 justify-between">
                                 <div class="flex items-center gap-2">
                                     <span class="px-2 py-0.5 rounded text-xs font-black bg-slate-100">${item.category}</span>
                                     <span class="text-xs font-bold text-slate-400">${item.date}</span>
@@ -946,8 +946,8 @@ function renderInnovations() {
                                     </button>
                                 ` : ''}
                             </div>
-                            <h4 class="font-black text-slate-800">${item.title}</h4>
-                            <p class="text-sm text-slate-600">${item.desc}</p>
+                            <h4 class="font-black text-slate-800 break-keep leading-tight">${item.title}</h4>
+                            <p class="text-sm text-slate-600 break-keep mt-2 leading-relaxed">${item.desc}</p>
                             ${item.imageUrl ? `
                                 <div class="mt-3">
                                     <img src="${item.imageUrl}" 
