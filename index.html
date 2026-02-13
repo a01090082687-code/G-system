@@ -916,13 +916,10 @@
         // 디버깅: GAS_URL 확인
         console.log('📡 Google Sheets 데이터 로드 시도:', GAS_URL);
         
-        // 캐시 방지를 위해 타임스탬프 추가
+        // 캐시 방지를 위해 타임스탬프 추가 (쿼리스트링으로 충분하므로 headers 제거)
         return fetch(GAS_URL + '?t=' + Date.now(), {
-            method: 'GET',
-            cache: 'no-cache',
-            headers: {
-                'Cache-Control': 'no-cache'
-            }
+            method: 'GET'
+            // headers 속성 제거: Preflight 요청을 방지하기 위해
         })
             .then(function(r) {
                 if (!r.ok) {
