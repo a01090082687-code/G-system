@@ -215,6 +215,15 @@
                     <i class="fas fa-running text-5xl mb-3"></i>
                     <h3 class="font-black text-lg text-center">스트레칭 영상</h3>
                 </button>
+                <!-- 건강 캐치 게임 카드 (NEW) -->
+                <div class="col-span-2 md:col-span-1">
+                    <button type="button" onclick="goToGame()"
+                        class="w-full h-full gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-pink-500 to-rose-500 text-white hover:from-pink-600 hover:to-rose-600 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
+                        <i class="fas fa-gamepad text-5xl mb-3"></i>
+                        <h3 class="font-black text-lg text-center">건강 캐치 게임</h3>
+                        <p class="text-xs font-bold text-white/80 mt-1">NEW! 잠시 쉬어가세요</p>
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -759,8 +768,12 @@
     </main>
 
     <script>
-        // ========== 0. 구글 시트 백엔드 URL (배포 후 여기에 붙여넣기) ==========
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbziwcFQgIxJ4D8Jq84e76pMoezKup2pntr02ZfQscYKEdkzojrPf0F_GTg961kcizZTmg/exec';
+        // ========== 0. 구글 시트 백엔드 URL ==========
+        var GAS_URL = 'https://script.google.com/macros/s/AKfycbziwcFQgIxJ4D8Jq84e76pMoezKup2pntr02ZfQscYKEdkzojrPf0F_GTg961kcizZTmg/exec';
+
+        function goToGame() {
+            window.location.href = 'health-catch-game.html';
+        }
 
         // ========== 1. 데이터 초기화 (기본값, 시트에서 덮어씀) ==========
         let NOISE_DATA = [
