@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>건강 지키기 캐치 게임 | G-SYSTEM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc8 50%, #b3e5fc 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 500px;
+            height: 90vh;
+            max-height: 800px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .game-header {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #81c784 0%, #66bb6a 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-section {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .score-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .lives-section {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .life-heart {
+            font-size: 24px;
+            transition: transform 0.2s;
+        }
+
+        .life-heart.lost {
+            opacity: 0.3;
+            transform: scale(0.8);
+        }
+
+        .game-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(180deg, #e8f5e9 0%, #f1f8e9 100%);
+        }
+
+        .item {
+            position: absolute;
+            font-size: 40px;
+            text-align: center;
+            transition: transform 0.1s;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .item.good {
+            animation: fall linear;
+        }
+
+        .item.bad {
+            animation: fall linear;
+        }
+
+        @keyframes fall {
+            from {
+                transform: translateY(-50px) rotate(0deg);
+            }
+            to {
+                transform: translateY(calc(100vh - 200px)) rotate(360deg);
+            }
+        }
+
+        .basket {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 60px;
+            cursor: pointer;
+            z-index: 20;
+            transition: transform 0.1s;
+            user-select: none;
+        }
+
+        .basket:active {
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 20px;
+        }
+
+        .game-over.show {
+            display: flex;
+        }
+
+        .game-over-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 300px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-over-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #e57373;
+            margin-bottom: 15px;
+        }
+
+        .final-score {
+            font-size: 24px;
+            color: #66bb6a;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #81c784 0%, #66bb6a 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 187, 106, 0.4);
+        }
+
+        .restart-btn:active {
+            transform: scale(0.95);
+        }
+
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .start-screen.hidden {
+            display: none;
+        }
+
+        .start-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #66bb6a;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .instructions {
+            background: #f1f8e9;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            max-width: 400px;
+        }
+
+        .instructions h3 {
+            font-size: 18px;
+            color: #558b2f;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            list-style: none;
+            text-align: left;
+        }
+
+        .instructions li {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 8px;
+            padding-left: 20px;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #81c784 0%, #66bb6a 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 187, 106, 0.4);
+        }
+
+        .start-btn:active {
+            transform: scale(0.95);
+        }
+
+        .item-caught {
+            animation: caught 0.3s ease-out;
+        }
+
+        @keyframes caught {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.5);
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+
+            .game-header {
+                border-radius: 0;
+            }
+
+            .item {
+                font-size: 35px;
+            }
+
+            .basket {
+                font-size: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <div class="score-section">
+                <div class="score-label">점수</div>
+                <div class="score-value" id="score">0</div>
+            </div>
+            <div class="lives-section" id="lives">
+                <span class="life-heart">❤️</span>
+                <span class="life-heart">❤️</span>
+                <span class="life-heart">❤️</span>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="basket" id="basket">🏥</div>
+        </div>
+
+        <div class="start-screen" id="startScreen">
+            <div class="start-title">🏥 건강 지키기 캐치 게임 🏥</div>
+            <div class="instructions">
+                <h3>게임 방법</h3>
+                <ul>
+                    <li>✅ 좋은 아이템: 💊 🍎 💧 (+10점)</li>
+                    <li>❌ 나쁜 아이템: 🦠 🚬 🍺 (생명력 -1)</li>
+                    <li>🎯 바구니를 좌우로 움직여 아이템을 받으세요!</li>
+                    <li>💔 생명력이 0이 되면 게임 오버입니다</li>
+                </ul>
+            </div>
+            <button class="start-btn" id="startBtn">게임 시작</button>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <div class="game-over-content">
+                <div class="game-over-title">게임 오버</div>
+                <div class="final-score">최종 점수: <span id="finalScore">0</span></div>
+                <button class="restart-btn" id="restartBtn">다시 시작</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // 게임 상태
+            const gameState = {
+                score: 0,
+                lives: 3,
+                isPlaying: false,
+                gameSpeed: 2000,
+                minSpeed: 1500,
+                items: [],
+                basketPosition: 50, // 백분율
+                animationId: null
+            };
+
+            // DOM 요소
+            const elements = {
+                gameArea: document.getElementById('gameArea'),
+                basket: document.getElementById('basket'),
+                score: document.getElementById('score'),
+                lives: document.getElementById('lives'),
+                startScreen: document.getElementById('startScreen'),
+                gameOver: document.getElementById('gameOver'),
+                startBtn: document.getElementById('startBtn'),
+                restartBtn: document.getElementById('restartBtn'),
+                finalScore: document.getElementById('finalScore')
+            };
+
+            // 아이템 정의
+            const goodItems = ['💊', '🍎', '💧'];
+            const badItems = ['🦠', '🚬', '🍺'];
+
+            // 터치/마우스 이벤트 처리
+            let isDragging = false;
+            let touchStartX = 0;
+            let basketStartX = 0;
+
+            function setupControls() {
+                // 터치 이벤트
+                elements.gameArea.addEventListener('touchstart', handleTouchStart, { passive: false });
+                elements.gameArea.addEventListener('touchmove', handleTouchMove, { passive: false });
+                elements.gameArea.addEventListener('touchend', handleTouchEnd);
+
+                // 마우스 이벤트 (데스크톱 지원)
+                elements.gameArea.addEventListener('mousedown', handleMouseDown);
+                elements.gameArea.addEventListener('mousemove', handleMouseMove);
+                elements.gameArea.addEventListener('mouseup', handleMouseUp);
+                elements.gameArea.addEventListener('mouseleave', handleMouseUp);
+            }
+
+            function handleTouchStart(e) {
+                if (!gameState.isPlaying) return;
+                e.preventDefault();
+                isDragging = true;
+                touchStartX = e.touches[0].clientX;
+                basketStartX = gameState.basketPosition;
+            }
+
+            function handleTouchMove(e) {
+                if (!isDragging || !gameState.isPlaying) return;
+                e.preventDefault();
+                const touchX = e.touches[0].clientX;
+                const deltaX = touchX - touchStartX;
+                const gameAreaWidth = elements.gameArea.offsetWidth;
+                const newPosition = basketStartX + (deltaX / gameAreaWidth) * 100;
+                updateBasketPosition(newPosition);
+            }
+
+            function handleTouchEnd() {
+                isDragging = false;
+            }
+
+            function handleMouseDown(e) {
+                if (!gameState.isPlaying) return;
+                isDragging = true;
+                touchStartX = e.clientX;
+                basketStartX = gameState.basketPosition;
+            }
+
+            function handleMouseMove(e) {
+                if (!isDragging || !gameState.isPlaying) return;
+                const mouseX = e.clientX;
+                const gameAreaWidth = elements.gameArea.offsetWidth;
+                const gameAreaRect = elements.gameArea.getBoundingClientRect();
+                const relativeX = mouseX - gameAreaRect.left;
+                const newPosition = (relativeX / gameAreaWidth) * 100;
+                updateBasketPosition(newPosition);
+            }
+
+            function handleMouseUp() {
+                isDragging = false;
+            }
+
+            function updateBasketPosition(percentage) {
+                gameState.basketPosition = Math.max(5, Math.min(95, percentage));
+                elements.basket.style.left = gameState.basketPosition + '%';
+            }
+
+            // 아이템 생성
+            function createItem() {
+                if (!gameState.isPlaying) return;
+
+                const isGood = Math.random() > 0.4; // 60% 확률로 좋은 아이템
+                const items = isGood ? goodItems : badItems;
+                const emoji = items[Math.floor(Math.random() * items.length)];
+
+                const item = document.createElement('div');
+                item.className = 'item ' + (isGood ? 'good' : 'bad');
+                item.textContent = emoji;
+                item.dataset.isGood = isGood;
+                
+                const startX = Math.random() * 90 + 5; // 5% ~ 95%
+                item.style.left = startX + '%';
+                item.style.top = '-50px';
+                
+                const fallDuration = gameState.gameSpeed + 'ms';
+                item.style.animationDuration = fallDuration;
+                item.style.animationName = 'fall';
+                
+                elements.gameArea.appendChild(item);
+                gameState.items.push({
+                    element: item,
+                    isGood: isGood,
+                    x: startX,
+                    y: -50,
+                    speed: gameState.gameSpeed
+                });
+
+                // 아이템이 바닥에 닿았는지 확인
+                setTimeout(function() {
+                    if (item.parentNode && gameState.isPlaying) {
+                        checkItemMissed(item, isGood);
+                    }
+                }, gameState.gameSpeed);
+            }
+
+            // 아이템 놓침 체크
+            function checkItemMissed(item, isGood) {
+                if (!item.parentNode || !gameState.isPlaying) return;
+                
+                const itemRect = item.getBoundingClientRect();
+                const basketRect = elements.basket.getBoundingClientRect();
+                
+                const itemCenterX = itemRect.left + itemRect.width / 2;
+                const basketLeft = basketRect.left;
+                const basketRight = basketRect.right;
+                
+                if (itemCenterX >= basketLeft && itemCenterX <= basketRight) {
+                    // 바구니에 닿음
+                    catchItem(item, isGood);
+                } else {
+                    // 바닥에 떨어짐
+                    if (!isGood) {
+                        loseLife();
+                    }
+                    removeItem(item);
+                }
+            }
+
+            // 아이템 잡기
+            function catchItem(item, isGood) {
+                if (!item.parentNode) return;
+                
+                item.classList.add('item-caught');
+                
+                setTimeout(function() {
+                    if (isGood) {
+                        gameState.score += 10;
+                        updateScore();
+                        increaseDifficulty();
+                    } else {
+                        loseLife();
+                    }
+                    removeItem(item);
+                }, 300);
+            }
+
+            // 아이템 제거
+            function removeItem(item) {
+                const index = gameState.items.findIndex(i => i.element === item);
+                if (index !== -1) {
+                    gameState.items.splice(index, 1);
+                }
+                if (item.parentNode) {
+                    item.parentNode.removeChild(item);
+                }
+            }
+
+            // 점수 업데이트
+            function updateScore() {
+                elements.score.textContent = gameState.score;
+            }
+
+            // 난이도 증가
+            function increaseDifficulty() {
+                const speedReduction = Math.floor(gameState.score / 100) * 50;
+                gameState.gameSpeed = Math.max(gameState.minSpeed, 2000 - speedReduction);
+            }
+
+            // 생명력 감소
+            function loseLife() {
+                if (!gameState.isPlaying) return;
+                
+                gameState.lives--;
+                updateLives();
+                
+                if (gameState.lives <= 0) {
+                    endGame();
+                }
+            }
+
+            // 생명력 업데이트
+            function updateLives() {
+                const hearts = elements.lives.querySelectorAll('.life-heart');
+                hearts.forEach((heart, index) => {
+                    if (index >= gameState.lives) {
+                        heart.classList.add('lost');
+                    } else {
+                        heart.classList.remove('lost');
+                    }
+                });
+            }
+
+            // 게임 시작
+            function startGame() {
+                gameState.isPlaying = true;
+                gameState.score = 0;
+                gameState.lives = 3;
+                gameState.gameSpeed = 2000;
+                gameState.items = [];
+                gameState.basketPosition = 50;
+                
+                elements.startScreen.classList.add('hidden');
+                elements.gameOver.classList.remove('show');
+                
+                updateScore();
+                updateLives();
+                updateBasketPosition(50);
+                
+                // 기존 아이템 제거
+                const existingItems = elements.gameArea.querySelectorAll('.item');
+                existingItems.forEach(item => item.remove());
+                
+                // 아이템 생성 시작
+                createItemInterval();
+            }
+
+            // 아이템 생성 인터벌
+            function createItemInterval() {
+                if (!gameState.isPlaying) return;
+                
+                createItem();
+                
+                const nextInterval = 800 + Math.random() * 1200; // 0.8초 ~ 2초 사이
+                setTimeout(createItemInterval, nextInterval);
+            }
+
+            // 게임 종료
+            function endGame() {
+                gameState.isPlaying = false;
+                elements.finalScore.textContent = gameState.score;
+                elements.gameOver.classList.add('show');
+            }
+
+            // 게임 재시작
+            function restartGame() {
+                startGame();
+            }
+
+            // 이벤트 리스너 등록
+            elements.startBtn.addEventListener('click', startGame);
+            elements.restartBtn.addEventListener('click', restartGame);
+
+            // 컨트롤 설정
+            setupControls();
+
+            // 게임 영역 클릭 방지 (터치 이벤트만 처리)
+            elements.gameArea.addEventListener('click', function(e) {
+                if (e.target === elements.gameArea) {
+                    e.preventDefault();
+                }
+            });
+
+        })();
+    </script>
+</body>
+</html>
