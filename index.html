@@ -655,7 +655,7 @@
             { name: "전영용", dept: "2공장", risk: "High", note: "근골", isIntensiveCare: false, counseling: { 1: null, 2: { date: "02/24", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } }
         ],
         stretchingVideos: [
-            { id: 1, title: "구영테크 스트레칭 영상", description: "근골격계 부담 예방을 위한 실전 스트레칭 가이드", videoUrl: "videos/stretching.mp4", thumbnail: "", duration: "", category: "전체", createdAt: "2026-02-12" }
+            { id: 1, title: "구영테크 스트레칭 영상", description: "근골격계 부담 예방을 위한 실전 스트레칭 가이드", videoUrl: "https://youtu.be/oYmiL6Bh_ak", thumbnail: "", duration: "", category: "전체", createdAt: "2026-02-12" }
         ]
     };
 
@@ -907,18 +907,31 @@
         const overlay = document.getElementById('data-loading-overlay');
         if (!silent && overlay) overlay.classList.remove('hidden');
         if (!GAS_URL || GAS_URL.trim() === '') {
+            console.warn('⚠️ GAS_URL이 설정되지 않았습니다. Google Sheets 연동이 불가능합니다.');
             hideDataLoadingOverlay();
             initApp();
             return Promise.resolve();
         }
-        return fetch(GAS_URL)
-            .then(function(r) { 
+        
+        // 디버깅: GAS_URL 확인
+        console.log('📡 Google Sheets 데이터 로드 시도:', GAS_URL);
+        
+        // 캐시 방지를 위해 타임스탬프 추가
+        return fetch(GAS_URL + '?t=' + Date.now(), {
+            method: 'GET',
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-cache'
+            }
+        })
+            .then(function(r) {
                 if (!r.ok) {
-                    throw new Error('HTTP ' + r.status);
+                    throw new Error('HTTP ' + r.status + ': ' + r.statusText);
                 }
                 return r.json(); 
             })
             .then(function(data) {
+                console.log('✅ Google Sheets 데이터 로드 성공:', data);
                 applyDataFromServer(data);
                 hideDataLoadingOverlay();
                 // 데이터 적용 직후 즉시 UI 갱신 (initApp 전에 먼저 실행)
@@ -955,7 +968,20 @@
                 }, 100);
             })
             .catch(function(error) {
-                console.error('Google Sheets 데이터 로드 실패:', error);
+                console.error('❌ Google Sheets 데이터 로드 실패:', error);
+                console.error('GAS_URL:', GAS_URL);
+                console.error('에러 상세:', error.message || error);
+                
+                // 사용자에게 알림 (개발 모드에서만)
+                if (!silent) {
+                    const errorMsg = 'Google Sheets 연결 실패: ' + (error.message || '알 수 없는 오류');
+                    console.warn('⚠️', errorMsg);
+                    console.warn('💡 해결 방법:');
+                    console.warn('1. Google Apps Script가 웹 앱으로 배포되어 있는지 확인');
+                    console.warn('2. 배포 시 "액세스 권한: 모든 사용자"로 설정했는지 확인');
+                    console.warn('3. GAS_URL이 올바른지 확인');
+                }
+                
                 hideDataLoadingOverlay();
                 // 에러 발생 시에도 localStorage에서 데이터 복원 시도
                 const savedUrl = localStorage.getItem('medicine_survey_url');
@@ -993,14 +1019,43 @@
     
     function apiPost(action, payload) {
         if (!GAS_URL || GAS_URL.trim() === '') {
-            if (typeof console !== 'undefined') console.warn('GAS_URL이 비어 있어 저장되지 않습니다.');
+            console.warn('⚠️ GAS_URL이 비어 있어 저장되지 않습니다.');
             return Promise.resolve();
         }
+        
+        console.log('💾 Google Sheets에 저장 시도:', action, payload);
+        
         return fetch(GAS_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({ action: action, payload: payload || {} })
-        }).then(function() { return loadDataFromSheets(true); }).catch(function() { return loadDataFromSheets(true); });
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            console.log('✅ Google Sheets 저장 성공:', action);
+            // 저장 후 데이터 새로고침 (다른 사용자들이 볼 수 있도록)
+            setTimeout(function() {
+                loadDataFromSheets(true);
+            }, 1000); // 1초 후 새로고침
+            return Promise.resolve();
+        })
+        .catch(function(error) {
+            console.error('❌ Google Sheets 저장 실패:', action, error);
+            console.error('GAS_URL:', GAS_URL);
+            console.error('💡 해결 방법:');
+            console.error('1. Google Apps Script가 웹 앱으로 배포되어 있는지 확인');
+            console.error('2. 배포 시 "액세스 권한: 모든 사용자"로 설정했는지 확인');
+            console.error('3. GAS_URL이 올바른지 확인');
+            // 저장 실패해도 데이터 새로고침 시도
+            setTimeout(function() {
+                loadDataFromSheets(true);
+            }, 1000);
+            return Promise.reject(error);
+        });
     }
 
     function initApp() {
@@ -2174,8 +2229,69 @@
         updateWorkerOnlyElements();
     }
 
+    // 초기 데이터를 Google Sheets에 저장하는 함수 (한 번만 실행)
+    function initializeDefaultData() {
+        // 이미 초기화되었는지 확인
+        const initialized = localStorage.getItem('data_initialized');
+        if (initialized === 'true') {
+            return; // 이미 초기화됨
+        }
+        
+        // Google Sheets에 데이터가 없을 때만 초기값 저장
+        if (GAS_URL && GAS_URL.trim() !== '') {
+            // 스트레칭 영상 초기값
+            const defaultStretchingVideos = [
+                { 
+                    id: 1, 
+                    title: "구영테크 스트레칭 영상", 
+                    description: "근골격계 부담 예방을 위한 실전 스트레칭 가이드", 
+                    videoUrl: "https://youtu.be/oYmiL6Bh_ak", 
+                    thumbnail: "", 
+                    duration: "", 
+                    category: "전체", 
+                    createdAt: new Date().toISOString().slice(0, 10) 
+                }
+            ];
+            
+            // 의약품 설문조사 URL 초기값
+            const defaultMedicineSurveyUrl = "https://docs.google.com/forms/d/e/1FAIpQLSc8GB-tbu8QhWnoItYi7lS26tyLX0KzQvNZ-bwc-Cqw-bHpsQ/viewform?usp=sharing&ouid=110501763882946908099";
+            
+            // Google Sheets에서 현재 데이터 확인 후, 없으면 초기값 저장
+            fetch(GAS_URL + '?t=' + Date.now())
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    let needsSave = false;
+                    
+                    // 스트레칭 영상이 없으면 저장
+                    if (!data.config || !data.config.stretchingVideos || !Array.isArray(data.config.stretchingVideos) || data.config.stretchingVideos.length === 0) {
+                        apiPost('saveStretchingVideos', defaultStretchingVideos);
+                        needsSave = true;
+                        console.log('✅ 스트레칭 영상 초기값 저장');
+                    }
+                    
+                    // 의약품 설문조사 URL이 없으면 저장
+                    if (!data.config || !data.config.medicine_survey_url || data.config.medicine_survey_url.trim() === '') {
+                        apiPost('saveMedicineSurveyUrl', { url: defaultMedicineSurveyUrl });
+                        needsSave = true;
+                        console.log('✅ 의약품 설문조사 URL 초기값 저장');
+                    }
+                    
+                    if (needsSave) {
+                        localStorage.setItem('data_initialized', 'true');
+                        console.log('✅ 초기 데이터 저장 완료');
+                    }
+                })
+                .catch(function(error) {
+                    console.warn('초기 데이터 확인 실패:', error);
+                });
+        }
+    }
+
     window.addEventListener('DOMContentLoaded', function() {
         localStorage.removeItem('g_auth_mode');
+        
+        // 초기 데이터 설정 (한 번만 실행)
+        initializeDefaultData();
         
         // 페이지 로드 시 localStorage에서 의약품 설문조사 URL 복원
         const savedUrl = localStorage.getItem('medicine_survey_url');
@@ -2228,11 +2344,12 @@
         // 초기 데이터 로드
         loadDataFromSheets();
         
-        // 실시간 연동: 30초마다 Google Sheets에서 데이터 자동 새로고침
+        // 실시간 연동: 10초마다 Google Sheets에서 데이터 자동 새로고침
         // (다른 기기에서 수정한 내용이 실시간으로 반영됨)
+        // GitHub Pages 사용 시 다른 사용자들이 최신 데이터를 볼 수 있도록 짧은 간격으로 새로고침
         setInterval(function() {
             loadDataFromSheets(true); // silent 모드로 조용히 새로고침
-        }, 30000); // 30초마다
+        }, 10000); // 10초마다 (더 빠른 동기화)
     });
     </script>
 </body>
