@@ -759,24 +759,60 @@
         if (Array.isArray(data.innovations)) APP_DATA.innovations = data.innovations;
         if (Array.isArray(data.expenses_2025)) APP_DATA.expenses_2025 = data.expenses_2025;
         if (Array.isArray(data.expenses_2026)) APP_DATA.expenses_2026 = data.expenses_2026;
+        // 배치도 데이터 처리 (Google Sheets 우선, localStorage fallback)
         if (data.floorplans && typeof data.floorplans === 'object') {
             const floorplansFromServer = data.floorplans;
-            // Google Sheets에서 로드된 데이터를 우선적으로 사용 (다른 기기에서도 보이도록)
-            APP_DATA.floorplans = floorplansFromServer;
-            if (floorplansFromServer.factory1) {
-                window.floorplan_1 = floorplansFromServer.factory1;
-            }
-            if (floorplansFromServer.factory2) {
-                window.floorplan_2 = floorplansFromServer.factory2;
-            }
-            
-            // Google Sheets에서 로드된 값도 localStorage에 저장 (로컬 캐시)
+            // 빈 객체가 아닌 경우에만 사용
             if (floorplansFromServer && (floorplansFromServer.factory1 || floorplansFromServer.factory2)) {
+                // Google Sheets에서 로드된 데이터를 우선적으로 사용 (다른 기기에서도 보이도록)
+                APP_DATA.floorplans = floorplansFromServer;
+                if (floorplansFromServer.factory1) {
+                    window.floorplan_1 = floorplansFromServer.factory1;
+                }
+                if (floorplansFromServer.factory2) {
+                    window.floorplan_2 = floorplansFromServer.factory2;
+                }
+                
+                // Google Sheets에서 로드된 값도 localStorage에 저장 (로컬 캐시)
                 localStorage.setItem('noise_floorplans', JSON.stringify(floorplansFromServer));
+                
+                // 배치도 즉시 표시
+                showNoiseFloorplan(1);
+            } else {
+                // Google Sheets에 데이터가 없으면 localStorage에서 복원 시도
+                const savedFloorplans = localStorage.getItem('noise_floorplans');
+                if (savedFloorplans) {
+                    try {
+                        const parsed = JSON.parse(savedFloorplans);
+                        if (parsed && typeof parsed === 'object' && (parsed.factory1 || parsed.factory2)) {
+                            if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                            APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, parsed);
+                            if (parsed.factory1) window.floorplan_1 = parsed.factory1;
+                            if (parsed.factory2) window.floorplan_2 = parsed.factory2;
+                            showNoiseFloorplan(1);
+                        }
+                    } catch (e) {
+                        console.error('배치도 복원 오류:', e);
+                    }
+                }
             }
-            
-            // 배치도 즉시 표시
-            showNoiseFloorplan(1);
+        } else {
+            // floorplans 데이터가 없으면 localStorage에서 복원 시도
+            const savedFloorplans = localStorage.getItem('noise_floorplans');
+            if (savedFloorplans) {
+                try {
+                    const parsed = JSON.parse(savedFloorplans);
+                    if (parsed && typeof parsed === 'object' && (parsed.factory1 || parsed.factory2)) {
+                        if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                        APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, parsed);
+                        if (parsed.factory1) window.floorplan_1 = parsed.factory1;
+                        if (parsed.factory2) window.floorplan_2 = parsed.factory2;
+                        showNoiseFloorplan(1);
+                    }
+                } catch (e) {
+                    console.error('배치도 복원 오류:', e);
+                }
+            }
         }
         if (data.config) {
             // Config가 비어 있으면(서버가 빈 배열 반환) 기본 명단·연락망 유지
@@ -786,31 +822,83 @@
             if (data.config.metadata) SYSTEM_CONFIG.metadata = data.config.metadata;
             if (Array.isArray(data.config.factory1) && data.config.factory1.length > 0) CONSULTATION_SCHEDULE.factory1 = data.config.factory1;
             if (Array.isArray(data.config.factory2) && data.config.factory2.length > 0) CONSULTATION_SCHEDULE.factory2 = data.config.factory2;
+            // 의약품 설문조사 URL 처리 (Google Sheets 우선, localStorage fallback)
             if (data.config.hasOwnProperty('medicine_survey_url')) {
                 const urlFromServer = String(data.config.medicine_survey_url || '').trim();
-                // Google Sheets에서 로드된 값을 우선적으로 사용 (다른 기기에서도 보이도록)
-                medicineSurveyUrlFromServer = urlFromServer;
-                // localStorage에도 저장 (로컬 캐시)
                 if (urlFromServer) {
+                    // Google Sheets에서 로드된 값을 우선적으로 사용 (다른 기기에서도 보이도록)
+                    medicineSurveyUrlFromServer = urlFromServer;
                     localStorage.setItem('medicine_survey_url', urlFromServer);
+                    // 의약품 조사 링크 즉시 표시
+                    renderMedicineSurveyUserArea();
                 } else {
-                    localStorage.removeItem('medicine_survey_url');
+                    // Google Sheets에 URL이 없으면 localStorage에서 복원 시도
+                    const savedUrl = localStorage.getItem('medicine_survey_url');
+                    if (savedUrl) {
+                        medicineSurveyUrlFromServer = savedUrl;
+                        renderMedicineSurveyUserArea();
+                    } else {
+                        medicineSurveyUrlFromServer = '';
+                        localStorage.removeItem('medicine_survey_url');
+                        renderMedicineSurveyUserArea();
+                    }
                 }
-                // 의약품 조사 링크 즉시 표시
-                renderMedicineSurveyUserArea();
+            } else {
+                // medicine_survey_url 키가 없으면 localStorage에서 복원 시도
+                const savedUrl = localStorage.getItem('medicine_survey_url');
+                if (savedUrl) {
+                    medicineSurveyUrlFromServer = savedUrl;
+                    renderMedicineSurveyUserArea();
+                }
             }
+            // 스트레칭 영상 처리 (Google Sheets 우선, localStorage fallback)
             if (data.config.hasOwnProperty('stretchingVideos') && Array.isArray(data.config.stretchingVideos)) {
                 const videosFromServer = data.config.stretchingVideos;
-                // Google Sheets에서 로드된 값을 우선적으로 사용 (다른 기기에서도 보이도록)
-                APP_DATA.stretchingVideos = videosFromServer;
-                // localStorage에도 저장 (로컬 캐시)
                 if (videosFromServer && videosFromServer.length > 0) {
+                    // Google Sheets에서 로드된 값을 우선적으로 사용 (다른 기기에서도 보이도록)
+                    APP_DATA.stretchingVideos = videosFromServer;
                     localStorage.setItem('stretching_videos', JSON.stringify(videosFromServer));
+                    // 스트레칭 영상 즉시 표시
+                    renderStretchingVideos();
                 } else {
-                    localStorage.removeItem('stretching_videos');
+                    // Google Sheets에 데이터가 없으면 localStorage에서 복원 시도
+                    const savedVideos = localStorage.getItem('stretching_videos');
+                    if (savedVideos) {
+                        try {
+                            const videos = JSON.parse(savedVideos);
+                            if (Array.isArray(videos) && videos.length > 0) {
+                                APP_DATA.stretchingVideos = videos;
+                                renderStretchingVideos();
+                            } else {
+                                APP_DATA.stretchingVideos = [];
+                                localStorage.removeItem('stretching_videos');
+                                renderStretchingVideos();
+                            }
+                        } catch (e) {
+                            console.error('스트레칭 영상 복원 오류:', e);
+                            APP_DATA.stretchingVideos = [];
+                            renderStretchingVideos();
+                        }
+                    } else {
+                        APP_DATA.stretchingVideos = [];
+                        localStorage.removeItem('stretching_videos');
+                        renderStretchingVideos();
+                    }
                 }
-                // 스트레칭 영상 즉시 표시
-                renderStretchingVideos();
+            } else {
+                // stretchingVideos 키가 없거나 배열이 아니면 localStorage에서 복원 시도
+                const savedVideos = localStorage.getItem('stretching_videos');
+                if (savedVideos) {
+                    try {
+                        const videos = JSON.parse(savedVideos);
+                        if (Array.isArray(videos) && videos.length > 0) {
+                            APP_DATA.stretchingVideos = videos;
+                            renderStretchingVideos();
+                        }
+                    } catch (e) {
+                        console.error('스트레칭 영상 복원 오류:', e);
+                    }
+                }
             }
         }
     }
@@ -824,7 +912,12 @@
             return Promise.resolve();
         }
         return fetch(GAS_URL)
-            .then(function(r) { return r.json(); })
+            .then(function(r) { 
+                if (!r.ok) {
+                    throw new Error('HTTP ' + r.status);
+                }
+                return r.json(); 
+            })
             .then(function(data) {
                 applyDataFromServer(data);
                 hideDataLoadingOverlay();
@@ -861,8 +954,39 @@
                     showNoiseFloorplan(1); // 배치도 재표시
                 }, 100);
             })
-            .catch(function() {
+            .catch(function(error) {
+                console.error('Google Sheets 데이터 로드 실패:', error);
                 hideDataLoadingOverlay();
+                // 에러 발생 시에도 localStorage에서 데이터 복원 시도
+                const savedUrl = localStorage.getItem('medicine_survey_url');
+                if (savedUrl) {
+                    medicineSurveyUrlFromServer = savedUrl;
+                }
+                const savedVideos = localStorage.getItem('stretching_videos');
+                if (savedVideos) {
+                    try {
+                        const videos = JSON.parse(savedVideos);
+                        if (Array.isArray(videos) && videos.length > 0) {
+                            APP_DATA.stretchingVideos = videos;
+                        }
+                    } catch (e) {
+                        console.error('스트레칭 영상 복원 오류:', e);
+                    }
+                }
+                const savedFloorplans = localStorage.getItem('noise_floorplans');
+                if (savedFloorplans) {
+                    try {
+                        const floorplans = JSON.parse(savedFloorplans);
+                        if (floorplans && typeof floorplans === 'object' && (floorplans.factory1 || floorplans.factory2)) {
+                            if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                            APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, floorplans);
+                            if (floorplans.factory1) window.floorplan_1 = floorplans.factory1;
+                            if (floorplans.factory2) window.floorplan_2 = floorplans.factory2;
+                        }
+                    } catch (e) {
+                        console.error('배치도 복원 오류:', e);
+                    }
+                }
                 initApp();
             });
     }
