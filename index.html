@@ -720,6 +720,10 @@
         if (tabId === 'stretching') {
             renderStretchingVideos();
         }
+        // 소음현황 탭으로 전환 시 배치도 표시
+        if (tabId === 'noise') {
+            showNoiseFloorplan(1);
+        }
     }
 
     function updateWorkerOnlyElements() {
@@ -756,9 +760,15 @@
         if (Array.isArray(data.expenses_2025)) APP_DATA.expenses_2025 = data.expenses_2025;
         if (Array.isArray(data.expenses_2026)) APP_DATA.expenses_2026 = data.expenses_2026;
         if (data.floorplans && typeof data.floorplans === 'object') {
-            APP_DATA.floorplans = data.floorplans;
-            if (data.floorplans.factory1) window.floorplan_1 = data.floorplans.factory1;
-            if (data.floorplans.factory2) window.floorplan_2 = data.floorplans.factory2;
+            const floorplansFromServer = data.floorplans;
+            APP_DATA.floorplans = floorplansFromServer;
+            if (floorplansFromServer.factory1) window.floorplan_1 = floorplansFromServer.factory1;
+            if (floorplansFromServer.factory2) window.floorplan_2 = floorplansFromServer.factory2;
+            
+            // Google Sheets에서 로드된 값도 localStorage에 저장 (동기화)
+            if (floorplansFromServer && (floorplansFromServer.factory1 || floorplansFromServer.factory2)) {
+                localStorage.setItem('noise_floorplans', JSON.stringify(floorplansFromServer));
+            }
         }
         if (data.config) {
             // Config가 비어 있으면(서버가 빈 배열 반환) 기본 명단·연락망 유지
@@ -830,6 +840,7 @@
                     setNoiseFilter('all');
                     renderMedicineSurveyUserArea(); // 의약품 설문조사 링크 재표시
                     renderStretchingVideos(); // 스트레칭 영상 재표시
+                    showNoiseFloorplan(1); // 배치도 재표시
                 }, 100);
             })
             .catch(function() {
@@ -1547,7 +1558,13 @@
                 img.style.display = 'block';
                 if (placeholder) placeholder.style.display = 'none';
                 window['floorplan_' + factoryNum] = e.target.result;
-                alert(factoryNum + '공장 도면 이미지가 업로드되었습니다. 저장 버튼을 눌러 저장하세요.');
+                
+                // 즉시 localStorage에 저장 (저장 버튼 누르기 전에도 표시되도록)
+                if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                APP_DATA.floorplans['factory' + factoryNum] = e.target.result;
+                localStorage.setItem('noise_floorplans', JSON.stringify(APP_DATA.floorplans));
+                
+                alert(factoryNum + '공장 도면 이미지가 업로드되었습니다. 저장 버튼을 눌러 서버에 저장하세요.');
             }
         };
         reader.readAsDataURL(file);
@@ -1561,6 +1578,12 @@
         if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
         if (window.floorplan_1) APP_DATA.floorplans.factory1 = window.floorplan_1;
         if (window.floorplan_2) APP_DATA.floorplans.factory2 = window.floorplan_2;
+        
+        // localStorage에 영구 저장 (사용자 모드에서도 유지되도록)
+        if (APP_DATA.floorplans && (APP_DATA.floorplans.factory1 || APP_DATA.floorplans.factory2)) {
+            localStorage.setItem('noise_floorplans', JSON.stringify(APP_DATA.floorplans));
+        }
+        
         apiPost('saveFloorplans', APP_DATA.floorplans);
         alert('배치도 이미지가 저장되었습니다.');
         var currentFactory = 1;
@@ -1593,9 +1616,30 @@
         const placeholder = document.getElementById('noise-floorplan-placeholder');
         if (img) {
             var imageSrc = 'images/noise-floorplan-' + factoryNum + 'factory.png';
-            if (APP_DATA.floorplans && APP_DATA.floorplans['factory' + factoryNum]) {
-                imageSrc = APP_DATA.floorplans['factory' + factoryNum];
+            
+            // localStorage에서도 확인 (사용자 모드에서도 표시되도록)
+            let floorplans = APP_DATA.floorplans || {};
+            const savedFloorplans = localStorage.getItem('noise_floorplans');
+            if ((!floorplans || !floorplans['factory' + factoryNum]) && savedFloorplans) {
+                try {
+                    const parsed = JSON.parse(savedFloorplans);
+                    if (parsed && typeof parsed === 'object') {
+                        floorplans = parsed;
+                        // APP_DATA에도 동기화
+                        if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                        APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, parsed);
+                        if (parsed.factory1) window.floorplan_1 = parsed.factory1;
+                        if (parsed.factory2) window.floorplan_2 = parsed.factory2;
+                    }
+                } catch (e) {
+                    console.error('배치도 이미지 로드 오류:', e);
+                }
             }
+            
+            if (floorplans && floorplans['factory' + factoryNum]) {
+                imageSrc = floorplans['factory' + factoryNum];
+            }
+            
             img.src = imageSrc;
             img.alt = factoryNum + '공장 소음 측정 위치도';
             img.onerror = function() {
@@ -1947,6 +1991,7 @@
         renderEmergencyContacts();
         renderStretchingVideos(); // 관리자 모드 전환 시에도 스트레칭 영상 표시
         renderMedicineSurveyUserArea(); // 관리자 모드 전환 시에도 링크 표시
+        showNoiseFloorplan(1); // 관리자 모드 전환 시에도 배치도 표시
         const noiseMode = document.getElementById('noise-btn-exceed') && document.getElementById('noise-btn-exceed').classList.contains('active') ? 'exceed' : 'all';
         setNoiseFilter(noiseMode);
     }
@@ -1985,11 +2030,31 @@
             }
         }
         
+        // 페이지 로드 시 localStorage에서 배치도 이미지 복원
+        const savedFloorplans = localStorage.getItem('noise_floorplans');
+        if (savedFloorplans) {
+            try {
+                const floorplans = JSON.parse(savedFloorplans);
+                if (floorplans && typeof floorplans === 'object') {
+                    // Google Sheets에서 로드되지 않았거나 비어있으면 localStorage 값 사용
+                    if (!APP_DATA.floorplans || (!APP_DATA.floorplans.factory1 && !APP_DATA.floorplans.factory2)) {
+                        if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                        APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, floorplans);
+                        if (floorplans.factory1) window.floorplan_1 = floorplans.factory1;
+                        if (floorplans.factory2) window.floorplan_2 = floorplans.factory2;
+                    }
+                }
+            } catch (e) {
+                console.error('배치도 이미지 복원 오류:', e);
+            }
+        }
+        
         renderNavigation();
         updateAuthUI();
         updateAdminOnlyElements();
         renderMedicineSurveyUserArea(); // 초기 로드 시에도 링크 표시
         renderStretchingVideos(); // 초기 로드 시에도 스트레칭 영상 표시
+        showNoiseFloorplan(1); // 초기 로드 시에도 배치도 표시
         loadDataFromSheets();
     });
     </script>
