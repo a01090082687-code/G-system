@@ -36,7 +36,7 @@
                 </div>
             </div>
             <nav class="space-y-1">
-                <button onclick="changeTab('dashboard')" class="nav-item active w-full flex items-center gap-3 px-4 py-3 font-bold text-sm" id="nav-dashboard"><i class="fas fa-chart-pie w-5 text-center"></i> 대시보드</button>
+                <button onclick="changeTab('dashboard')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500" id="nav-dashboard"><i class="fas fa-chart-pie w-5 text-center"></i> 대시보드</button>
                 <button onclick="changeTab('list')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500" id="nav-list"><i class="fas fa-users w-5 text-center"></i> 집중관리 명단</button>
                 <button onclick="changeTab('expense')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500" id="nav-expense"><i class="fas fa-won-sign w-5 text-center"></i> 병원비 지출</button>
                 <button onclick="changeTab('risk-factors')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500" id="nav-risk-factors"><i class="fas fa-hard-hat w-5 text-center"></i> 작업환경</button>
@@ -68,7 +68,7 @@
         <div class="font-black text-sm text-slate-800 flex items-center gap-2"><span class="text-xl">🐧</span><span>G-SYSTEM</span></div>
         <div class="flex items-center gap-2">
             <button onclick="toggleAuth()" id="auth-btn-mobile" class="px-3 py-1.5 rounded-lg font-bold text-xs bg-teal-500 text-white hover:bg-teal-600 transition-colors"><i class="fas fa-lock"></i></button>
-            <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="p-2 text-slate-600"><i class="fas fa-bars text-xl"></i></button>
+            <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" id="mobile-menu-btn" class="admin-only p-2 text-slate-600"><i class="fas fa-bars text-xl"></i></button>
         </div>
     </header>
 
@@ -76,7 +76,8 @@
         <div class="absolute right-0 top-0 bottom-0 w-64 bg-white shadow-2xl p-6 flex flex-col" onclick="event.stopPropagation()">
             <div class="text-xl font-black mb-8 text-slate-800">메뉴</div>
             <nav class="space-y-4">
-                <button onclick="changeTab('dashboard'); document.getElementById('mobile-menu').classList.add('hidden')" class="block w-full text-left font-bold text-slate-600">대시보드</button>
+                <button onclick="goToWorkerHome(); document.getElementById('mobile-menu').classList.add('hidden')" class="worker-only block w-full text-left font-bold text-slate-600"><i class="fas fa-home"></i> 홈으로</button>
+                <button onclick="changeTab('dashboard'); document.getElementById('mobile-menu').classList.add('hidden')" class="admin-only hidden block w-full text-left font-bold text-slate-600">대시보드</button>
                 <button onclick="changeTab('list'); document.getElementById('mobile-menu').classList.add('hidden')" class="admin-only hidden block w-full text-left font-bold text-slate-600">집중관리</button>
                 <button onclick="changeTab('expense'); document.getElementById('mobile-menu').classList.add('hidden')" class="admin-only hidden block w-full text-left font-bold text-slate-600">병원비</button>
                 <button onclick="changeTab('risk-factors'); document.getElementById('mobile-menu').classList.add('hidden')" class="block w-full text-left font-bold text-slate-600">작업환경</button>
@@ -105,22 +106,44 @@
     </div>
 
     <main class="flex-1 overflow-y-auto h-full p-4 md:p-8 pt-20 md:pt-8 bg-[#F1F5F9]">
-        <section id="dashboard" class="tab-content active max-w-7xl mx-auto space-y-8">
+        <!-- 근로자 홈 화면 (비로그인 상태 기본 화면) -->
+        <section id="worker-home" class="tab-content active max-w-4xl mx-auto space-y-6">
+            <div class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white">
+                <div class="p-6 md:p-8 relative z-10 text-center">
+                    <h2 class="text-2xl md:text-3xl font-black mb-2">구영테크 보건시스템</h2>
+                    <p class="text-white/80 font-bold text-sm">작업자 건강과 안전을 위한 보건 관리</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <!-- 의약품 신청 카드 -->
+                <button type="button" onclick="changeTab('medicine-survey')" class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-teal-500 to-teal-600 text-white hover:from-teal-600 hover:to-teal-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
+                    <i class="fas fa-pills text-5xl mb-3"></i>
+                    <h3 class="font-black text-lg text-center">의약품 신청</h3>
+                </button>
+                <!-- 소음 위험 지도 카드 -->
+                <button type="button" onclick="changeTab('noise'); setTimeout(function(){setNoiseFilter('exceed');}, 100);" class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-red-500 to-orange-500 text-white hover:from-red-600 hover:to-orange-600 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
+                    <i class="fas fa-exclamation-triangle text-5xl mb-3"></i>
+                    <h3 class="font-black text-lg text-center">소음 위험 지도</h3>
+                </button>
+                <!-- 응급 연락망 카드 -->
+                <button type="button" onclick="changeTab('emergency')" class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
+                    <i class="fas fa-ambulance text-5xl mb-3"></i>
+                    <h3 class="font-black text-lg text-center">응급 연락망</h3>
+                </button>
+                <!-- 스트레칭 영상 카드 -->
+                <button type="button" onclick="changeTab('stretching')" class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-indigo-500 to-blue-600 text-white hover:from-indigo-600 hover:to-blue-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
+                    <i class="fas fa-running text-5xl mb-3"></i>
+                    <h3 class="font-black text-lg text-center">스트레칭 영상</h3>
+                </button>
+            </div>
+        </section>
+
+        <section id="dashboard" class="tab-content admin-only max-w-7xl mx-auto space-y-8">
             <div class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white">
                 <div class="p-8 md:p-10 relative z-10">
                     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/30 text-[10px] font-black uppercase tracking-widest mb-3"><span class="w-2 h-2 rounded-full bg-yellow-400"></span> 실시간 운영중</div>
-                    <h2 id="announcement-title" class="text-3xl md:text-4xl font-black mb-2">11월·12월 공상비 '0원' 달성</h2>
-                    <p id="announcement-desc" class="text-white/80 font-bold text-sm">2025년 하반기 무재해 목표 달성 완료</p>
-                </div>
-            </div>
-            <div class="gu-card p-8 bg-slate-800 text-white relative overflow-hidden">
-                <div class="flex flex-col md:flex-row items-center gap-8 relative z-10">
-                    <div class="w-32 h-32 bg-white rounded-full flex items-center justify-center text-6xl shadow-2xl border-4 border-yellow-400">🐧</div>
-                    <div>
-                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500 text-[10px] font-black uppercase text-slate-900 mb-2">보건 수호자</div>
-                        <h2 class="text-2xl font-black mb-2">퍼펭 & 구펭 - 우리공장 안전 지킴이</h2>
-                        <p class="text-slate-300 text-sm leading-relaxed max-w-xl">작업자들의 안전을 최우선으로 지키는 든든한 안전 반장입니다.</p>
-                    </div>
+                    <h2 id="announcement-title" class="text-3xl md:text-4xl font-black mb-2">구영테크 보건시스템</h2>
+                    <p id="announcement-desc" class="text-white/80 font-bold text-sm">작업자 건강과 안전을 위한 보건 관리</p>
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -133,20 +156,23 @@
                     <h3 class="text-3xl font-black text-slate-800 mt-1"><span id="dashboard-counseling-rate">0</span>%</h3>
                     <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2"><div id="dashboard-counseling-rate-bar" class="bg-red-500 h-full" style="width: 0%"></div></div>
                 </div>
-                <div class="gu-card p-6 border-t-4 border-t-indigo-500">
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">공상자 지출 현황</p>
-                    <h3 class="text-3xl font-black text-slate-800 mt-1" id="total-2025">-</h3>
+                <div class="gu-card p-6 border-t-4 border-t-emerald-500">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">누적 예산 절감액</p>
+                    <h3 class="text-3xl font-black text-slate-800 mt-1"><span id="dashboard-total-savings">₩ 0</span></h3>
                 </div>
             </div>
             <!-- 금월 건강상담 대상자 명단 -->
             <div class="gu-card p-6 border-t-4 border-t-purple-500">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i class="fas fa-calendar-check text-purple-600"></i> 금월 건강상담 대상자 명단</h3>
-                    <span id="schedule-count" class="text-sm font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-full">0명</span>
+                    <div class="flex items-center gap-2">
+                        <span id="schedule-count" class="text-sm font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-full">0명</span>
+                        <button type="button" onclick="changeTab('risk-factors')" class="text-sm font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1"><i class="fas fa-external-link-alt"></i> 상세보기</button>
+                    </div>
                 </div>
                 <div class="flex flex-wrap gap-2 mb-4">
-                    <button type="button" onclick="showFactory(0)" id="factory-tab-0" class="factory-tab flex-1 min-w-0 px-4 py-2 rounded-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">전체</button>
-                    <button type="button" onclick="showFactory(1)" id="factory-tab-1" class="factory-tab active flex-1 min-w-0 px-4 py-2 rounded-lg font-bold text-sm bg-purple-500 text-white transition-colors">1공장</button>
+                    <button type="button" onclick="showFactory(0)" id="factory-tab-0" class="factory-tab active flex-1 min-w-0 px-4 py-2 rounded-lg font-bold text-sm bg-purple-500 text-white transition-colors">전체</button>
+                    <button type="button" onclick="showFactory(1)" id="factory-tab-1" class="factory-tab flex-1 min-w-0 px-4 py-2 rounded-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">1공장</button>
                     <button type="button" onclick="showFactory(2)" id="factory-tab-2" class="factory-tab flex-1 min-w-0 px-4 py-2 rounded-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">2공장</button>
                 </div>
                 <div class="relative mb-4">
@@ -155,14 +181,28 @@
                 </div>
                 <div id="schedule-list" class="space-y-2 max-h-80 overflow-y-auto"></div>
             </div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="gu-card p-6">
-                    <h3 class="font-bold text-slate-700 mb-6 flex items-center gap-2"><i class="fas fa-chart-line text-teal-500"></i> 2025년 월별 병원비 추이</h3>
-                    <div class="h-64"><canvas id="costChart"></canvas></div>
+            <!-- 부서별 소음 현황 (대시보드) -->
+            <div class="gu-card p-6 border-t-4 border-t-red-500">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i class="fas fa-volume-up text-red-500"></i> 부서별 소음 현황</h3>
+                    <button type="button" onclick="changeTab('noise')" class="text-sm font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1"><i class="fas fa-external-link-alt"></i> 상세보기</button>
                 </div>
-                <div class="gu-card p-6">
-                    <h3 class="font-bold text-slate-700 mb-6 flex items-center gap-2"><i class="fas fa-chart-pie text-teal-500"></i> 보건관리 대상자 건강 위험군 분포</h3>
-                    <div class="h-64"><canvas id="riskChart"></canvas></div>
+                <div id="dashboard-noise-by-factory" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 오늘의 안전 명언 카드 -->
+                <div class="gu-card p-6 border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
+                    <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2"><i class="fas fa-quote-left text-amber-500"></i> 오늘의 안전 명언</h3>
+                    <p id="safety-quote-text" class="text-lg md:text-xl font-black text-slate-800 leading-relaxed">안전은 생명입니다.</p>
+                    <p class="text-xs font-bold text-slate-400 mt-3">매일 다른 문구로 바뀝니다</p>
+                </div>
+                <!-- 1분 스트레칭 바로가기 카드 -->
+                <div class="gu-card p-6 border-l-4 border-l-teal-500 bg-gradient-to-br from-teal-50 to-emerald-50 flex flex-col justify-center">
+                    <h3 class="font-bold text-slate-700 mb-2 flex items-center gap-2"><i class="fas fa-running text-teal-500"></i> 1분 스트레칭</h3>
+                    <p class="text-slate-600 font-bold mb-4">뻐근하시죠? 1분만 투자하세요.</p>
+                    <button type="button" onclick="changeTab('stretching')" class="w-full py-3 px-4 rounded-xl font-black text-white bg-teal-500 hover:bg-teal-600 transition-colors flex items-center justify-center gap-2">
+                        <i class="fas fa-play-circle"></i> 스트레칭 영상 보기
+                    </button>
                 </div>
             </div>
             <!-- 오늘의 건강 뉴스 -->
@@ -246,11 +286,52 @@
                     <h2 class="text-2xl font-black text-slate-800">작업환경측정 - 소음 현황</h2>
                     <p class="text-sm font-bold text-slate-500 mt-1">소음 노출기준(85dB) 초과 공정 집중 관리</p>
                 </div>
-                <button type="button" id="noise-add-btn" class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600" onclick="addNoiseItem()"><i class="fas fa-plus"></i> 항목 추가</button>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" onclick="goToWorkerHome()" class="worker-only flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors">
+                        <i class="fas fa-home"></i> 홈으로
+                    </button>
+                    <button type="button" id="noise-add-btn" class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600" onclick="addNoiseItem()"><i class="fas fa-plus"></i> 항목 추가</button>
+                </div>
                 <div class="flex flex-wrap items-center gap-2 noise-toolbar">
-                    <button type="button" onclick="setNoiseFilter('exceed')" id="noise-btn-exceed" class="noise-filter-btn active px-4 py-2 rounded-xl font-bold text-sm bg-red-500 text-white"><i class="fas fa-exclamation-triangle"></i> 초과만 보기</button>
-                    <button type="button" onclick="setNoiseFilter('all')" id="noise-btn-all" class="noise-filter-btn px-4 py-2 rounded-xl font-bold text-sm bg-slate-200 text-slate-600 hover:bg-slate-300">전체 보기</button>
+                    <button type="button" onclick="setNoiseFilter('exceed')" id="noise-btn-exceed" class="noise-filter-btn px-4 py-2 rounded-xl font-bold text-sm bg-slate-200 text-slate-600 hover:bg-slate-300"><i class="fas fa-exclamation-triangle"></i> 초과만 보기</button>
+                    <button type="button" onclick="setNoiseFilter('all')" id="noise-btn-all" class="noise-filter-btn active px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white"><i class="fas fa-list"></i> 전체 보기</button>
                     <button type="button" onclick="toggleNoiseShareMode()" id="noise-share-btn" class="px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600"><i class="fas fa-share-alt"></i> 공유용 캡처 모드</button>
+                </div>
+            </div>
+            <!-- 작업장 소음 측정 위치도 -->
+            <div class="gu-card p-6 border-t-4 border-t-blue-500">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i class="fas fa-map-marked-alt text-blue-500"></i> 작업장 소음 측정 위치도</h3>
+                    <div class="admin-only hidden flex gap-2">
+                        <label for="floorplan-upload-1" class="px-4 py-2 rounded-lg font-bold text-sm bg-blue-500 text-white hover:bg-blue-600 cursor-pointer transition-colors">
+                            <i class="fas fa-upload"></i> 1공장 이미지 추가
+                        </label>
+                        <input type="file" id="floorplan-upload-1" accept="image/*" class="hidden" onchange="handleFloorplanUpload(1, this)">
+                        <label for="floorplan-upload-2" class="px-4 py-2 rounded-lg font-bold text-sm bg-blue-500 text-white hover:bg-blue-600 cursor-pointer transition-colors">
+                            <i class="fas fa-upload"></i> 2공장 이미지 추가
+                        </label>
+                        <input type="file" id="floorplan-upload-2" accept="image/*" class="hidden" onchange="handleFloorplanUpload(2, this)">
+                        <button type="button" onclick="saveFloorplanImages()" class="px-4 py-2 rounded-lg font-bold text-sm bg-emerald-500 text-white hover:bg-emerald-600 transition-colors">
+                            <i class="fas fa-save"></i> 저장
+                        </button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-4 mb-4">
+                    <button type="button" onclick="showNoiseFloorplan(1)" id="floorplan-tab-1" class="floorplan-tab active px-4 py-2 rounded-lg font-bold text-sm bg-blue-500 text-white transition-colors">1공장</button>
+                    <button type="button" onclick="showNoiseFloorplan(2)" id="floorplan-tab-2" class="floorplan-tab px-4 py-2 rounded-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">2공장</button>
+                </div>
+                <div class="rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-50">
+                    <img id="noise-floorplan-image" src="images/noise-floorplan-1factory.png" alt="1공장 소음 측정 위치도" class="w-full h-auto object-contain" onerror="this.style.display='none'; document.getElementById('noise-floorplan-placeholder').style.display='block';">
+                    <div id="noise-floorplan-placeholder" class="hidden p-12 text-center">
+                        <i class="fas fa-image text-6xl text-slate-300 mb-4"></i>
+                        <p class="text-slate-500 font-bold mb-2">도면 이미지를 준비 중입니다.</p>
+                        <p class="text-sm text-slate-400">images 폴더에 noise-floorplan-1factory.png, noise-floorplan-2factory.png 파일을 넣어주세요.</p>
+                    </div>
+                </div>
+                <div class="mt-4 flex flex-wrap items-center gap-4 text-sm">
+                    <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-500"></div><span class="font-bold">노출기준 초과</span></div>
+                    <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-blue-500"></div><span class="font-bold">85dB(A) 이상</span></div>
+                    <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-green-500"></div><span class="font-bold">85dB(A) 미만</span></div>
                 </div>
             </div>
             <div id="noise-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -264,7 +345,12 @@
         </section>
 
         <section id="medicine-survey" class="tab-content max-w-7xl mx-auto space-y-6">
-            <h2 class="text-2xl font-black text-slate-800">의약품 수요 조사</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-black text-slate-800">의약품 수요 조사</h2>
+                <button type="button" onclick="goToWorkerHome()" class="worker-only flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors">
+                    <i class="fas fa-home"></i> 홈으로
+                </button>
+            </div>
             <div id="medicine-survey-admin" class="admin-only hidden gu-card p-6 border-l-8 border-l-amber-500 mb-6">
                 <h3 class="text-lg font-black text-slate-800 mb-3">설문조사 링크 관리 (관리자)</h3>
                 <div class="flex flex-wrap gap-3 items-end">
@@ -286,13 +372,23 @@
                 <h2 class="text-2xl font-black text-slate-800">주요 업무 실적</h2>
                 <button type="button" id="innovation-add-btn" class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600" onclick="addInnovation()"><i class="fas fa-plus"></i> 항목 추가</button>
             </div>
+            <!-- 누적 예산 절감액 카드 -->
+            <div class="gu-card p-6 border-t-4 border-t-emerald-500">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">누적 예산 절감액</p>
+                <h3 class="text-4xl font-black text-slate-800"><span id="innovation-total-savings">₩ 0</span></h3>
+            </div>
             <div id="innovation-tab-list" class="space-y-4"></div>
         </section>
 
         <section id="emergency" class="tab-content max-w-7xl mx-auto space-y-6">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <h2 class="text-2xl font-black text-slate-800">응급상황 대응 매뉴얼</h2>
-                <button type="button" id="emergency-add-btn" class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600" onclick="addEmergencyContact()"><i class="fas fa-plus"></i> 항목 추가</button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="goToWorkerHome()" class="worker-only flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors">
+                        <i class="fas fa-home"></i> 홈으로
+                    </button>
+                    <button type="button" id="emergency-add-btn" class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600" onclick="addEmergencyContact()"><i class="fas fa-plus"></i> 항목 추가</button>
+                </div>
             </div>
             <!-- 기본 원칙 -->
             <div class="gu-card p-6 bg-amber-50 border-l-4 border-amber-500">
@@ -402,7 +498,43 @@
                     <h2 class="text-2xl font-black text-slate-800">스트레칭 영상</h2>
                     <p class="text-sm font-bold text-slate-500 mt-1">근골격계 부담 예방을 위한 실전 스트레칭 가이드</p>
                 </div>
-                <button type="button" id="stretching-add-btn" class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600" onclick="addStretchingVideo()"><i class="fas fa-plus"></i> 항목 추가</button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="goToWorkerHome()" class="worker-only flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors">
+                        <i class="fas fa-home"></i> 홈으로
+                    </button>
+                    <button type="button" id="stretching-add-btn" class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600" onclick="addStretchingVideo()"><i class="fas fa-plus"></i> 항목 추가</button>
+                </div>
+            </div>
+            <!-- 스트레칭 영상 추가 모달 -->
+            <div id="stretching-add-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/80 flex items-center justify-center p-4">
+                <div class="gu-card p-6 max-w-md w-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-black text-slate-800">스트레칭 영상 추가</h3>
+                        <button type="button" onclick="closeStretchingAddModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">영상 제목 *</label>
+                            <input type="text" id="stretching-add-title" placeholder="예: 목·어깨 스트레칭" class="w-full px-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:border-teal-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">설명</label>
+                            <textarea id="stretching-add-description" placeholder="영상에 대한 설명을 입력하세요" rows="3" class="w-full px-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:border-teal-500"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">영상 URL *</label>
+                            <input type="text" id="stretching-add-url" placeholder="https://youtube.com/watch?v=..." class="w-full px-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:border-teal-500">
+                        </div>
+                        <div class="flex gap-2 pt-2">
+                            <button type="button" onclick="saveStretchingVideo()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-teal-500 text-white hover:bg-teal-600 transition-colors">
+                                <i class="fas fa-save"></i> 저장
+                            </button>
+                            <button type="button" onclick="closeStretchingAddModal()" class="px-4 py-3 rounded-xl font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors">
+                                취소
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div id="stretching-video-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </section>
@@ -429,7 +561,7 @@
     ];
 
     let CONSULTATION_SCHEDULE = {
-        currentFactory: 1,
+        currentFactory: 0,
         factory1: [
             "강민성", "강태호", "고병해", "권유겸", "권은희", "김다솔", "김도훈", "김도훈", "김민조", "김병화",
             "김성호", "감새헌", "김수민", "김양식", "김영철", "김영해", "김영환", "김완국", "김전호", "김준동"
@@ -455,7 +587,7 @@
             { id: 4, name: "영남대병원", phone: "053-623-8001", emergencyPhone: "053-623-8001", specialty: "권역응급센터", note: "심정지·의식불명 등 중증 응급 시, 즉시 119 신고 후 이송", isMOU: false, priority: 4, color: "red", estimatedTime: "45분" },
             { id: 5, name: "봄이오는안과", phone: "053-614-7778", emergencyPhone: "053-614-7778", specialty: "안구 손상 (이물질)", note: "18:30 진료 종료", isMOU: false, priority: 5, color: "purple", estimatedTime: "20분" }
         ],
-        announcements: { title: "11월·12월 공상비 '0원' 달성", description: "2025년 하반기 무재해 목표 달성 완료", imageUrl: "" },
+        announcements: { title: "구영테크 보건시스템", description: "작업자 건강과 안전을 위한 보건 관리", imageUrl: "" },
         metadata: { lastUpdated: "2026-02-12T16:56:00", updatedBy: "박기태 선임", version: "3.9" }
     };
 
@@ -476,6 +608,7 @@
             { month: 12, items: [] }
         ],
         expenses_2026: [ { month: 7, items: [] }, { month: 8, items: [] }, { month: 9, items: [] }, { month: 10, items: [] }, { month: 11, items: [] }, { month: 12, items: [] } ],
+        floorplans: {},
         risks: [
             { type: "밀폐공간(질식)", dept: "전 공정", health: "산소결핍, 유해가스", action: "복합가스측정기 구매 완료", level: "Critical" },
             { type: "소음", dept: "프레스, 용접", health: "소음성 난청", action: "귀마개 착용 및 특수검진", level: "Critical" },
@@ -496,7 +629,8 @@
             { category: "Process", title: "행정 효율화", desc: "소모품 결제 통합 (법인카드 월 1회 일괄)", date: "2026.01", imageUrl: "" },
             { category: "Visual", title: "현장 시각화 개선", desc: "맨홀·위험구역 황색 삼각형 도색 및 경고 표지 부착", date: "2026.01", imageUrl: "" },
             { category: "Safety", title: "비상 대응 프로세스 수립", desc: "응급상황 Flowchart 및 연락망 신규 정립", date: "2026.01", imageUrl: "" },
-            { category: "System", title: "자체 보건 전산 시스템 개발", desc: "웹 기반 보건시스템(G-System) 구축으로 데이터 자동화 및 행정 효율화", date: "2026.02", imageUrl: "" }
+            { category: "System", title: "자체 보건 전산 시스템 개발", desc: "웹 기반 보건시스템(G-System) 구축으로 데이터 자동화 및 행정 효율화", date: "2026.02", savings: 10000000, imageUrl: "" },
+            { category: "Cost", title: "협력병원(W병원, 우리허브) MOU 할인", desc: "임직원 진료비 10% 할인 혜택 적용 (자동 집계)", date: "2025.01", savings: 0, id: "hospital_mou", imageUrl: "" }
         ],
         members: [
             { name: "김규주", dept: "1공장", risk: "Highest", note: "소음성 난청 (양측)", isIntensiveCare: true, counseling: { 1: { date: "01/15", count: 1 }, 2: { date: "02/10", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
@@ -522,20 +656,64 @@
     const HEALTH_NEWS = [
         { title: "겨울철 혈압 관리, 직장인에게 특히 중요한 이유", summary: "기온이 1℃ 떨어질 때마다 수축기 혈압이 평균 1mmHg 상승한다는 보고가 있습니다. 고혈압·심혈관 질환 병력이 있는 근로자는 보온, 규칙적인 약 복용, 카페인·나트륨 조절이 중요합니다.", source: "대한고혈압학회 · 질병관리청 가이드 요약", date: "2026-02-10", category: "심혈관·고혈압" },
         { title: "3분 목·어깨 스트레칭으로 근골격계 부담 줄이기", summary: "프레스·용접·조립 공정에서 1시간 이상 같은 자세가 지속되면 목·어깨·허리 통증 위험이 크게 증가합니다. 작업 중 1~2시간마다 3분씩 가벼운 스트레칭을 시행하면 통증 호소율을 유의하게 줄일 수 있습니다.", source: "산업안전보건공단 KOSHA Guide 요약", date: "2026-02-05", category: "근골격계 부담" },
-        { title: "야간·교대근무자의 수면 위생 수칙", summary: "야간근무 후 90분 낮잠은 피로 회복에 도움이 되지만, 2시간 이상 과다수면은 생체리듬을 더 흐트러뜨릴 수 있습니다. 일정한 기상시간 유지, 카페인 섭취 시간 제한, 수면 전 스마트폰 사용 최소화가 핵심입니다.", source: "대한수면의학회 권고안 정리", date: "2026-01-28", category: "수면·교대근무" }
+        { title: "야간·교대근무자의 수면 위생 수칙", summary: "야간근무 후 90분 낮잠은 피로 회복에 도움이 되지만, 2시간 이상 과다수면은 생체리듬을 더 흐트러뜨릴 수 있습니다. 일정한 기상시간 유지, 카페인 섭취 시간 제한, 수면 전 스마트폰 사용 최소화가 핵심입니다.", source: "대한수면의학회 권고안 정리", date: "2026-01-28", category: "수면·교대근무" },
+        { title: "소음 작업장 청력보호구 착용의 중요성", summary: "85dB 이상 소음이 발생하는 공정에서는 반드시 귀마개 등 청력보호구를 착용해야 합니다. 착용하지 않을 경우 소음성 난청이 진행될 수 있으며, 한번 손상된 청력은 회복이 어렵습니다.", source: "산업안전보건공단", date: "2026-02-01", category: "소음·청력" },
+        { title: "당뇨·고혈압 관리, 정기 상담이 필요한 이유", summary: "만성질환 보유 근로자는 분기 1회 이상 보건관리자와 상담하여 약 복용 여부, 식이·운동 조절 상태를 점검하는 것이 좋습니다. 조기 관리로 합병증을 예방할 수 있습니다.", source: "질병관리청 산업장 보건관리 가이드", date: "2026-01-15", category: "만성질환" }
+    ];
+
+    const SAFETY_QUOTES = [
+        '안전은 생명입니다.',
+        '정리정돈은 안전의 시작입니다.',
+        '한 번의 부주의가 평생을 바꿉니다.',
+        '안전 수칙은 지키기 위해 있는 것입니다.',
+        '위험을 아는 것이 첫 번째 예방입니다.',
+        '오늘의 안전이 내일의 행복입니다.',
+        '작은 부주의가 큰 사고를 부릅니다.',
+        '안전 모드, 항상 켜 두세요.'
     ];
 
     const slides = ['dashboard', 'noise', 'expense', 'risk-factors', 'innovation'];
 
     // ========== 탭 전환 ==========
+    function goToWorkerHome() {
+        if (!isAdminLoggedIn()) {
+            changeTab('worker-home');
+        } else {
+            changeTab('dashboard');
+        }
+    }
+
     function changeTab(tabId) {
         const contentEl = document.getElementById(tabId);
         if (!contentEl) return;
+        const isAdmin = isAdminLoggedIn();
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         contentEl.classList.add('active');
+        if (isAdmin && contentEl.classList.contains('admin-only')) {
+            contentEl.classList.remove('hidden');
+        } else if (!isAdmin && contentEl.classList.contains('admin-only')) {
+            contentEl.classList.add('hidden');
+            if (tabId === 'dashboard') {
+                goToWorkerHome();
+                return;
+            }
+        }
         document.querySelectorAll('.nav-item').forEach(el => { el.classList.remove('active'); el.classList.add('text-slate-500'); });
         const activeBtn = document.getElementById('nav-' + tabId);
         if (activeBtn) { activeBtn.classList.add('active'); activeBtn.classList.remove('text-slate-500'); }
+        updateWorkerOnlyElements();
+        if (tabId === 'noise') {
+            showNoiseFloorplan(1);
+            setNoiseFilter('all');
+        }
+    }
+
+    function updateWorkerOnlyElements() {
+        const isAdmin = isAdminLoggedIn();
+        document.querySelectorAll('.worker-only').forEach(el => {
+            if (isAdmin) el.classList.add('hidden');
+            else el.classList.remove('hidden');
+        });
     }
 
     // ========== 초기화 ==========
@@ -563,6 +741,11 @@
         if (Array.isArray(data.innovations)) APP_DATA.innovations = data.innovations;
         if (Array.isArray(data.expenses_2025)) APP_DATA.expenses_2025 = data.expenses_2025;
         if (Array.isArray(data.expenses_2026)) APP_DATA.expenses_2026 = data.expenses_2026;
+        if (data.floorplans && typeof data.floorplans === 'object') {
+            APP_DATA.floorplans = data.floorplans;
+            if (data.floorplans.factory1) window.floorplan_1 = data.floorplans.factory1;
+            if (data.floorplans.factory2) window.floorplan_2 = data.floorplans.factory2;
+        }
         if (data.config) {
             // Config가 비어 있으면(서버가 빈 배열 반환) 기본 명단·연락망 유지
             if (Array.isArray(data.config.emergencyContacts) && data.config.emergencyContacts.length > 0) SYSTEM_CONFIG.emergencyContacts = data.config.emergencyContacts;
@@ -571,8 +754,12 @@
             if (data.config.metadata) SYSTEM_CONFIG.metadata = data.config.metadata;
             if (Array.isArray(data.config.factory1) && data.config.factory1.length > 0) CONSULTATION_SCHEDULE.factory1 = data.config.factory1;
             if (Array.isArray(data.config.factory2) && data.config.factory2.length > 0) CONSULTATION_SCHEDULE.factory2 = data.config.factory2;
-            medicineSurveyUrlFromServer = data.config.medicine_survey_url || '';
-            if (Array.isArray(data.config.stretchingVideos)) APP_DATA.stretchingVideos = data.config.stretchingVideos;
+            if (data.config.hasOwnProperty('medicine_survey_url')) {
+                medicineSurveyUrlFromServer = String(data.config.medicine_survey_url || '').trim();
+            }
+            if (data.config.hasOwnProperty('stretchingVideos') && Array.isArray(data.config.stretchingVideos)) {
+                APP_DATA.stretchingVideos = data.config.stretchingVideos;
+            }
         }
     }
 
@@ -589,7 +776,33 @@
             .then(function(data) {
                 applyDataFromServer(data);
                 hideDataLoadingOverlay();
+                // 데이터 적용 직후 즉시 UI 갱신 (initApp 전에 먼저 실행)
+                updateSavingsBasedOnExpenses();
+                renderCharts();
+                renderHealthNews();
+                renderSchedule();
+                renderDashboardNoise();
+                renderSafetyQuote();
+                updateDashboardCounselingRate();
+                calculateTotalSavings();
+                filterList('All');
+                setNoiseFilter('all');
+                renderExpenseData(2025);
+                // 그 다음 initApp 실행 (전체 초기화)
                 initApp();
+                // 추가로 한 번 더 강제 갱신 (Race Condition 완전 방지)
+                setTimeout(function() {
+                    updateSavingsBasedOnExpenses();
+                    renderCharts();
+                    renderHealthNews();
+                    renderSchedule();
+                    renderDashboardNoise();
+                    renderSafetyQuote();
+                    updateDashboardCounselingRate();
+                    calculateTotalSavings();
+                    filterList('All');
+                    setNoiseFilter('all');
+                }, 100);
             })
             .catch(function() {
                 hideDataLoadingOverlay();
@@ -610,6 +823,7 @@
     }
 
     function initApp() {
+        const isAdmin = isAdminLoggedIn();
         const total = APP_DATA.members.length;
         const el = document.getElementById('dashboard-total-members');
         if (el) el.textContent = total;
@@ -625,15 +839,72 @@
         renderCharts();
         renderRiskFactors();
         renderInnovations();
-        setNoiseFilter('exceed');
+        setNoiseFilter('all');
         filterList('All');
         renderExpenseData(2025);
         renderEmergencyContacts();
         renderSchedule();
+        renderDashboardNoise();
         renderHealthNews();
+        renderSafetyQuote();
         renderStretchingVideos();
         renderMsdsTable();
         renderMedicineSurveyUserArea();
+        calculateTotalSavings();
+        updateWorkerOnlyElements();
+        updateAdminOnlyElements();
+        if (!isAdmin) {
+            changeTab('worker-home');
+        } else {
+            changeTab('dashboard');
+        }
+    }
+
+    function renderSafetyQuote() {
+        const el = document.getElementById('safety-quote-text');
+        if (!el || !SAFETY_QUOTES.length) return;
+        var now = new Date();
+        var dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+        var idx = dayOfYear % SAFETY_QUOTES.length;
+        el.textContent = SAFETY_QUOTES[idx];
+    }
+
+    function updateSavingsBasedOnExpenses() {
+        var hospitalDiscount = 0;
+        var mouHospitals = ['W병원', '우리허브병원', '우리허브'];
+        var allExpenses = (APP_DATA.expenses_2025 || []).concat(APP_DATA.expenses_2026 || []);
+        allExpenses.forEach(function(monthData) {
+            if (monthData.items && Array.isArray(monthData.items)) {
+                monthData.items.forEach(function(item) {
+                    if (item.hospital && item.amount) {
+                        var hospitalName = String(item.hospital).trim();
+                        var isMOU = mouHospitals.some(function(h) { return hospitalName.indexOf(h) >= 0; });
+                        if (isMOU && !isNaN(item.amount)) {
+                            hospitalDiscount += Math.round(item.amount * 0.1);
+                        }
+                    }
+                });
+            }
+        });
+        var mouItem = (APP_DATA.innovations || []).find(function(item) { return item.id === 'hospital_mou'; });
+        if (mouItem) {
+            mouItem.savings = hospitalDiscount;
+        }
+    }
+
+    function calculateTotalSavings() {
+        updateSavingsBasedOnExpenses();
+        var total = 0;
+        (APP_DATA.innovations || []).forEach(function(item) {
+            if (item.savings && !isNaN(item.savings)) {
+                total += Number(item.savings);
+            }
+        });
+        var dashboardEl = document.getElementById('dashboard-total-savings');
+        if (dashboardEl) dashboardEl.textContent = '₩ ' + total.toLocaleString();
+        var innovationEl = document.getElementById('innovation-total-savings');
+        if (innovationEl) innovationEl.textContent = '₩ ' + total.toLocaleString();
+        return total;
     }
 
     function updateDashboardCounselingRate() {
@@ -663,21 +934,46 @@
             : '<p class="text-slate-500">등록된 영상이 없습니다.</p>';
     }
     function addStretchingVideo() {
-        const title = prompt('영상 제목', '');
-        if (title == null) return;
-        const description = prompt('설명', '');
-        const videoUrl = prompt('영상 URL (선택)', '');
-        const id = Math.max(0, ...(APP_DATA.stretchingVideos || []).map(v => v.id || 0)) + 1;
-        APP_DATA.stretchingVideos.push({ id, title: title || '', description: description || '', videoUrl: videoUrl || '', thumbnail: '', duration: '', category: '전체', createdAt: new Date().toISOString().slice(0, 10) });
-        renderStretchingVideos(); apiPost('saveStretchingVideos', APP_DATA.stretchingVideos);
+        document.getElementById('stretching-add-title').value = '';
+        document.getElementById('stretching-add-description').value = '';
+        document.getElementById('stretching-add-url').value = '';
+        document.getElementById('stretching-add-modal').classList.remove('hidden');
+        window.currentStretchingEditIndex = null;
+    }
+    function closeStretchingAddModal() {
+        document.getElementById('stretching-add-modal').classList.add('hidden');
+        window.currentStretchingEditIndex = null;
+    }
+    function saveStretchingVideo() {
+        const title = document.getElementById('stretching-add-title').value.trim();
+        const description = document.getElementById('stretching-add-description').value.trim();
+        const videoUrl = document.getElementById('stretching-add-url').value.trim();
+        if (!title || !videoUrl) {
+            alert('영상 제목과 URL은 필수 입력 항목입니다.');
+            return;
+        }
+        if (window.currentStretchingEditIndex !== null && window.currentStretchingEditIndex !== undefined) {
+            const v = APP_DATA.stretchingVideos[window.currentStretchingEditIndex];
+            if (v) {
+                v.title = title;
+                v.description = description;
+                v.videoUrl = videoUrl;
+            }
+        } else {
+            const id = Math.max(0, ...(APP_DATA.stretchingVideos || []).map(v => v.id || 0)) + 1;
+            APP_DATA.stretchingVideos.push({ id, title, description, videoUrl, thumbnail: '', duration: '', category: '전체', createdAt: new Date().toISOString().slice(0, 10) });
+        }
+        renderStretchingVideos();
+        apiPost('saveStretchingVideos', APP_DATA.stretchingVideos);
+        closeStretchingAddModal();
     }
     function editStretchingVideo(i) {
         const v = APP_DATA.stretchingVideos[i]; if (!v) return;
-        const title = prompt('영상 제목', v.title); if (title == null) return;
-        const description = prompt('설명', v.description);
-        const videoUrl = prompt('영상 URL', v.videoUrl);
-        v.title = title !== null ? title : v.title; v.description = description !== null ? description : v.description; v.videoUrl = videoUrl !== null ? videoUrl : v.videoUrl;
-        renderStretchingVideos(); apiPost('saveStretchingVideos', APP_DATA.stretchingVideos);
+        window.currentStretchingEditIndex = i;
+        document.getElementById('stretching-add-title').value = v.title || '';
+        document.getElementById('stretching-add-description').value = v.description || '';
+        document.getElementById('stretching-add-url').value = v.videoUrl || '';
+        document.getElementById('stretching-add-modal').classList.remove('hidden');
     }
     function deleteStretchingVideo(i) {
         if (!confirm('이 영상 항목을 삭제할까요?')) return;
@@ -690,9 +986,6 @@
             const total = (m.items || []).reduce((sum, item) => sum + (item.amount || 0), 0);
             if (m.month >= 1 && m.month <= 12) monthlyData2025[m.month - 1] = total;
         });
-        const total2025 = monthlyData2025.reduce((a, b) => a + b, 0);
-        const totalEl = document.getElementById('total-2025');
-        if (totalEl) totalEl.textContent = '₩' + total2025.toLocaleString();
         const costCanvas = document.getElementById('costChart');
         if (costCanvas && typeof Chart !== 'undefined') {
             if (chartInstances.cost) chartInstances.cost.destroy();
@@ -768,7 +1061,13 @@
         const el = document.getElementById('innovation-tab-list');
         if (!el || !APP_DATA.innovations) return;
         const isAdmin = isAdminLoggedIn();
-        const html = APP_DATA.innovations.map((item, i) => `
+        updateSavingsBasedOnExpenses();
+        const html = APP_DATA.innovations.map((item, i) => {
+            var savingsText = '';
+            if (item.savings && item.savings > 0) {
+                savingsText = '<div class="mt-2"><span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-700">절감액: ₩ ' + item.savings.toLocaleString() + '</span></div>';
+            }
+            return `
             <div class="gu-card p-4 flex items-start gap-4">
                 <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold flex-shrink-0">${i + 1}</div>
                 <div class="flex-1">
@@ -779,10 +1078,13 @@
                     </div>
                     <h4 class="font-black text-slate-800 mt-1">${item.title || ''}</h4>
                     <p class="text-sm text-slate-600">${item.desc || ''}</p>
+                    ${savingsText}
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
         el.innerHTML = html;
+        calculateTotalSavings();
     }
     function addInnovation() {
         const category = prompt('분류 (예: Cost, Safety)', 'System');
@@ -790,21 +1092,46 @@
         const title = prompt('제목', '');
         const desc = prompt('설명', '');
         const date = prompt('일자 (예: 2025.01)', new Date().toISOString().slice(0, 7).replace('-', '.'));
-        APP_DATA.innovations.push({ category: category || '', title: title || '', desc: desc || '', date: date || '', imageUrl: '' });
-        renderInnovations(); apiPost('saveInnovations', APP_DATA.innovations);
+        const savings = prompt('절감액 (원, 없으면 0)', '0');
+        APP_DATA.innovations.push({ category: category || '', title: title || '', desc: desc || '', date: date || '', savings: savings ? parseInt(savings, 10) : 0, imageUrl: '' });
+        updateSavingsBasedOnExpenses();
+        renderInnovations(); 
+        calculateTotalSavings();
+        apiPost('saveInnovations', APP_DATA.innovations);
     }
     function editInnovation(i) {
         const item = APP_DATA.innovations[i]; if (!item) return;
+        if (item.id === 'hospital_mou') {
+            alert('협력병원 MOU 할인은 병원비 지출 내역에 따라 자동으로 계산됩니다.');
+            return;
+        }
         const category = prompt('분류', item.category); if (category == null) return;
         const title = prompt('제목', item.title);
         const desc = prompt('설명', item.desc);
         const date = prompt('일자', item.date);
-        item.category = category !== null ? category : item.category; item.title = title !== null ? title : item.title; item.desc = desc !== null ? desc : item.desc; item.date = date !== null ? date : item.date;
-        renderInnovations(); apiPost('saveInnovations', APP_DATA.innovations);
+        const savings = prompt('절감액 (원)', item.savings ? String(item.savings) : '0');
+        item.category = category !== null ? category : item.category; 
+        item.title = title !== null ? title : item.title; 
+        item.desc = desc !== null ? desc : item.desc; 
+        item.date = date !== null ? date : item.date;
+        item.savings = savings ? parseInt(savings, 10) : (item.savings || 0);
+        updateSavingsBasedOnExpenses();
+        renderInnovations(); 
+        calculateTotalSavings();
+        apiPost('saveInnovations', APP_DATA.innovations);
     }
     function deleteInnovation(i) {
+        const item = APP_DATA.innovations[i];
+        if (item && item.id === 'hospital_mou') {
+            alert('협력병원 MOU 할인 항목은 삭제할 수 없습니다.');
+            return;
+        }
         if (!confirm('이 성과 항목을 삭제할까요?')) return;
-        APP_DATA.innovations.splice(i, 1); renderInnovations(); apiPost('saveInnovations', APP_DATA.innovations);
+        APP_DATA.innovations.splice(i, 1); 
+        updateSavingsBasedOnExpenses();
+        renderInnovations(); 
+        calculateTotalSavings();
+        apiPost('saveInnovations', APP_DATA.innovations);
     }
 
     function renderEmergencyContacts() {
@@ -870,32 +1197,71 @@
         renderSchedule();
     }
 
+    function getDeptForScheduleName(name, factoryNum) {
+        if (!name) return factoryNum ? factoryNum + '공장' : '';
+        var member = (APP_DATA.members || []).find(function(m) { return m.name === name; });
+        if (member && member.dept) return member.dept;
+        return factoryNum ? factoryNum + '공장' : '';
+    }
+
     function renderSchedule() {
         const scheduleListEl = document.getElementById('schedule-list');
         const scheduleCountEl = document.getElementById('schedule-count');
         const scheduleSearchEl = document.getElementById('schedule-search');
         if (!scheduleListEl || !scheduleCountEl) return;
         const currentFactory = CONSULTATION_SCHEDULE.currentFactory;
-        let list;
+        var list;
         if (currentFactory === 0) {
-            list = (CONSULTATION_SCHEDULE.factory1 || []).concat(CONSULTATION_SCHEDULE.factory2 || []).filter(Boolean);
-            list.sort((a, b) => (a || '').localeCompare(b || '', 'ko'));
+            var f1 = (CONSULTATION_SCHEDULE.factory1 || []).map(function(n) { return { name: n, factoryNum: 1 }; });
+            var f2 = (CONSULTATION_SCHEDULE.factory2 || []).map(function(n) { return { name: n, factoryNum: 2 }; });
+            list = f1.concat(f2).filter(function(x) { return x.name; });
+            list.sort(function(a, b) { return (a.name || '').localeCompare(b.name || '', 'ko'); });
         } else {
-            list = currentFactory === 1 ? (CONSULTATION_SCHEDULE.factory1 || []) : (CONSULTATION_SCHEDULE.factory2 || []);
+            var arr = currentFactory === 1 ? (CONSULTATION_SCHEDULE.factory1 || []) : (CONSULTATION_SCHEDULE.factory2 || []);
+            list = arr.map(function(n) { return { name: n, factoryNum: currentFactory }; });
         }
         const searchTerm = (scheduleSearchEl && scheduleSearchEl.value) ? scheduleSearchEl.value.trim().toLowerCase() : '';
-        const filtered = list.filter(name => (name || '').toLowerCase().includes(searchTerm));
+        const filtered = list.filter(function(x) { return (x.name || '').toLowerCase().includes(searchTerm); });
         scheduleCountEl.textContent = filtered.length + '명';
         const label = currentFactory === 0 ? '전체' : currentFactory + '공장';
         scheduleListEl.innerHTML = filtered.length > 0
-            ? filtered.map((name, index) => `
-                <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-purple-50 transition-colors">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-xs">${index + 1}</div>
-                    <div class="font-bold text-slate-700">${name}</div>
-                    <div class="ml-auto text-xs text-slate-500">${label}</div>
-                </div>
-            `).join('')
+            ? filtered.map(function(item, index) {
+                var dept = getDeptForScheduleName(item.name, item.factoryNum);
+                var displayText = dept ? item.name + ' (' + dept + ')' : item.name;
+                return '<div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-purple-50 transition-colors">' +
+                    '<div class="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-xs">' + (index + 1) + '</div>' +
+                    '<div class="font-bold text-slate-700">' + displayText + '</div>' +
+                    '<div class="ml-auto text-xs text-slate-500">' + label + '</div>' +
+                    '</div>';
+            }).join('')
             : '<p class="text-center text-slate-400 py-8 text-sm font-bold">검색 결과가 없습니다.</p>';
+    }
+
+    function renderDashboardNoise() {
+        const container = document.getElementById('dashboard-noise-by-factory');
+        if (!container) return;
+        var byFactory = {};
+        (NOISE_DATA || []).forEach(function(n) {
+            if (n.result !== '초과') return;
+            var key = n.factory || n.processDept || '기타';
+            if (!byFactory[key]) byFactory[key] = [];
+            byFactory[key].push(n);
+        });
+        var factories = Object.keys(byFactory).sort();
+        if (factories.length === 0) {
+            container.innerHTML = '<p class="text-slate-500 text-sm col-span-2">소음 기준 초과 공정이 없습니다.</p>';
+            return;
+        }
+        container.innerHTML = factories.map(function(factory) {
+            var items = byFactory[factory];
+            var rows = items.map(function(item) {
+                var db = Number(item.measuredDb);
+                var std = Number(item.standardDb);
+                var exceed = isNaN(db) || isNaN(std) ? '' : '+' + (Math.round((db - std) * 10) / 10).toFixed(1) + ' dB';
+                return '<div class="flex justify-between items-center py-1.5 border-b border-slate-100 last:border-0"><span class="font-bold text-slate-700">' + (item.processName || '-') + '</span><span class="text-sm text-red-600 font-bold">' + db + ' dB ' + (exceed ? '(' + exceed + ')' : '') + '</span></div>';
+            }).join('');
+            return '<div class="p-4 rounded-xl bg-slate-50 border border-slate-200"><h4 class="font-black text-slate-800 mb-3 flex items-center gap-2"><i class="fas fa-industry text-slate-500"></i>' + factory + '</h4><div class="space-y-0">' + rows + '</div></div>';
+        }).join('');
     }
 
     // ========== 건강 뉴스 (HEALTH_NEWS) ==========
@@ -995,6 +1361,84 @@
         setNoiseFilter(noiseMode); apiPost('saveNoise', NOISE_DATA);
     }
 
+    function handleFloorplanUpload(factoryNum, input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        if (!file.type.startsWith('image/')) {
+            alert('이미지 파일만 업로드 가능합니다.');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById('noise-floorplan-image');
+            const placeholder = document.getElementById('noise-floorplan-placeholder');
+            if (img) {
+                img.src = e.target.result;
+                img.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+                window['floorplan_' + factoryNum] = e.target.result;
+                alert(factoryNum + '공장 도면 이미지가 업로드되었습니다. 저장 버튼을 눌러 저장하세요.');
+            }
+        };
+        reader.readAsDataURL(file);
+        input.value = '';
+    }
+    function saveFloorplanImages() {
+        if (!window.floorplan_1 && !window.floorplan_2) {
+            alert('저장할 이미지가 없습니다. 먼저 이미지를 업로드하세요.');
+            return;
+        }
+        if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+        if (window.floorplan_1) APP_DATA.floorplans.factory1 = window.floorplan_1;
+        if (window.floorplan_2) APP_DATA.floorplans.factory2 = window.floorplan_2;
+        apiPost('saveFloorplans', APP_DATA.floorplans);
+        alert('배치도 이미지가 저장되었습니다.');
+        var currentFactory = 1;
+        document.querySelectorAll('.floorplan-tab').forEach(function(tab) {
+            if (tab.classList.contains('active')) {
+                var match = tab.id.match(/floorplan-tab-(\d)/);
+                if (match) currentFactory = parseInt(match[1]);
+            }
+        });
+        if (currentFactory === 1 && window.floorplan_1) {
+            const img = document.getElementById('noise-floorplan-image');
+            if (img) img.src = APP_DATA.floorplans.factory1;
+        } else if (currentFactory === 2 && window.floorplan_2) {
+            const img = document.getElementById('noise-floorplan-image');
+            if (img) img.src = APP_DATA.floorplans.factory2;
+        }
+    }
+
+    function showNoiseFloorplan(factoryNum) {
+        document.querySelectorAll('.floorplan-tab').forEach(tab => {
+            tab.classList.remove('active', 'bg-blue-500', 'text-white');
+            tab.classList.add('bg-slate-100', 'text-slate-600');
+        });
+        const activeTab = document.getElementById('floorplan-tab-' + factoryNum);
+        if (activeTab) {
+            activeTab.classList.add('active', 'bg-blue-500', 'text-white');
+            activeTab.classList.remove('bg-slate-100', 'text-slate-600');
+        }
+        const img = document.getElementById('noise-floorplan-image');
+        const placeholder = document.getElementById('noise-floorplan-placeholder');
+        if (img) {
+            var imageSrc = 'images/noise-floorplan-' + factoryNum + 'factory.png';
+            if (APP_DATA.floorplans && APP_DATA.floorplans['factory' + factoryNum]) {
+                imageSrc = APP_DATA.floorplans['factory' + factoryNum];
+            }
+            img.src = imageSrc;
+            img.alt = factoryNum + '공장 소음 측정 위치도';
+            img.onerror = function() {
+                this.style.display = 'none';
+                if (placeholder) placeholder.style.display = 'block';
+            };
+            img.onload = function() {
+                this.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            };
+        }
+    }
+
     function setNoiseFilter(mode) {
         document.querySelectorAll('.noise-filter-btn').forEach(btn => { btn.classList.remove('active', 'bg-red-500', 'text-white'); btn.classList.add('bg-slate-200', 'text-slate-600'); });
         const btn = document.getElementById('noise-btn-' + mode);
@@ -1049,7 +1493,7 @@
                 </div>
             `;
         } else {
-            area.innerHTML = '<p class="text-slate-500 font-bold py-8">현재 진행 중인 설문이 없습니다.</p>';
+            area.innerHTML = '<div class="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-8 text-center"><p class="text-slate-600 font-bold mb-2">예시: 설문이 등록되면 이곳에 참여 버튼과 설문 화면이 표시됩니다.</p><p class="text-sm text-slate-500">관리자 로그인 후 상단 [설문조사 URL]에 구글 폼 링크 등을 입력해 주세요.</p><p class="text-xs text-slate-400 mt-4">예: https://docs.google.com/forms/d/... </p></div>';
         }
     }
 
@@ -1250,6 +1694,8 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
             });
         }
+        updateSavingsBasedOnExpenses();
+        calculateTotalSavings();
     }
 
     // ========== 인증 ==========
@@ -1264,8 +1710,7 @@
             localStorage.removeItem('g_auth_mode');
             updateAuthUI();
             updateAdminOnlyElements();
-            const cur = document.querySelector('.tab-content.active');
-            if (cur && !['dashboard','risk-factors','noise','medicine-survey','innovation','emergency','stretching'].includes(cur.id)) changeTab('dashboard');
+            changeTab('worker-home');
         } else {
             document.getElementById('auth-modal').classList.remove('hidden');
             document.getElementById('auth-password').value = '';
@@ -1280,6 +1725,7 @@
             document.getElementById('auth-modal').classList.add('hidden');
             updateAuthUI();
             updateAdminOnlyElements();
+            changeTab('dashboard');
         } else {
             document.getElementById('auth-error').classList.remove('hidden');
         }
@@ -1302,6 +1748,7 @@
             if (isAdmin) el.classList.remove('hidden');
             else el.classList.add('hidden');
         });
+        updateWorkerOnlyElements();
         renderRiskFactors();
         renderInnovations();
         renderEmergencyContacts();
@@ -1317,9 +1764,11 @@
         } else {
             document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
         }
+        updateWorkerOnlyElements();
     }
 
     window.addEventListener('DOMContentLoaded', function() {
+        localStorage.removeItem('g_auth_mode');
         renderNavigation();
         updateAuthUI();
         updateAdminOnlyElements();
