@@ -661,7 +661,7 @@ const APP_DATA = {
         { name: "안성형", dept: "2공장", risk: "Highest", note: "당뇨", isIntensiveCare: true, counseling: { 1: { date: "01/28", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
         { name: "전영용", dept: "2공장", risk: "High", note: "근골", isIntensiveCare: false, counseling: { 1: null, 2: { date: "02/24", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } }
     ],
-    
+
     // 전체 인원명부 (건강검진 관리용)
     // 주의: 인원명부에 있는 사람들이 전체 인원입니다.
     // convert_excel_to_json.py 스크립트를 실행하여 엑셀 파일에서 자동으로 로드할 수 있습니다.
@@ -670,7 +670,7 @@ const APP_DATA = {
         // Python 스크립트(convert_excel_to_json.py)를 실행하면 자동으로 채워집니다.
         // 형식: { name: "이름", dept: "부서명", factory: "1공장" 또는 "2공장", checkupDate: null, status: "completed" }
     ],
-    
+
     // 스트레칭 영상 데이터
     stretchingVideos: [
         {
@@ -794,22 +794,22 @@ let chartInstances = {};
 function updateFebruaryCounselingList() {
     // 2공장 2월 건강상담 명단 (2월 26일 방문 예정)
     const february2Factory = [
-        "박인학", "전성호", "김성진", "김준영", "김지환", "김진균", 
-        "김진환", "김찬민", "박원규", "송룡슈", "송영빈", "여동현", 
+        "박인학", "전성호", "김성진", "김준영", "김지환", "김진균",
+        "김진환", "김찬민", "박원규", "송룡슈", "송영빈", "여동현",
         "오상흠", "윤진영", "이대응"
     ];
-    
+
     // 전체 2월 건강상담 명단
     const februaryAll = [
-        "강민성", "강태호", "고병해", "권유겸", "권은희", "김다솔", 
-        "김도훈", "김민조", "김병화", "김성호", "감새헌", "김수민", 
-        "김양식", "김영철", "김영해", "김영환", "김완국", "김전호", 
+        "강민성", "강태호", "고병해", "권유겸", "권은희", "김다솔",
+        "김도훈", "김민조", "김병화", "김성호", "감새헌", "김수민",
+        "김양식", "김영철", "김영해", "김영환", "김완국", "김전호",
         "김준동"
     ];
-    
+
     // 모든 2월 상담 대상자 통합 (중복 제거)
     const allFebruaryCounseling = [...new Set([...february2Factory, ...februaryAll])];
-    
+
     // 기존 members 배열에서 이름으로 찾아서 2월 상담 기록 추가/업데이트
     allFebruaryCounseling.forEach(name => {
         const member = APP_DATA.members.find(m => m.name === name);
@@ -834,24 +834,13 @@ function updateFebruaryCounselingList() {
             });
         }
     });
-    
+
     // 통계 UI 업데이트
     updateCounselingStatsUI();
     console.log(`✅ 2월 건강상담 명단 반영 완료: ${allFebruaryCounseling.length}명`);
 }
 
-function initApp() {
-    renderCharts();
-    renderRiskFactors();
-    renderInnovations();
-    renderHealthNews();
-    filterList('All');
-    renderExpenseData(2025);
-    updateCounselingStatsUI();
-    updateFebruaryCounselingList(); // 2월 건강상담 명단 반영
-    renderHealthCheckupList(); // 건강검진 관리 목록 렌더링
-    renderStretchingVideos(); // 스트레칭 영상 목록 렌더링
-}
+// initApp 제거됨 (index.html의 initApp 사용)
 
 function renderCharts() {
     const monthlyData2025 = Array(12).fill(0);
@@ -1005,8 +994,8 @@ function searchMembers(query) {
         filterList('All');
         return;
     }
-    const filtered = APP_DATA.members.filter(m => 
-        m.name.toLowerCase().includes(searchTerm) || 
+    const filtered = APP_DATA.members.filter(m =>
+        m.name.toLowerCase().includes(searchTerm) ||
         m.dept.toLowerCase().includes(searchTerm) ||
         (m.note && m.note.toLowerCase().includes(searchTerm))
     );
@@ -1018,18 +1007,18 @@ function searchMembers(query) {
 function renderMemberTable(members) {
     const tbody = document.getElementById('member-table-body');
     const isAdmin = isAdminLoggedIn();
-    
+
     // 실제 members 배열에서 인덱스 찾기
     const findMemberIndex = (memberName) => {
         return APP_DATA.members.findIndex(m => m.name === memberName);
     };
-    
+
     tbody.innerHTML = members.map((m, displayIdx) => {
         const actualIdx = findMemberIndex(m.name);
         const isIntensiveCare = m.isIntensiveCare === true;
         const rowBgClass = isIntensiveCare ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-slate-50';
         const nameBgClass = isIntensiveCare ? 'bg-yellow-200 text-yellow-800 border-2 border-yellow-400' : (m.risk === 'Highest' ? 'bg-red-100 text-red-600' : m.risk === 'High' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100');
-        
+
         return `
                 <tr class="${rowBgClass} transition-colors">
                     <td class="p-4">
@@ -1043,23 +1032,23 @@ function renderMemberTable(members) {
                     <td class="p-4"><span class="status-badge status-${m.risk.toLowerCase()}">${m.risk}</span></td>
                     <td class="p-4 text-xs font-bold text-slate-600">${m.note}</td>
                     ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(month => {
-        const counseling = m.counseling[month];
-        if (counseling && counseling.count > 0) {
-            // 상담 이력이 있으면 O 표시
-            return `<td class="p-2 text-center">
+            const counseling = m.counseling[month];
+            if (counseling && counseling.count > 0) {
+                // 상담 이력이 있으면 O 표시
+                return `<td class="p-2 text-center">
                                 <button onclick="editCounseling(${actualIdx}, ${month})" class="w-8 h-8 rounded-full bg-teal-500 text-white font-black text-sm hover:bg-teal-600 transition-colors shadow-sm" title="상담 완료: ${counseling.date} (${counseling.count}회)">
                                     O
                                 </button>
                             </td>`;
-        } else {
-            // 상담 이력이 없으면 공란
-            return `<td class="p-2 text-center">
+            } else {
+                // 상담 이력이 없으면 공란
+                return `<td class="p-2 text-center">
                                 <button onclick="editCounseling(${actualIdx}, ${month})" class="w-8 h-8 rounded-full bg-slate-100 text-slate-300 font-bold hover:bg-slate-200 transition-colors" title="클릭하여 상담 추가">
                                     
                                 </button>
                             </td>`;
-        }
-    }).join('')}
+            }
+        }).join('')}
                     ${isAdmin ? `<td class="p-2 text-center">
                         <button onclick="deleteMember(${actualIdx})" class="px-2 py-1 bg-red-100 text-red-600 rounded text-xs font-bold hover:bg-red-200 transition-colors" title="삭제">
                             <i class="fas fa-trash"></i>
@@ -1228,14 +1217,14 @@ function changeExpenseView(view) {
 function changeTab(tabId) {
     const isAdmin = isAdminLoggedIn();
     const allowedMenus = isAdmin ? MENU_CONFIG.admin : MENU_CONFIG.public;
-    
+
     // 일반 모드에서 관리자 전용 탭 접근 시 차단
     if (!allowedMenus.includes(tabId)) {
         alert('관리자 권한이 필요한 메뉴입니다.');
         changeTab('dashboard');
         return;
     }
-    
+
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     const targetSection = document.getElementById(tabId);
     if (targetSection) {
@@ -1252,7 +1241,7 @@ function changeTab(tabId) {
         activeBtn.classList.add('active');
         activeBtn.classList.remove('text-slate-500');
     }
-    
+
     // 탭별 초기화 작업
     if (tabId === 'survey-results') {
         setTimeout(renderSurveyResults, 50);
@@ -1397,7 +1386,7 @@ function renderNavigation() {
             }
         });
     }
-    
+
     // 일반 모드에서 집중관리명단(list)과 병원비 지출(expense) 섹션 완전 숨김
     if (!isAdmin) {
         const listSection = document.getElementById('list');
@@ -1454,7 +1443,7 @@ function addMember() {
     }
 
     const note = prompt('관리 소견을 입력하세요:', '');
-    
+
     const isIntensiveCare = confirm('집중관찰 대상자로 설정하시겠습니까? (노란색 표시)');
 
     const newMember = {
@@ -1465,7 +1454,7 @@ function addMember() {
         isIntensiveCare: isIntensiveCare,
         counseling: {}
     };
-    
+
     // 12개월 상담 데이터 초기화
     for (let i = 1; i <= 12; i++) {
         newMember.counseling[i] = null;
@@ -1909,7 +1898,7 @@ function renderSurveyResults() {
         if (window.surveyChartInstance) {
             window.surveyChartInstance.destroy();
         }
-        
+
         const ctx = chartCanvas.getContext('2d');
         const sortedItems = Object.keys(itemCounts).sort((a, b) => itemCounts[b] - itemCounts[a]);
         window.surveyChartInstance = new Chart(ctx, {
@@ -1937,7 +1926,7 @@ function renderSurveyResults() {
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 return `${context.parsed.y}회 요청`;
                             }
                         }
@@ -1954,17 +1943,17 @@ function renderSurveyResults() {
 function renderSurveyResponseList(responses) {
     const container = document.getElementById('survey-comments');
     if (!container) return;
-    
+
     if (responses.length === 0) {
         container.innerHTML = '<p class="text-sm text-slate-500 text-center py-8">아직 응답이 없습니다.</p>';
         return;
     }
-    
+
     // 최신순 정렬
-    const sortedResponses = [...responses].sort((a, b) => 
+    const sortedResponses = [...responses].sort((a, b) =>
         new Date(b.timestamp || 0) - new Date(a.timestamp || 0)
     );
-    
+
     const html = `
         <div class="mb-4 flex items-center justify-between">
             <p class="text-sm font-bold text-slate-600">총 ${responses.length}건의 응답</p>
@@ -2014,7 +2003,7 @@ function renderSurveyResponseList(responses) {
             `).join('')}
         </div>
     `;
-    
+
     container.innerHTML = html;
 }
 
@@ -2072,20 +2061,20 @@ function checkSurveyPeriod() {
 
 function submitSurvey(e) {
     e.preventDefault();
-    
+
     // 설문 기간 확인
     if (!checkSurveyPeriod()) {
         alert('현재 설문조사 기간이 아닙니다.');
         return false;
     }
-    
+
     // 폼 데이터 수집
     const dept = document.getElementById('survey-dept').value.trim();
     const name = document.getElementById('survey-name').value.trim();
     const items = Array.from(document.querySelectorAll('input[name="medicine-item"]:checked')).map(cb => cb.value);
     const comments = document.getElementById('survey-comments').value.trim();
     const add = document.getElementById('survey-additional').value.trim();
-    
+
     // 유효성 검사
     if (!dept || !name) {
         alert('부서와 성함을 모두 입력해주세요.');
@@ -2095,7 +2084,7 @@ function submitSurvey(e) {
         alert('하나 이상의 항목을 선택하거나 요청사항을 입력해주세요.');
         return false;
     }
-    
+
     // 응답 데이터 생성
     const response = {
         timestamp: new Date().toISOString(),
@@ -2105,28 +2094,28 @@ function submitSurvey(e) {
         comments: comments,
         additionalRequests: add
     };
-    
+
     // localStorage에 저장 (관리자가 볼 수 있도록)
     const responses = JSON.parse(localStorage.getItem('g_survey_responses') || '[]');
     responses.push(response);
     localStorage.setItem('g_survey_responses', JSON.stringify(responses));
-    
+
     // Netlify Forms를 위한 hidden 필드 업데이트 (선택한 항목들을 쉼표로 구분)
     const netlifyItemsField = document.getElementById('netlify-selected-items');
     if (netlifyItemsField) {
         netlifyItemsField.value = items.join(', ');
     }
-    
+
     // Netlify Forms에 제출하기 위한 hidden 필드 설정
     const form = document.getElementById('medicine-survey-form');
     if (form) {
         // Netlify가 인식할 수 있도록 폼 데이터 설정
         // Netlify는 name 속성을 가진 input을 자동으로 수집합니다
         // 이미 HTML에 name 속성이 있으므로 그대로 제출하면 됩니다
-        
+
         // 제출 전 사용자에게 알림
         alert('설문 응답이 제출되었습니다. 감사합니다!');
-        
+
         // Netlify 제출 (onsubmit 이벤트 리스너 제거 후 실제 submit)
         form.onsubmit = null;
         form.submit();
@@ -2297,7 +2286,7 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     updateAuthUI();
     renderNavigation();
-    initApp();
+    // initApp(); // index.html에서 초기화 담당
 
     // 관리자 상담 모니터링 업데이트
     if (isAdminLoggedIn()) {
@@ -2330,7 +2319,7 @@ function renderHealthCheckupList() {
     const tbody = document.getElementById('health-checkup-table-body');
     const emptyMsg = document.getElementById('health-checkup-empty-message');
     if (!tbody) return;
-    
+
     // 전체 인원명부가 비어있으면 안내 메시지 표시
     // 주의: 인원명부에 있는 사람들이 전체 인원입니다.
     // convert_excel_to_json.py 스크립트를 실행하여 엑셀 파일에서 로드해야 합니다.
@@ -2340,30 +2329,30 @@ function renderHealthCheckupList() {
         updateHealthCheckupStats();
         return;
     }
-    
+
     // 필터링 적용
     let filtered = [...APP_DATA.healthCheckupMembers];
-    
+
     // 상태 필터
     if (currentCheckupFilter === 'completed') {
         filtered = filtered.filter(m => m.status === 'completed');
     } else if (currentCheckupFilter === 'pending') {
         filtered = filtered.filter(m => m.status === 'pending');
     }
-    
+
     // 부서 필터
     if (currentCheckupDept !== 'all') {
         filtered = filtered.filter(m => m.factory === currentCheckupDept);
     }
-    
+
     // 검색 필터
     if (currentCheckupSearch) {
-        filtered = filtered.filter(m => 
+        filtered = filtered.filter(m =>
             m.name.toLowerCase().includes(currentCheckupSearch) ||
             m.dept.toLowerCase().includes(currentCheckupSearch)
         );
     }
-    
+
     // 데이터가 없으면 안내 메시지 표시
     if (filtered.length === 0) {
         if (emptyMsg) emptyMsg.classList.remove('hidden');
@@ -2371,13 +2360,13 @@ function renderHealthCheckupList() {
         updateHealthCheckupStats();
         return;
     }
-    
+
     if (emptyMsg) emptyMsg.classList.add('hidden');
-    
+
     const isAdmin = isAdminLoggedIn();
     const html = filtered.map((member, idx) => {
         // 원본 배열에서의 인덱스 찾기
-        const originalIdx = APP_DATA.healthCheckupMembers.findIndex(m => 
+        const originalIdx = APP_DATA.healthCheckupMembers.findIndex(m =>
             m.name === member.name && m.dept === member.dept
         );
         return `
@@ -2402,7 +2391,7 @@ function renderHealthCheckupList() {
         </tr>
     `;
     }).join('');
-    
+
     tbody.innerHTML = html;
     updateHealthCheckupStats();
 }
@@ -2412,12 +2401,12 @@ function updateHealthCheckupStats() {
     const completed = APP_DATA.healthCheckupMembers.filter(m => m.status === 'completed').length;
     const pending = total - completed;
     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
-    
+
     const totalEl = document.getElementById('checkup-total');
     const completedEl = document.getElementById('checkup-completed');
     const pendingEl = document.getElementById('checkup-pending');
     const rateEl = document.getElementById('checkup-rate');
-    
+
     if (totalEl) totalEl.textContent = total;
     if (completedEl) completedEl.textContent = completed;
     if (pendingEl) pendingEl.textContent = pending;
@@ -2445,14 +2434,14 @@ function filterHealthCheckup(type) {
     document.querySelectorAll('.filter-checkup-btn').forEach(btn => {
         btn.classList.remove('active', 'bg-slate-800', 'text-white');
     });
-    
+
     const activeBtn = type === 'all' ? document.getElementById('btn-checkup-all') :
-                     type === 'completed' ? document.getElementById('btn-checkup-completed') :
-                     document.getElementById('btn-checkup-pending');
+        type === 'completed' ? document.getElementById('btn-checkup-completed') :
+            document.getElementById('btn-checkup-pending');
     if (activeBtn) {
         activeBtn.classList.add('active', 'bg-slate-800', 'text-white');
     }
-    
+
     renderHealthCheckupList();
 }
 
@@ -2461,15 +2450,15 @@ function addHealthCheckupMember() {
         alert('관리자 권한이 필요합니다.');
         return;
     }
-    
+
     const name = prompt('성명을 입력하세요:');
     if (!name) return;
-    
+
     const dept = prompt('부서를 입력하세요:');
     if (!dept) return;
-    
+
     const factory = prompt('공장을 입력하세요 (1공장/2공장):', '1공장');
-    
+
     APP_DATA.healthCheckupMembers.push({
         name: name,
         dept: dept,
@@ -2477,7 +2466,7 @@ function addHealthCheckupMember() {
         checkupDate: null,
         status: 'pending'
     });
-    
+
     renderHealthCheckupList();
     alert('인원이 추가되었습니다.');
 }
@@ -2487,14 +2476,14 @@ function editHealthCheckup(idx) {
         alert('관리자 권한이 필요합니다.');
         return;
     }
-    
+
     const member = APP_DATA.healthCheckupMembers[idx];
     const newDate = prompt('검진일을 입력하세요 (YYYY-MM-DD):', member.checkupDate || '');
     if (newDate === null) return;
-    
+
     member.checkupDate = newDate || null;
     member.status = newDate ? 'completed' : 'pending';
-    
+
     renderHealthCheckupList();
     alert('수정되었습니다.');
 }
@@ -2504,9 +2493,9 @@ function deleteHealthCheckup(idx) {
         alert('관리자 권한이 필요합니다.');
         return;
     }
-    
+
     if (!confirm('정말 삭제하시겠습니까?')) return;
-    
+
     APP_DATA.healthCheckupMembers.splice(idx, 1);
     renderHealthCheckupList();
     alert('삭제되었습니다.');
@@ -2518,7 +2507,7 @@ function deleteHealthCheckup(idx) {
 function renderStretchingVideos() {
     const container = document.getElementById('stretching-video-list');
     if (!container) return;
-    
+
     const isAdmin = isAdminLoggedIn();
     const html = APP_DATA.stretchingVideos.map(video => `
         <div class="bg-slate-50 rounded-xl overflow-hidden border-2 border-slate-200 hover:border-orange-300 transition-colors">
@@ -2544,7 +2533,7 @@ function renderStretchingVideos() {
             </div>
         </div>
     `).join('');
-    
+
     container.innerHTML = html;
 }
 
@@ -2553,16 +2542,16 @@ function addStretchingVideo() {
         alert('관리자 권한이 필요합니다.');
         return;
     }
-    
+
     const title = prompt('영상 제목을 입력하세요:');
     if (!title) return;
-    
+
     const description = prompt('영상 설명을 입력하세요:', '');
     const videoUrl = prompt('영상 파일 경로 또는 URL을 입력하세요:', '');
     if (!videoUrl) return;
-    
+
     const category = prompt('카테고리를 입력하세요 (전체/목/어깨/허리 등):', '전체');
-    
+
     const newVideo = {
         id: Math.max(...APP_DATA.stretchingVideos.map(v => v.id), 0) + 1,
         title: title,
@@ -2573,7 +2562,7 @@ function addStretchingVideo() {
         category: category || '전체',
         createdAt: new Date().toISOString().split('T')[0]
     };
-    
+
     APP_DATA.stretchingVideos.push(newVideo);
     renderStretchingVideos();
     alert('영상이 추가되었습니다.');
@@ -2584,16 +2573,16 @@ function editStretchingVideo(id) {
         alert('관리자 권한이 필요합니다.');
         return;
     }
-    
+
     const video = APP_DATA.stretchingVideos.find(v => v.id === id);
     if (!video) return;
-    
+
     const title = prompt('영상 제목을 입력하세요:', video.title);
     if (title === null) return;
-    
+
     video.title = title;
     video.description = prompt('영상 설명을 입력하세요:', video.description) || video.description;
-    
+
     renderStretchingVideos();
     alert('수정되었습니다.');
 }
@@ -2603,9 +2592,9 @@ function deleteStretchingVideo(id) {
         alert('관리자 권한이 필요합니다.');
         return;
     }
-    
+
     if (!confirm('정말 삭제하시겠습니까?')) return;
-    
+
     const idx = APP_DATA.stretchingVideos.findIndex(v => v.id === id);
     if (idx !== -1) {
         APP_DATA.stretchingVideos.splice(idx, 1);

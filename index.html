@@ -1300,6 +1300,10 @@
             if (listTotal) listTotal.textContent = total;
             updateDashboardCounselingRate();
 
+            // 추가된 초기화 로직
+            if (typeof updateFebruaryCounselingList === 'function') updateFebruaryCounselingList();
+            if (typeof renderHealthCheckupList === 'function') renderHealthCheckupList();
+
             if (SYSTEM_CONFIG && SYSTEM_CONFIG.announcements) {
                 const t = document.getElementById('announcement-title');
                 const d = document.getElementById('announcement-desc');
@@ -1484,10 +1488,10 @@
             const container = document.getElementById('stretching-video-list');
             if (!container) return;
 
-            // 1순위: Google Sheets에서 로드된 APP_DATA.stretchingVideos 사용 (다른 기기에서도 보이도록)
+            // 1순위: Google Sheets에서 로드된 APP_DATA.stretchingVideos 사용
             let list = APP_DATA.stretchingVideos || [];
 
-            // 2순위: localStorage fallback (로컬 캐시, Google Sheets 데이터가 없을 때만)
+            // 2순위: localStorage fallback
             if ((!list || list.length === 0)) {
                 const savedVideos = localStorage.getItem('stretching_videos');
                 if (savedVideos) {
@@ -1501,6 +1505,13 @@
                     }
                 }
             }
+
+            // [최적화] 데이터가 변경되지 않았다면 렌더링 건너뛰기 (영상 재생 끊김 방지)
+            const currentJSON = JSON.stringify(list);
+            if (window.lastStretchingVideosJSON === currentJSON) {
+                return; // 변경 없음, 리턴
+            }
+            window.lastStretchingVideosJSON = currentJSON; // 최신 데이터로 업데이트
 
             const isAdmin = isAdminLoggedIn();
             container.innerHTML = list.length > 0
@@ -2070,25 +2081,53 @@
                 alert('이미지 파일만 업로드 가능합니다.');
                 return;
             }
+
+            // 이미지 압축 로직 (Canvas 사용)
             const reader = new FileReader();
             reader.onload = function (e) {
-                const img = document.getElementById('noise-floorplan-image');
-                const placeholder = document.getElementById('noise-floorplan-placeholder');
-                if (img) {
-                    img.src = e.target.result;
-                    img.style.display = 'block';
-                    if (placeholder) placeholder.style.display = 'none';
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
 
-                    // window 객체와 APP_DATA에 즉시 저장 (로컬 표시용)
-                    window['floorplan_' + factoryNum] = e.target.result;
-                    if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
-                    APP_DATA.floorplans['factory' + factoryNum] = e.target.result;
+                    // 최대 너비 1024px로 제한
+                    const MAX_WIDTH = 1024;
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
 
-                    // localStorage에도 저장 (로컬 캐시)
-                    localStorage.setItem('noise_floorplans', JSON.stringify(APP_DATA.floorplans));
+                    canvas.width = width;
+                    canvas.height = height;
 
-                    alert(factoryNum + '공장 도면 이미지가 업로드되었습니다.\n\n⚠️ 중요: "저장" 버튼을 반드시 눌러서 Google Sheets에 저장해야 다른 기기(핸드폰 등)에서도 보입니다!');
-                }
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // JPEG 포맷, 품질 0.7로 압축
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+                    // 압축된 데이터 표시 및 저장
+                    const displayImg = document.getElementById('noise-floorplan-image');
+                    const placeholder = document.getElementById('noise-floorplan-placeholder');
+
+                    if (displayImg) {
+                        displayImg.src = compressedDataUrl;
+                        displayImg.style.display = 'block';
+                        if (placeholder) placeholder.style.display = 'none';
+
+                        // window 객체와 APP_DATA에 저장
+                        window['floorplan_' + factoryNum] = compressedDataUrl;
+                        if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                        APP_DATA.floorplans['factory' + factoryNum] = compressedDataUrl;
+
+                        // localStorage에도 저장
+                        localStorage.setItem('noise_floorplans', JSON.stringify(APP_DATA.floorplans));
+
+                        alert(factoryNum + '공장 도면 이미지가 업로드되었습니다. (압축됨)\n\n⚠️ 중요: "저장" 버튼을 반드시 눌러서 Google Sheets에 저장해야 다른 기기에서도 보입니다!');
+                    }
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
             input.value = '';
@@ -2568,7 +2607,7 @@
                 ];
 
                 // 의약품 설문조사 URL 초기값
-                const defaultMedicineSurveyUrl = "https://docs.google.com/forms/d/e/1FAIpQLSc8GB-tbu8QhWnoItYi7lS26tyLX0KzQvNZ-bwc-Cqw-bHpsQ/viewform?usp=sharing&ouid=110501763882946908099";
+                const defaultMedicineSurveyUrl = "https://naver.me/GT4FBECG";
 
                 // Google Sheets에서 현재 데이터 확인 후, 없으면 초기값 저장
                 fetch(GAS_URL + '?t=' + Date.now())

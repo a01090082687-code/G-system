@@ -258,19 +258,63 @@ function readConfig(ss) {
         sh.getRange(1, 1, 1, 2).setValues([['key', 'value']]);
         return config;
     }
+
+    var rawConfig = {};
     for (var i = 1; i < data.length; i++) {
         var key = String(data[i][0] || '').trim();
         var val = data[i][1];
         if (!key) continue;
+        rawConfig[key] = val;
+    }
+
+    // 청크 데이터 병합 로직
+    var mergedConfig = {};
+
+    // 1. 일반 키 처리
+    for (var key in rawConfig) {
+        if (key.indexOf('_chunk_') === -1) {
+            mergedConfig[key] = rawConfig[key];
+        }
+    }
+
+    // 2. 청크 키 처리 및 병합 (예: floorplans_chunk_0, floorplans_chunk_1 ...)
+    // 청크가 있는 키들을 찾아서 조합
+    var chunkKeys = Object.keys(rawConfig).filter(function (k) { return k.indexOf('_chunk_') > -1; });
+    var processedBaseKeys = [];
+
+    chunkKeys.forEach(function (k) {
+        var parts = k.split('_chunk_');
+        var baseKey = parts[0];
+
+        if (processedBaseKeys.indexOf(baseKey) === -1) {
+            // 해당 baseKey에 대한 모든 청크를 찾아서 순서대로 병합
+            var chunks = [];
+            var idx = 0;
+            while (rawConfig[baseKey + '_chunk_' + idx] !== undefined) {
+                chunks.push(rawConfig[baseKey + '_chunk_' + idx]);
+                idx++;
+            }
+            if (chunks.length > 0) {
+                mergedConfig[baseKey] = chunks.join('');
+            }
+            processedBaseKeys.push(baseKey);
+        }
+    });
+
+    // 3. JSON 파싱 및 설정 적용
+    for (var key in mergedConfig) {
+        var val = mergedConfig[key];
         try {
             if (typeof val === 'string' && val.trim() !== '' && (val.indexOf('[') === 0 || val.indexOf('{') === 0)) {
                 val = JSON.parse(val);
             }
         } catch (e) { }
+
         if (val !== undefined && val !== null && val !== '') {
             config[key] = val;
         }
     }
+
     return config;
 }
 
@@ -282,7 +326,7 @@ function defaultConfig() {
         metadata: {},
         factory1: [],
         factory2: [],
-        medicine_survey_url: '',
+        medicine_survey_url: 'https://naver.me/GT4FBECG',
         stretchingVideos: [],
         floorplans: {}
     };
@@ -291,25 +335,49 @@ function defaultConfig() {
 function writeConfigKey(ss, key, value) {
     var sh = getOrCreateSheet(ss, SHEET_NAMES.config);
     var data = sh.getDataRange().getValues();
+
+    // 헤더 확인
     if (data.length < 1 || !data[0] || data[0][0] !== 'key') {
         sh.clear();
         sh.getRange(1, 1, 1, 2).setValues([['key', 'value']]);
         data = [['key', 'value']];
     }
-    var found = false;
+
+    var valToWrite = typeof value === 'object' ? JSON.stringify(value) : (value !== undefined && value !== null ? String(value) : '');
+    const CHUNK_SIZE = 45000; // 구글 시트 셀 한도(50000)보다 약간 작게 설정
+
+    // 기존 데이터 삭제 (해당 키 및 해당 키의 청크들)
+    var rowsToDelete = [];
     for (var i = 1; i < data.length; i++) {
-        if (String(data[i][0] || '').trim() === key) {
-            var valToWrite = typeof value === 'object' ? JSON.stringify(value) : (value !== undefined && value !== null ? String(value) : '');
-            sh.getRange(i + 1, 2).setValue(valToWrite);
-            found = true;
-            break;
+        var currentKey = String(data[i][0] || '').trim();
+        if (currentKey === key || currentKey.indexOf(key + '_chunk_') === 0) {
+            rowsToDelete.push(i + 1); // 1-based row index
         }
     }
-    if (!found) {
-        var nextRow = data.length + 1;
-        sh.getRange(nextRow, 1).setValue(key);
-        var valToWrite = typeof value === 'object' ? JSON.stringify(value) : (value !== undefined && value !== null ? String(value) : '');
-        sh.getRange(nextRow, 2).setValue(valToWrite);
+
+    // 뒤에서부터 삭제해야 인덱스가 꼬이지 않음
+    rowsToDelete.sort(function (a, b) { return b - a; });
+    rowsToDelete.forEach(function (r) { sh.deleteRow(r); });
+
+    // 새 데이터 쓰기
+    var newRows = [];
+    if (valToWrite.length > CHUNK_SIZE) {
+        // 청크로 나누어 저장
+        var chunks = [];
+        for (var i = 0; i < valToWrite.length; i += CHUNK_SIZE) {
+            chunks.push(valToWrite.substring(i, i + CHUNK_SIZE));
+        }
+        chunks.forEach(function (chunk, idx) {
+            newRows.push([key + '_chunk_' + idx, chunk]);
+        });
+    } else {
+        // 단일 셀 저장
+        newRows.push([key, valToWrite]);
+    }
+
+    if (newRows.length > 0) {
+        var lastRow = sh.getLastRow();
+        sh.getRange(lastRow + 1, 1, newRows.length, 2).setValues(newRows);
     }
 }
 
