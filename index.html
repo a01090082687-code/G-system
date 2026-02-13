@@ -574,6 +574,9 @@
             "송영빈", "여동현", "오상흠", "윤진영", "이대응"
         ]
     };
+    
+    // 의약품 설문조사 URL 변수 (Google Sheets에서 로드되거나 localStorage에서 복원)
+    let medicineSurveyUrlFromServer = '';
 
     let SYSTEM_CONFIG = {
         emergencyContacts: [
@@ -709,6 +712,14 @@
             showNoiseFloorplan(1);
             setNoiseFilter('all');
         }
+        // 의약품조사 탭으로 전환 시 링크 표시
+        if (tabId === 'medicine-survey') {
+            renderMedicineSurveyUserArea();
+        }
+        // 스트레칭 탭으로 전환 시 영상 표시
+        if (tabId === 'stretching') {
+            renderStretchingVideos();
+        }
     }
 
     function updateWorkerOnlyElements() {
@@ -758,10 +769,20 @@
             if (Array.isArray(data.config.factory1) && data.config.factory1.length > 0) CONSULTATION_SCHEDULE.factory1 = data.config.factory1;
             if (Array.isArray(data.config.factory2) && data.config.factory2.length > 0) CONSULTATION_SCHEDULE.factory2 = data.config.factory2;
             if (data.config.hasOwnProperty('medicine_survey_url')) {
-                medicineSurveyUrlFromServer = String(data.config.medicine_survey_url || '').trim();
+                const urlFromServer = String(data.config.medicine_survey_url || '').trim();
+                medicineSurveyUrlFromServer = urlFromServer;
+                // Google Sheets에서 로드된 값도 localStorage에 저장 (동기화)
+                if (urlFromServer) {
+                    localStorage.setItem('medicine_survey_url', urlFromServer);
+                }
             }
             if (data.config.hasOwnProperty('stretchingVideos') && Array.isArray(data.config.stretchingVideos)) {
-                APP_DATA.stretchingVideos = data.config.stretchingVideos;
+                const videosFromServer = data.config.stretchingVideos;
+                APP_DATA.stretchingVideos = videosFromServer;
+                // Google Sheets에서 로드된 값도 localStorage에 저장 (동기화)
+                if (videosFromServer && videosFromServer.length > 0) {
+                    localStorage.setItem('stretching_videos', JSON.stringify(videosFromServer));
+                }
             }
         }
     }
@@ -807,6 +828,8 @@
                     calculateTotalSavings();
                     filterList('All');
                     setNoiseFilter('all');
+                    renderMedicineSurveyUserArea(); // 의약품 설문조사 링크 재표시
+                    renderStretchingVideos(); // 스트레칭 영상 재표시
                 }, 100);
             })
             .catch(function() {
@@ -859,7 +882,7 @@
         renderSafetyQuote();
         renderStretchingVideos();
         renderMsdsTable();
-        renderMedicineSurveyUserArea();
+        renderMedicineSurveyUserArea(); // 의약품 설문조사 링크 표시
         calculateTotalSavings();
         updateWorkerOnlyElements();
         updateAdminOnlyElements();
@@ -1017,17 +1040,49 @@
     function renderStretchingVideos() {
         const container = document.getElementById('stretching-video-list');
         if (!container) return;
-        const list = (APP_DATA.stretchingVideos || []);
+        
+        // localStorage에서도 확인 (사용자 모드에서도 표시되도록)
+        let list = APP_DATA.stretchingVideos || [];
+        const savedVideos = localStorage.getItem('stretching_videos');
+        if ((!list || list.length === 0) && savedVideos) {
+            try {
+                const videos = JSON.parse(savedVideos);
+                if (Array.isArray(videos) && videos.length > 0) {
+                    list = videos;
+                }
+            } catch (e) {
+                console.error('스트레칭 영상 로드 오류:', e);
+            }
+        }
+        
         const isAdmin = isAdminLoggedIn();
         container.innerHTML = list.length > 0
-            ? list.map((v, i) => `
+            ? list.map((v, i) => {
+                // YouTube URL인 경우 임베드 형식으로 변환
+                let videoDisplay = '';
+                if (v.videoUrl) {
+                    const youtubeMatch = v.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+                    if (youtubeMatch) {
+                        const videoId = youtubeMatch[1];
+                        videoDisplay = `
+                            <div class="mt-4 rounded-xl overflow-hidden border-2 border-slate-200" style="height: 400px;">
+                                <iframe src="https://www.youtube.com/embed/${videoId}" title="${(v.title || '').replace(/"/g, '&quot;')}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            </div>
+                        `;
+                    } else {
+                        videoDisplay = `<a href="${v.videoUrl.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white font-black rounded-xl hover:bg-orange-600 transition-colors mt-4"><i class="fas fa-external-link-alt"></i> 영상 보기</a>`;
+                    }
+                }
+                
+                return `
                 <div class="gu-card p-5 relative">
                     ${isAdmin ? `<div class="absolute top-3 right-3 flex gap-1"><button type="button" onclick="editStretchingVideo(${i})" class="text-xs font-bold px-2 py-1 rounded bg-slate-200 text-slate-700 hover:bg-slate-300">수정</button><button type="button" onclick="deleteStretchingVideo(${i})" class="text-xs font-bold px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">삭제</button></div>` : ''}
                     <div class="flex items-center gap-2 mb-2"><i class="fas fa-play-circle text-orange-500"></i><span class="font-black text-slate-800">${v.title || ''}</span></div>
                     <p class="text-sm text-slate-600">${v.description || ''}</p>
-                    ${v.videoUrl ? `<p class="text-xs text-slate-400 mt-2">${v.videoUrl}</p>` : ''}
+                    ${videoDisplay}
                 </div>
-            `).join('')
+            `;
+            }).join('')
             : '<p class="text-slate-500">등록된 영상이 없습니다.</p>';
     }
     function addStretchingVideo() {
@@ -1060,6 +1115,14 @@
             const id = Math.max(0, ...(APP_DATA.stretchingVideos || []).map(v => v.id || 0)) + 1;
             APP_DATA.stretchingVideos.push({ id, title, description, videoUrl, thumbnail: '', duration: '', category: '전체', createdAt: new Date().toISOString().slice(0, 10) });
         }
+        
+        // localStorage에 영구 저장 (사용자 모드에서도 유지되도록)
+        if (APP_DATA.stretchingVideos && APP_DATA.stretchingVideos.length > 0) {
+            localStorage.setItem('stretching_videos', JSON.stringify(APP_DATA.stretchingVideos));
+        } else {
+            localStorage.removeItem('stretching_videos');
+        }
+        
         renderStretchingVideos();
         apiPost('saveStretchingVideos', APP_DATA.stretchingVideos);
         closeStretchingAddModal();
@@ -1074,7 +1137,17 @@
     }
     function deleteStretchingVideo(i) {
         if (!confirm('이 영상 항목을 삭제할까요?')) return;
-        APP_DATA.stretchingVideos.splice(i, 1); renderStretchingVideos(); apiPost('saveStretchingVideos', APP_DATA.stretchingVideos);
+        APP_DATA.stretchingVideos.splice(i, 1);
+        
+        // localStorage에 영구 저장 (사용자 모드에서도 유지되도록)
+        if (APP_DATA.stretchingVideos && APP_DATA.stretchingVideos.length > 0) {
+            localStorage.setItem('stretching_videos', JSON.stringify(APP_DATA.stretchingVideos));
+        } else {
+            localStorage.removeItem('stretching_videos');
+        }
+        
+        renderStretchingVideos();
+        apiPost('saveStretchingVideos', APP_DATA.stretchingVideos);
     }
 
     function renderCharts() {
@@ -1566,13 +1639,35 @@
         }
     }
 
-    function getMedicineSurveyUrl() { return medicineSurveyUrlFromServer || ''; }
+    // ========== 의약품 설문조사 URL 관리 (localStorage로 영구 저장) ==========
+    function getMedicineSurveyUrl() {
+        // 1순위: Google Sheets에서 로드된 값
+        // 2순위: localStorage에 저장된 값
+        // 3순위: 빈 문자열
+        return medicineSurveyUrlFromServer || localStorage.getItem('medicine_survey_url') || '';
+    }
+    
     function saveMedicineSurveyUrl() {
         const input = document.getElementById('medicine-survey-url');
         const url = (input && input.value) ? input.value.trim() : '';
+        
+        // 메모리 변수에 저장
         medicineSurveyUrlFromServer = url;
+        
+        // localStorage에 영구 저장 (사용자 모드에서도 유지되도록)
+        if (url) {
+            localStorage.setItem('medicine_survey_url', url);
+        } else {
+            localStorage.removeItem('medicine_survey_url');
+        }
+        
+        // UI 즉시 업데이트
         renderMedicineSurveyUserArea();
-        apiPost('saveMedicineSurveyUrl', { url: url }).then(function() { alert(url ? '설문조사 링크가 저장되었습니다.' : '링크가 삭제되었습니다.'); });
+        
+        // Google Sheets에도 저장 (백업)
+        apiPost('saveMedicineSurveyUrl', { url: url }).then(function() {
+            alert(url ? '설문조사 링크가 저장되었습니다. (모든 사용자에게 표시됩니다)' : '링크가 삭제되었습니다.');
+        });
     }
     function renderMedicineSurveyUserArea() {
         const area = document.getElementById('medicine-survey-user-area');
@@ -1848,12 +1943,10 @@
         });
         updateWorkerOnlyElements();
         renderRiskFactors();
-        (async function() {
-            await renderInnovations();
-        })();
+        renderInnovations();
         renderEmergencyContacts();
-        renderStretchingVideos();
-        renderMedicineSurveyUserArea();
+        renderStretchingVideos(); // 관리자 모드 전환 시에도 스트레칭 영상 표시
+        renderMedicineSurveyUserArea(); // 관리자 모드 전환 시에도 링크 표시
         const noiseMode = document.getElementById('noise-btn-exceed') && document.getElementById('noise-btn-exceed').classList.contains('active') ? 'exceed' : 'all';
         setNoiseFilter(noiseMode);
     }
@@ -1869,9 +1962,34 @@
 
     window.addEventListener('DOMContentLoaded', function() {
         localStorage.removeItem('g_auth_mode');
+        
+        // 페이지 로드 시 localStorage에서 의약품 설문조사 URL 복원
+        const savedUrl = localStorage.getItem('medicine_survey_url');
+        if (savedUrl && !medicineSurveyUrlFromServer) {
+            medicineSurveyUrlFromServer = savedUrl;
+        }
+        
+        // 페이지 로드 시 localStorage에서 스트레칭 영상 복원
+        const savedVideos = localStorage.getItem('stretching_videos');
+        if (savedVideos) {
+            try {
+                const videos = JSON.parse(savedVideos);
+                if (Array.isArray(videos) && videos.length > 0) {
+                    // Google Sheets에서 로드되지 않았거나 비어있으면 localStorage 값 사용
+                    if (!APP_DATA.stretchingVideos || APP_DATA.stretchingVideos.length === 0) {
+                        APP_DATA.stretchingVideos = videos;
+                    }
+                }
+            } catch (e) {
+                console.error('스트레칭 영상 복원 오류:', e);
+            }
+        }
+        
         renderNavigation();
         updateAuthUI();
         updateAdminOnlyElements();
+        renderMedicineSurveyUserArea(); // 초기 로드 시에도 링크 표시
+        renderStretchingVideos(); // 초기 로드 시에도 스트레칭 영상 표시
         loadDataFromSheets();
     });
     </script>
