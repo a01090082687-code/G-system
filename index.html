@@ -545,7 +545,7 @@
 
     <script>
     // ========== 0. 구글 시트 백엔드 URL (배포 후 여기에 붙여넣기) ==========
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwHEFK5PcLh_RG2tycyOqwan0OE9uos3wZZ-nc2GPoHv2l6C53TZ0pxIlebOqu2gcHCeg/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzmhsrMJu9eZhZ35bnHL76Gow4vMm6qFS0L5P72OYyd2kMdObiF-tcnuhwM1Bg5UiL8RA/exec';
 
     // ========== 1. 데이터 초기화 (기본값, 시트에서 덮어씀) ==========
     let NOISE_DATA = [
@@ -1033,28 +1033,49 @@
             body: JSON.stringify({ action: action, payload: payload || {} })
         })
         .then(function(response) {
-            if (!response.ok) {
-                throw new Error('HTTP ' + response.status);
-            }
-            console.log('✅ Google Sheets 저장 성공:', action);
-            // 저장 후 데이터 새로고침 (다른 사용자들이 볼 수 있도록)
-            setTimeout(function() {
-                loadDataFromSheets(true);
-            }, 1000); // 1초 후 새로고침
-            return Promise.resolve();
+            // 응답을 텍스트로 먼저 읽어서 확인
+            return response.text().then(function(text) {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.ok === false || data.message) {
+                        throw new Error(data.message || '저장 실패');
+                    }
+                    console.log('✅ Google Sheets 저장 성공:', action, data);
+                    // 저장 후 데이터 새로고침 (다른 사용자들이 볼 수 있도록)
+                    setTimeout(function() {
+                        loadDataFromSheets(true);
+                    }, 1000); // 1초 후 새로고침
+                    return Promise.resolve();
+                } catch (parseError) {
+                    // JSON 파싱 실패 시에도 텍스트 응답 확인
+                    if (text && text.trim() !== '') {
+                        console.log('응답:', text);
+                    }
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                    }
+                    // 응답이 비어있거나 성공인 경우
+                    console.log('✅ Google Sheets 저장 성공:', action);
+                    setTimeout(function() {
+                        loadDataFromSheets(true);
+                    }, 1000);
+                    return Promise.resolve();
+                }
+            });
         })
         .catch(function(error) {
             console.error('❌ Google Sheets 저장 실패:', action, error);
             console.error('GAS_URL:', GAS_URL);
+            console.error('에러 상세:', error.message || error);
             console.error('💡 해결 방법:');
             console.error('1. Google Apps Script가 웹 앱으로 배포되어 있는지 확인');
             console.error('2. 배포 시 "액세스 권한: 모든 사용자"로 설정했는지 확인');
             console.error('3. GAS_URL이 올바른지 확인');
-            // 저장 실패해도 데이터 새로고침 시도
-            setTimeout(function() {
-                loadDataFromSheets(true);
-            }, 1000);
-            return Promise.reject(error);
+            console.error('4. 브라우저 개발자 도구(F12) > 네트워크 탭에서 요청 상태 확인');
+            
+            // 사용자에게 더 자세한 에러 메시지 표시
+            const errorMsg = error.message || '알 수 없는 오류';
+            throw new Error('Google Sheets 연결 실패: ' + errorMsg);
         });
     }
 
@@ -1340,8 +1361,9 @@
         // Google Sheets에 저장 (다른 기기에서도 보이도록)
         apiPost('saveStretchingVideos', APP_DATA.stretchingVideos).then(function() {
             alert('✅ 스트레칭 영상이 Google Sheets에 저장되었습니다!\n\n이제 다른 기기(핸드폰 등)에서도 실시간으로 볼 수 있습니다.');
-        }).catch(function() {
-            alert('⚠️ 저장 중 오류가 발생했습니다. Google Sheets 연결을 확인해주세요.');
+        }).catch(function(error) {
+            const errorMsg = error && error.message ? error.message : '알 수 없는 오류';
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + errorMsg + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
         });
         
         closeStretchingAddModal();
@@ -1435,7 +1457,13 @@
         const action = prompt('조치사항', '');
         const level = prompt('위험등급 (Critical / High / Mid)', 'High');
         APP_DATA.risks.push({ type: type || '', dept: dept || '', health: health || '', action: action || '', level: level || 'High' });
-        renderRiskFactors(); apiPost('saveRisks', APP_DATA.risks);
+        renderRiskFactors();
+        apiPost('saveRisks', APP_DATA.risks).then(function() {
+            console.log('✅ 유해인자 항목이 Google Sheets에 저장되었습니다.');
+        }).catch(function(error) {
+            console.error('❌ 유해인자 항목 저장 실패:', error);
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        });
     }
     function editRisk(i) {
         const r = APP_DATA.risks[i]; if (!r) return;
@@ -1445,11 +1473,24 @@
         const action = prompt('조치사항', r.action);
         const level = prompt('위험등급 (Critical / High / Mid)', r.level);
         r.type = type || r.type; r.dept = dept !== null ? dept : r.dept; r.health = health !== null ? health : r.health; r.action = action !== null ? action : r.action; r.level = level || r.level;
-        renderRiskFactors(); apiPost('saveRisks', APP_DATA.risks);
+        renderRiskFactors();
+        apiPost('saveRisks', APP_DATA.risks).then(function() {
+            console.log('✅ 유해인자 항목이 Google Sheets에 저장되었습니다.');
+        }).catch(function(error) {
+            console.error('❌ 유해인자 항목 저장 실패:', error);
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        });
     }
     function deleteRisk(i) {
         if (!confirm('이 유해인자 항목을 삭제할까요?')) return;
-        APP_DATA.risks.splice(i, 1); renderRiskFactors(); apiPost('saveRisks', APP_DATA.risks);
+        APP_DATA.risks.splice(i, 1);
+        renderRiskFactors();
+        apiPost('saveRisks', APP_DATA.risks).then(function() {
+            console.log('✅ 유해인자 항목이 Google Sheets에 저장되었습니다.');
+        }).catch(function(error) {
+            console.error('❌ 유해인자 항목 저장 실패:', error);
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        });
     }
 
     function renderInnovations() {
@@ -1492,7 +1533,12 @@
         updateSavingsBasedOnExpenses();
         renderInnovations(); 
         calculateTotalSavings();
-        apiPost('saveInnovations', APP_DATA.innovations);
+        apiPost('saveInnovations', APP_DATA.innovations).then(function() {
+            console.log('✅ 혁신 성과 항목이 Google Sheets에 저장되었습니다.');
+        }).catch(function(error) {
+            console.error('❌ 혁신 성과 항목 저장 실패:', error);
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        });
     }
     function editInnovation(i) {
         const item = APP_DATA.innovations[i]; if (!item) return;
@@ -1513,7 +1559,12 @@
         updateSavingsBasedOnExpenses();
         renderInnovations(); 
         calculateTotalSavings();
-        apiPost('saveInnovations', APP_DATA.innovations);
+        apiPost('saveInnovations', APP_DATA.innovations).then(function() {
+            console.log('✅ 혁신 성과 항목이 Google Sheets에 저장되었습니다.');
+        }).catch(function(error) {
+            console.error('❌ 혁신 성과 항목 저장 실패:', error);
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        });
     }
     function deleteInnovation(i) {
         const item = APP_DATA.innovations[i];
@@ -1526,7 +1577,12 @@
         updateSavingsBasedOnExpenses();
         renderInnovations(); 
         calculateTotalSavings();
-        apiPost('saveInnovations', APP_DATA.innovations);
+        apiPost('saveInnovations', APP_DATA.innovations).then(function() {
+            console.log('✅ 혁신 성과 항목이 Google Sheets에 저장되었습니다.');
+        }).catch(function(error) {
+            console.error('❌ 혁신 성과 항목 저장 실패:', error);
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        });
     }
 
     function renderEmergencyContacts() {
@@ -1555,7 +1611,13 @@
         const order = parseInt(prompt('표시 순서 (숫자)', String((SYSTEM_CONFIG.emergencyContacts.length + 1))), 10) || SYSTEM_CONFIG.emergencyContacts.length + 1;
         const id = Math.max(0, ...SYSTEM_CONFIG.emergencyContacts.map(c => c.id)) + 1;
         SYSTEM_CONFIG.emergencyContacts.push({ id, category: category || '', name: name || '', phone: phone || '', description: description || '', icon: 'fa-phone', color: 'blue', order });
-        renderEmergencyContacts(); apiPost('saveEmergencyContacts', SYSTEM_CONFIG.emergencyContacts);
+        renderEmergencyContacts();
+        apiPost('saveEmergencyContacts', SYSTEM_CONFIG.emergencyContacts).then(function() {
+            console.log('✅ 응급연락망이 Google Sheets에 저장되었습니다.');
+        }).catch(function(error) {
+            console.error('❌ 응급연락망 저장 실패:', error);
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        });
     }
     function editEmergencyContact(i) {
         const c = SYSTEM_CONFIG.emergencyContacts[i]; if (!c) return;
@@ -1564,11 +1626,24 @@
         const description = prompt('설명', c.description);
         const order = prompt('표시 순서', String(c.order || 0));
         c.name = name !== null ? name : c.name; c.phone = phone !== null ? phone : c.phone; c.description = description !== null ? description : c.description; c.order = order !== null ? parseInt(order, 10) || 0 : c.order;
-        renderEmergencyContacts(); apiPost('saveEmergencyContacts', SYSTEM_CONFIG.emergencyContacts);
+        renderEmergencyContacts();
+        apiPost('saveEmergencyContacts', SYSTEM_CONFIG.emergencyContacts).then(function() {
+            console.log('✅ 응급연락망이 Google Sheets에 저장되었습니다.');
+        }).catch(function(error) {
+            console.error('❌ 응급연락망 저장 실패:', error);
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        });
     }
     function deleteEmergencyContact(i) {
         if (!confirm('이 연락처를 삭제할까요?')) return;
-        SYSTEM_CONFIG.emergencyContacts.splice(i, 1); renderEmergencyContacts(); apiPost('saveEmergencyContacts', SYSTEM_CONFIG.emergencyContacts);
+        SYSTEM_CONFIG.emergencyContacts.splice(i, 1);
+        renderEmergencyContacts();
+        apiPost('saveEmergencyContacts', SYSTEM_CONFIG.emergencyContacts).then(function() {
+            console.log('✅ 응급연락망이 Google Sheets에 저장되었습니다.');
+        }).catch(function(error) {
+            console.error('❌ 응급연락망 저장 실패:', error);
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        });
     }
 
     // ========== 건강상담 일정 (CONSULTATION_SCHEDULE) ==========
@@ -1738,7 +1813,13 @@
         const protectionGear = result === '초과' ? '귀마개' : '-';
         NOISE_DATA.push({ factory, processName: processName || '', processDept: factory, measuredDb, standardDb, result, protectionGear });
         const noiseMode = document.getElementById('noise-btn-exceed') && document.getElementById('noise-btn-exceed').classList.contains('active') ? 'exceed' : 'all';
-        setNoiseFilter(noiseMode); apiPost('saveNoise', NOISE_DATA);
+        setNoiseFilter(noiseMode);
+        apiPost('saveNoise', NOISE_DATA).then(function() {
+            console.log('✅ 소음 측정 데이터가 Google Sheets에 저장되었습니다.');
+        }).catch(function(error) {
+            console.error('❌ 소음 측정 데이터 저장 실패:', error);
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        });
     }
     function editNoiseItem(i) {
         const n = NOISE_DATA[i]; if (!n) return;
@@ -1747,13 +1828,25 @@
         n.processName = processName !== null ? processName : n.processName;
         if (!isNaN(measuredDbRaw)) { const measuredDb = Math.round(measuredDbRaw * 10) / 10; n.measuredDb = measuredDb; n.result = measuredDb > (n.standardDb || 87.7) ? '초과' : '적합'; n.protectionGear = n.result === '초과' ? '귀마개' : '-'; }
         const noiseMode = document.getElementById('noise-btn-exceed') && document.getElementById('noise-btn-exceed').classList.contains('active') ? 'exceed' : 'all';
-        setNoiseFilter(noiseMode); apiPost('saveNoise', NOISE_DATA);
+        setNoiseFilter(noiseMode);
+        apiPost('saveNoise', NOISE_DATA).then(function() {
+            console.log('✅ 소음 측정 데이터가 Google Sheets에 저장되었습니다.');
+        }).catch(function(error) {
+            console.error('❌ 소음 측정 데이터 저장 실패:', error);
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        });
     }
     function deleteNoiseItem(i) {
         if (!confirm('이 소음 측정 항목을 삭제할까요?')) return;
         NOISE_DATA.splice(i, 1);
         const noiseMode = document.getElementById('noise-btn-exceed') && document.getElementById('noise-btn-exceed').classList.contains('active') ? 'exceed' : 'all';
-        setNoiseFilter(noiseMode); apiPost('saveNoise', NOISE_DATA);
+        setNoiseFilter(noiseMode);
+        apiPost('saveNoise', NOISE_DATA).then(function() {
+            console.log('✅ 소음 측정 데이터가 Google Sheets에 저장되었습니다.');
+        }).catch(function(error) {
+            console.error('❌ 소음 측정 데이터 저장 실패:', error);
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        });
     }
 
     function handleFloorplanUpload(factoryNum, input) {
@@ -1813,8 +1906,9 @@
                 }
             });
             showNoiseFloorplan(currentFactory);
-        }).catch(function() {
-            alert('⚠️ 저장 중 오류가 발생했습니다. Google Sheets 연결을 확인해주세요.');
+        }).catch(function(error) {
+            const errorMsg = error && error.message ? error.message : '알 수 없는 오류';
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + errorMsg + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
         });
     }
 
@@ -1933,8 +2027,9 @@
         // Google Sheets에 저장 (다른 기기에서도 보이도록)
         apiPost('saveMedicineSurveyUrl', { url: url }).then(function() {
             alert('✅ 설문조사 링크가 Google Sheets에 저장되었습니다!\n\n이제 다른 기기(핸드폰 등)에서도 실시간으로 볼 수 있습니다.');
-        }).catch(function() {
-            alert('⚠️ 저장 중 오류가 발생했습니다. Google Sheets 연결을 확인해주세요.');
+        }).catch(function(error) {
+            const errorMsg = error && error.message ? error.message : '알 수 없는 오류';
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + errorMsg + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
         });
     }
     function renderMedicineSurveyUserArea() {
@@ -2091,7 +2186,12 @@
         }
         applyListFilter();
         updateDashboardCounselingRate();
-        apiPost('saveMembers', APP_DATA.members);
+        apiPost('saveMembers', APP_DATA.members).then(function() {
+            console.log('✅ 집중관리 명단이 Google Sheets에 저장되었습니다.');
+        }).catch(function(error) {
+            console.error('❌ 집중관리 명단 저장 실패:', error);
+            alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        });
     }
 
     function renderMemberTable(members) {
