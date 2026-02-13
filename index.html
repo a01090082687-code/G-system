@@ -1,0 +1,2671 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>G-System V3.9 | 구영테크 보건시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="flex h-screen overflow-hidden text-slate-800">
+    <!-- 데이터 로딩 오버레이 -->
+    <div id="data-loading-overlay"
+        class="hidden fixed inset-0 z-[100] bg-slate-900/80 flex flex-col items-center justify-center gap-4">
+        <div class="w-12 h-12 border-4 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-white font-bold">데이터 불러오는 중...</p>
+    </div>
+    <!-- PT 모드 버튼 (우측 하단) -->
+    <button type="button" id="pt-mode-btn" onclick="togglePTMode()"
+        class="fixed bottom-6 right-6 z-[60] px-4 py-2 rounded-xl font-bold text-sm bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg flex items-center gap-2">
+        <i class="fas fa-tv"></i> PT 모드
+    </button>
+    <div id="pt-mode-bar"
+        class="hidden fixed bottom-0 left-0 right-0 z-[70] h-16 bg-slate-800/95 flex items-center justify-center gap-4 px-4">
+        <button type="button" onclick="ptPrevSlide()"
+            class="px-6 py-2 rounded-xl font-bold bg-slate-600 text-white hover:bg-slate-500"><i
+                class="fas fa-chevron-left"></i> 이전</button>
+        <span id="pt-slide-indicator" class="text-white font-bold px-4">1 / 5</span>
+        <button type="button" onclick="ptNextSlide()"
+            class="px-6 py-2 rounded-xl font-bold bg-slate-600 text-white hover:bg-slate-500">다음 <i
+                class="fas fa-chevron-right"></i></button>
+        <button type="button" onclick="togglePTMode()"
+            class="px-6 py-2 rounded-xl font-bold bg-red-600 text-white hover:bg-red-500 ml-4"><i
+                class="fas fa-times"></i> 종료</button>
+    </div>
+
+    <aside class="w-72 bg-white border-r border-slate-200 hidden md:flex flex-col z-20 shadow-xl" id="main-aside">
+        <div class="p-8">
+            <div class="flex items-center gap-3 mb-8">
+                <div
+                    class="w-10 h-10 rounded-xl bg-[#064E3B] flex items-center justify-center text-white text-xl font-bold shadow-lg border-2 border-teal-500">
+                    G</div>
+                <div>
+                    <h1 class="font-black text-xl text-slate-800 tracking-tight">G-SYSTEM</h1>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">보건시스템 V3.9</p>
+                </div>
+            </div>
+            <nav class="space-y-1">
+                <button onclick="changeTab('dashboard')"
+                    class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    id="nav-dashboard"><i class="fas fa-chart-pie w-5 text-center"></i> 대시보드</button>
+                <button onclick="changeTab('list')"
+                    class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    id="nav-list"><i class="fas fa-users w-5 text-center"></i> 집중관리 명단</button>
+                <button onclick="changeTab('expense')"
+                    class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    id="nav-expense"><i class="fas fa-won-sign w-5 text-center"></i> 병원비 지출</button>
+                <button onclick="changeTab('risk-factors')"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    id="nav-risk-factors"><i class="fas fa-hard-hat w-5 text-center"></i> 작업환경</button>
+                <button onclick="changeTab('noise')"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    id="nav-noise"><i class="fas fa-volume-up w-5 text-center"></i> 소음 현황</button>
+                <button onclick="changeTab('medicine-survey')"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    id="nav-medicine-survey"><i class="fas fa-medkit w-5 text-center"></i> 의약품조사</button>
+                <button onclick="changeTab('innovation')"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    id="nav-innovation"><i class="fas fa-award w-5 text-center"></i> 혁신성과</button>
+                <button onclick="changeTab('emergency')"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    id="nav-emergency"><i class="fas fa-phone-volume w-5 text-center"></i> 응급연락망</button>
+                <button onclick="changeTab('survey-results')"
+                    class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    id="nav-survey-results"><i class="fas fa-chart-bar w-5 text-center"></i> 설문결과</button>
+                <button onclick="changeTab('health-checkup')"
+                    class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    id="nav-health-checkup"><i class="fas fa-user-check w-5 text-center"></i> 건강검진 관리</button>
+                <button onclick="changeTab('msds')"
+                    class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    id="nav-msds"><i class="fas fa-flask w-5 text-center"></i> MSDS 관리</button>
+                <button onclick="changeTab('stretching')"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    id="nav-stretching"><i class="fas fa-running w-5 text-center"></i> 스트레칭 영상</button>
+            </nav>
+        </div>
+        <div class="mt-auto p-6 border-t border-slate-100 bg-slate-50">
+            <div class="flex items-center gap-3 mb-4">
+                <div
+                    class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold border-2 border-white shadow-sm">
+                    P</div>
+                <div>
+                    <p class="text-xs font-black text-slate-700">박기태 선임</p>
+                    <p class="text-[10px] text-slate-400 font-bold">총괄 관리자</p>
+                </div>
+            </div>
+            <button onclick="toggleAuth()" id="auth-btn-desktop"
+                class="w-full px-4 py-2 rounded-lg font-bold text-sm bg-teal-500 text-white hover:bg-teal-600 transition-colors flex items-center justify-center gap-2">
+                <i class="fas fa-lock"></i> <span id="auth-btn-desktop-text">관리자 로그인</span>
+            </button>
+        </div>
+    </aside>
+
+    <header
+        class="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md border-b border-slate-200 z-50 flex items-center justify-between px-4">
+        <div class="font-black text-sm text-slate-800 flex items-center gap-2"><span
+                class="text-xl">🐧</span><span>G-SYSTEM</span></div>
+        <div class="flex items-center gap-2">
+            <button onclick="toggleAuth()" id="auth-btn-mobile"
+                class="px-3 py-1.5 rounded-lg font-bold text-xs bg-teal-500 text-white hover:bg-teal-600 transition-colors"><i
+                    class="fas fa-lock"></i></button>
+            <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" id="mobile-menu-btn"
+                class="admin-only p-2 text-slate-600"><i class="fas fa-bars text-xl"></i></button>
+        </div>
+    </header>
+
+    <div id="mobile-menu" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+        onclick="this.classList.add('hidden')">
+        <div class="absolute right-0 top-0 bottom-0 w-64 bg-white shadow-2xl p-6 flex flex-col"
+            onclick="event.stopPropagation()">
+            <div class="text-xl font-black mb-8 text-slate-800">메뉴</div>
+            <nav class="space-y-4">
+                <button onclick="goToWorkerHome(); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="worker-only block w-full text-left font-bold text-slate-600"><i class="fas fa-home"></i>
+                    홈으로</button>
+                <button onclick="changeTab('dashboard'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="admin-only hidden block w-full text-left font-bold text-slate-600">대시보드</button>
+                <button onclick="changeTab('list'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="admin-only hidden block w-full text-left font-bold text-slate-600">집중관리</button>
+                <button onclick="changeTab('expense'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="admin-only hidden block w-full text-left font-bold text-slate-600">병원비</button>
+                <button
+                    onclick="changeTab('risk-factors'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="block w-full text-left font-bold text-slate-600">작업환경</button>
+                <button onclick="changeTab('noise'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="block w-full text-left font-bold text-slate-600">소음 현황</button>
+                <button
+                    onclick="changeTab('medicine-survey'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="block w-full text-left font-bold text-slate-600">의약품</button>
+                <button
+                    onclick="changeTab('innovation'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="block w-full text-left font-bold text-slate-600">혁신성과</button>
+                <button onclick="changeTab('emergency'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="block w-full text-left font-bold text-slate-600">응급연락망</button>
+                <button
+                    onclick="changeTab('survey-results'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="admin-only hidden block w-full text-left font-bold text-slate-600">설문결과</button>
+                <button
+                    onclick="changeTab('health-checkup'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="admin-only hidden block w-full text-left font-bold text-slate-600">건강검진</button>
+                <button onclick="changeTab('msds'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="admin-only hidden block w-full text-left font-bold text-slate-600">MSDS</button>
+                <button
+                    onclick="changeTab('stretching'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="block w-full text-left font-bold text-slate-600">스트레칭</button>
+            </nav>
+        </div>
+    </div>
+
+    <div id="auth-modal"
+        class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+        onclick="this.classList.add('hidden')">
+        <div class="gu-card max-w-md w-full p-8" onclick="event.stopPropagation()">
+            <h3 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-2"><i
+                    class="fas fa-user-shield text-teal-500"></i> 관리자 로그인</h3>
+            <input type="password" id="auth-password" placeholder="비밀번호 입력"
+                class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-teal-500 mb-4"
+                onkeypress="if(event.key==='Enter') attemptLogin()">
+            <div id="auth-error" class="hidden text-red-500 text-sm font-bold mb-4 bg-red-50 p-3 rounded-lg"><i
+                    class="fas fa-exclamation-circle"></i> 비밀번호가 올바르지 않습니다.</div>
+            <div class="flex gap-3">
+                <button onclick="attemptLogin()"
+                    class="flex-1 px-6 py-3 bg-teal-500 text-white font-bold rounded-xl hover:bg-teal-600">로그인</button>
+                <button onclick="document.getElementById('auth-modal').classList.add('hidden')"
+                    class="px-6 py-3 bg-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-300">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="flex-1 overflow-y-auto h-full p-4 md:p-8 pt-20 md:pt-8 bg-[#F1F5F9]">
+        <!-- 근로자 홈 화면 (비로그인 상태 기본 화면) -->
+        <section id="worker-home" class="tab-content active max-w-4xl mx-auto space-y-6">
+            <div class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white">
+                <div class="p-6 md:p-8 relative z-10 text-center">
+                    <h2 class="text-2xl md:text-3xl font-black mb-2">구영테크 보건시스템</h2>
+                    <p class="text-white/80 font-bold text-sm">작업자 건강과 안전을 위한 보건 관리</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <!-- 의약품 신청 카드 -->
+                <button type="button" onclick="changeTab('medicine-survey')"
+                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-teal-500 to-teal-600 text-white hover:from-teal-600 hover:to-teal-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
+                    <i class="fas fa-pills text-5xl mb-3"></i>
+                    <h3 class="font-black text-lg text-center">의약품 신청</h3>
+                </button>
+                <!-- 소음 위험 지도 카드 -->
+                <button type="button"
+                    onclick="changeTab('noise'); setTimeout(function(){setNoiseFilter('exceed');}, 100);"
+                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-red-500 to-orange-500 text-white hover:from-red-600 hover:to-orange-600 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
+                    <i class="fas fa-exclamation-triangle text-5xl mb-3"></i>
+                    <h3 class="font-black text-lg text-center">소음 위험 지도</h3>
+                </button>
+                <!-- 응급 연락망 카드 -->
+                <button type="button" onclick="changeTab('emergency')"
+                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
+                    <i class="fas fa-ambulance text-5xl mb-3"></i>
+                    <h3 class="font-black text-lg text-center">응급 연락망</h3>
+                </button>
+                <!-- 스트레칭 영상 카드 -->
+                <button type="button" onclick="changeTab('stretching')"
+                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-indigo-500 to-blue-600 text-white hover:from-indigo-600 hover:to-blue-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
+                    <i class="fas fa-running text-5xl mb-3"></i>
+                    <h3 class="font-black text-lg text-center">스트레칭 영상</h3>
+                </button>
+            </div>
+        </section>
+
+        <section id="dashboard" class="tab-content admin-only max-w-7xl mx-auto space-y-8">
+            <div class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white">
+                <div class="p-8 md:p-10 relative z-10">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/30 text-[10px] font-black uppercase tracking-widest mb-3">
+                        <span class="w-2 h-2 rounded-full bg-yellow-400"></span> 실시간 운영중
+                    </div>
+                    <h2 id="announcement-title" class="text-3xl md:text-4xl font-black mb-2">구영테크 보건시스템</h2>
+                    <p id="announcement-desc" class="text-white/80 font-bold text-sm">작업자 건강과 안전을 위한 보건 관리</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="gu-card p-6 border-t-4 border-t-[#064E3B]">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">총 관리인원</p>
+                    <h3 class="text-3xl font-black text-slate-800 mt-1"><span id="dashboard-total-members">0</span><span
+                            class="text-base text-slate-400 ml-1">명</span></h3>
+                </div>
+                <div class="gu-card p-6 border-t-4 border-t-red-500">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">최고위험군 상담 진행률</p>
+                    <h3 class="text-3xl font-black text-slate-800 mt-1"><span id="dashboard-counseling-rate">0</span>%
+                    </h3>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
+                        <div id="dashboard-counseling-rate-bar" class="bg-red-500 h-full" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="gu-card p-6 border-t-4 border-t-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">누적 예산 절감액</p>
+                    <h3 class="text-3xl font-black text-amber-700 mt-1"><span id="dashboard-total-savings">₩ 0</span>
+                    </h3>
+                    <p class="text-xs font-bold text-amber-600 mt-2 flex items-center gap-1">
+                        <i class="fas fa-chart-line"></i> 자동 집계 중
+                    </p>
+                </div>
+            </div>
+            <!-- 금월 건강상담 대상자 명단 -->
+            <div class="gu-card p-6 border-t-4 border-t-purple-500">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i
+                            class="fas fa-calendar-check text-purple-600"></i> 금월 건강상담 대상자 명단</h3>
+                    <div class="flex items-center gap-2">
+                        <span id="schedule-count"
+                            class="text-sm font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-full">0명</span>
+                        <button type="button" onclick="changeTab('risk-factors')"
+                            class="text-sm font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1"><i
+                                class="fas fa-external-link-alt"></i> 상세보기</button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button type="button" onclick="showFactory(0)" id="factory-tab-0"
+                        class="factory-tab active flex-1 min-w-0 px-4 py-2 rounded-lg font-bold text-sm bg-purple-500 text-white transition-colors">전체</button>
+                    <button type="button" onclick="showFactory(1)" id="factory-tab-1"
+                        class="factory-tab flex-1 min-w-0 px-4 py-2 rounded-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">1공장</button>
+                    <button type="button" onclick="showFactory(2)" id="factory-tab-2"
+                        class="factory-tab flex-1 min-w-0 px-4 py-2 rounded-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">2공장</button>
+                </div>
+                <div class="relative mb-4">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="schedule-search" placeholder="이름으로 검색..." oninput="searchSchedule()"
+                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-purple-500">
+                </div>
+                <div id="schedule-list" class="space-y-2 max-h-80 overflow-y-auto"></div>
+            </div>
+            <!-- 부서별 소음 현황 (대시보드) -->
+            <div class="gu-card p-6 border-t-4 border-t-red-500">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i
+                            class="fas fa-volume-up text-red-500"></i> 부서별 소음 현황</h3>
+                    <button type="button" onclick="changeTab('noise')"
+                        class="text-sm font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1"><i
+                            class="fas fa-external-link-alt"></i> 상세보기</button>
+                </div>
+                <div id="dashboard-noise-by-factory" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 오늘의 안전 명언 카드 -->
+                <div class="gu-card p-6 border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
+                    <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2"><i
+                            class="fas fa-quote-left text-amber-500"></i> 오늘의 안전 명언</h3>
+                    <p id="safety-quote-text" class="text-lg md:text-xl font-black text-slate-800 leading-relaxed">안전은
+                        생명입니다.</p>
+                    <p class="text-xs font-bold text-slate-400 mt-3">매일 다른 문구로 바뀝니다</p>
+                </div>
+                <!-- 1분 스트레칭 바로가기 카드 -->
+                <div
+                    class="gu-card p-6 border-l-4 border-l-teal-500 bg-gradient-to-br from-teal-50 to-emerald-50 flex flex-col justify-center">
+                    <h3 class="font-bold text-slate-700 mb-2 flex items-center gap-2"><i
+                            class="fas fa-running text-teal-500"></i> 1분 스트레칭</h3>
+                    <p class="text-slate-600 font-bold mb-4">뻐근하시죠? 1분만 투자하세요.</p>
+                    <button type="button" onclick="changeTab('stretching')"
+                        class="w-full py-3 px-4 rounded-xl font-black text-white bg-teal-500 hover:bg-teal-600 transition-colors flex items-center justify-center gap-2">
+                        <i class="fas fa-play-circle"></i> 스트레칭 영상 보기
+                    </button>
+                </div>
+            </div>
+            <!-- 오늘의 건강 뉴스 -->
+            <div class="gu-card p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-slate-700 flex items-center gap-2"><i
+                            class="fas fa-heartbeat text-teal-500"></i> 오늘의 건강 뉴스</h3>
+                    <span id="health-news-updated-at" class="text-xs font-bold text-slate-400"></span>
+                </div>
+                <div id="health-news-list" class="space-y-4"></div>
+            </div>
+        </section>
+
+        <section id="list" class="admin-only hidden tab-content max-w-7xl mx-auto space-y-6">
+            <h2 class="text-2xl font-black text-slate-800">보건 집중관리 대상자 (<span id="list-total-members">0</span>명)</h2>
+            <div class="gu-card p-4 mb-4">
+                <label class="block text-sm font-bold text-slate-700 mb-2">이름 검색</label>
+                <input type="text" id="list-search" placeholder="이름으로 검색..." oninput="searchMembers(this.value)"
+                    class="w-full md:max-w-md px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-teal-500">
+            </div>
+            <div class="flex flex-wrap gap-2 mb-4">
+                <button onclick="filterList('All')"
+                    class="filter-btn active px-4 py-2 rounded-xl bg-slate-200 text-slate-600 font-bold text-xs"
+                    data-filter="All">전체</button>
+                <button onclick="filterList('Highest')"
+                    class="filter-btn px-4 py-2 rounded-xl bg-red-50 text-red-600 font-bold text-xs"
+                    data-filter="Highest">최고위험</button>
+                <button onclick="filterList('Pending')"
+                    class="filter-btn px-4 py-2 rounded-xl bg-orange-50 text-orange-600 font-bold text-xs"
+                    data-filter="Pending">미상담</button>
+            </div>
+            <div class="gu-card overflow-hidden">
+                <div class="mobile-scroll overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200">
+                                <th class="p-3 text-xs font-black text-slate-500 uppercase whitespace-nowrap">성명</th>
+                                <th class="p-3 text-xs font-black text-slate-500 uppercase whitespace-nowrap">부서</th>
+                                <th class="p-3 text-xs font-black text-slate-500 uppercase whitespace-nowrap">위험등급</th>
+                                <th class="p-3 text-xs font-black text-slate-500 uppercase whitespace-nowrap">관리 소견</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">1월</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">2월</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">3월</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">4월</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">5월</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">6월</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">7월</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">8월</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">9월</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">10월</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">11월</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">12월</th>
+                            </tr>
+                        </thead>
+                        <tbody id="member-table-body"
+                            class="divide-y divide-slate-100 text-sm font-medium text-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="expense" class="admin-only hidden tab-content max-w-7xl mx-auto space-y-6">
+            <h2 class="text-2xl font-black text-slate-800">병원비 지출 현황</h2>
+            <div class="gu-card p-6">
+                <div class="flex gap-2 mb-4">
+                    <button onclick="changeExpenseYear(2025)"
+                        class="expense-year-btn active px-6 py-3 font-bold rounded-lg bg-teal-500 text-white"
+                        data-year="2025">2025년</button>
+                    <button onclick="changeExpenseYear(2026)"
+                        class="expense-year-btn px-6 py-3 font-bold rounded-lg text-slate-600 hover:bg-slate-100"
+                        data-year="2026">2026년</button>
+                </div>
+                <div class="h-64"><canvas id="expenseChart"></canvas></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="gu-card p-4">
+                    <p class="text-xs font-bold text-slate-400 uppercase">총 지출</p>
+                    <div class="text-2xl font-black" id="expense-total">-</div>
+                </div>
+                <div class="gu-card p-4">
+                    <p class="text-xs font-bold text-slate-400 uppercase">총 건수</p>
+                    <div class="text-2xl font-black" id="expense-count">-</div>
+                </div>
+                <div class="gu-card p-4">
+                    <p class="text-xs font-bold text-slate-400 uppercase">평균 비용</p>
+                    <div class="text-2xl font-black" id="expense-avg">-</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="risk-factors" class="tab-content max-w-7xl mx-auto space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <h2 class="text-2xl font-black text-slate-800">작업환경 5대 핵심 유해인자</h2>
+                <button type="button" id="risk-add-btn"
+                    class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600"
+                    onclick="addRisk()"><i class="fas fa-plus"></i> 항목 추가</button>
+            </div>
+            <div id="risk-factors-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </section>
+
+        <!-- 소음 현황 -->
+        <section id="noise" class="tab-content max-w-7xl mx-auto space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800">작업환경측정 - 소음 현황</h2>
+                    <p class="text-sm font-bold text-slate-500 mt-1">소음 노출기준(85dB) 초과 공정 집중 관리</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" onclick="goToWorkerHome()"
+                        class="worker-only flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors">
+                        <i class="fas fa-home"></i> 홈으로
+                    </button>
+                    <button type="button" id="noise-add-btn"
+                        class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600"
+                        onclick="addNoiseItem()"><i class="fas fa-plus"></i> 항목 추가</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 noise-toolbar">
+                    <button type="button" onclick="setNoiseFilter('exceed')" id="noise-btn-exceed"
+                        class="noise-filter-btn px-4 py-2 rounded-xl font-bold text-sm bg-slate-200 text-slate-600 hover:bg-slate-300"><i
+                            class="fas fa-exclamation-triangle"></i> 초과만 보기</button>
+                    <button type="button" onclick="setNoiseFilter('all')" id="noise-btn-all"
+                        class="noise-filter-btn active px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white"><i
+                            class="fas fa-list"></i> 전체 보기</button>
+                    <button type="button" onclick="toggleNoiseShareMode()" id="noise-share-btn"
+                        class="px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600"><i
+                            class="fas fa-share-alt"></i> 공유용 캡처 모드</button>
+                </div>
+            </div>
+            <!-- 작업장 소음 측정 위치도 -->
+            <div class="gu-card p-6 border-t-4 border-t-blue-500">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i
+                            class="fas fa-map-marked-alt text-blue-500"></i> 작업장 소음 측정 위치도</h3>
+                    <div class="admin-only hidden flex gap-2">
+                        <label for="floorplan-upload-1"
+                            class="px-4 py-2 rounded-lg font-bold text-sm bg-blue-500 text-white hover:bg-blue-600 cursor-pointer transition-colors">
+                            <i class="fas fa-upload"></i> 1공장 이미지 추가
+                        </label>
+                        <input type="file" id="floorplan-upload-1" accept="image/*" class="hidden"
+                            onchange="handleFloorplanUpload(1, this)">
+                        <label for="floorplan-upload-2"
+                            class="px-4 py-2 rounded-lg font-bold text-sm bg-blue-500 text-white hover:bg-blue-600 cursor-pointer transition-colors">
+                            <i class="fas fa-upload"></i> 2공장 이미지 추가
+                        </label>
+                        <input type="file" id="floorplan-upload-2" accept="image/*" class="hidden"
+                            onchange="handleFloorplanUpload(2, this)">
+                        <button type="button" onclick="saveFloorplanImages()"
+                            class="px-4 py-2 rounded-lg font-bold text-sm bg-emerald-500 text-white hover:bg-emerald-600 transition-colors">
+                            <i class="fas fa-save"></i> 저장
+                        </button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-4 mb-4">
+                    <button type="button" onclick="showNoiseFloorplan(1)" id="floorplan-tab-1"
+                        class="floorplan-tab active px-4 py-2 rounded-lg font-bold text-sm bg-blue-500 text-white transition-colors">1공장</button>
+                    <button type="button" onclick="showNoiseFloorplan(2)" id="floorplan-tab-2"
+                        class="floorplan-tab px-4 py-2 rounded-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">2공장</button>
+                </div>
+                <div class="rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-50">
+                    <img id="noise-floorplan-image" src="images/noise-floorplan-1factory.png" alt="1공장 소음 측정 위치도"
+                        class="w-full h-auto object-contain"
+                        onerror="this.style.display='none'; document.getElementById('noise-floorplan-placeholder').style.display='block';">
+                    <div id="noise-floorplan-placeholder" class="hidden p-12 text-center">
+                        <i class="fas fa-image text-6xl text-slate-300 mb-4"></i>
+                        <p class="text-slate-500 font-bold mb-2">도면 이미지를 준비 중입니다.</p>
+                        <p class="text-sm text-slate-400">images 폴더에 noise-floorplan-1factory.png,
+                            noise-floorplan-2factory.png 파일을 넣어주세요.</p>
+                    </div>
+                </div>
+                <div class="mt-4 flex flex-wrap items-center gap-4 text-sm">
+                    <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 rounded-full bg-red-500"></div><span class="font-bold">노출기준 초과</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 rounded-full bg-blue-500"></div><span class="font-bold">85dB(A) 이상</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 rounded-full bg-green-500"></div><span class="font-bold">85dB(A) 미만</span>
+                    </div>
+                </div>
+            </div>
+            <div id="noise-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            <div id="noise-share-view" class="hidden fixed inset-0 z-[100] bg-slate-100 p-6 overflow-auto">
+                <div class="max-w-4xl mx-auto">
+                    <h1 id="noise-share-title"
+                        class="text-xl md:text-2xl font-black text-slate-800 text-center mb-6 py-4 bg-white rounded-2xl shadow border-2 border-red-200">
+                        2026년 상반기 소음 초과 공정 알림 - 필히 청력보호구 착용</h1>
+                    <div id="noise-share-cards" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    <button type="button" onclick="toggleNoiseShareMode()"
+                        class="mt-6 w-full py-3 bg-slate-500 text-white font-bold rounded-xl hover:bg-slate-600"><i
+                            class="fas fa-times"></i> 캡처 모드 닫기</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="medicine-survey" class="tab-content max-w-7xl mx-auto space-y-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-black text-slate-800">의약품 수요 조사</h2>
+                <button type="button" onclick="goToWorkerHome()"
+                    class="worker-only flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors">
+                    <i class="fas fa-home"></i> 홈으로
+                </button>
+            </div>
+            <div id="medicine-survey-admin" class="admin-only hidden gu-card p-6 border-l-8 border-l-amber-500 mb-6">
+                <h3 class="text-lg font-black text-slate-800 mb-3">설문조사 링크 관리 (관리자)</h3>
+                <div class="flex flex-wrap gap-3 items-end">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-sm font-bold text-slate-700 mb-1">설문조사 URL</label>
+                        <input type="url" id="medicine-survey-url" placeholder="https://naver.me/... 또는 구글 폼 링크"
+                            class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-teal-500">
+                    </div>
+                    <button type="button" onclick="saveMedicineSurveyUrl()"
+                        class="px-6 py-3 bg-teal-500 text-white font-bold rounded-xl hover:bg-teal-600"><i
+                            class="fas fa-save"></i> 저장</button>
+                </div>
+            </div>
+            <div class="gu-card p-8 border-t-8 border-t-teal-500">
+                <p class="text-sm font-bold text-slate-500 mb-4">현장 구급함 부족분 신청은 아래 설문으로 참여해 주세요.</p>
+                <div id="medicine-survey-user-area"></div>
+            </div>
+        </section>
+
+        <section id="innovation" class="tab-content max-w-7xl mx-auto space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <h2 class="text-2xl font-black text-slate-800">주요 업무 실적</h2>
+                <button type="button" id="innovation-add-btn"
+                    class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600"
+                    onclick="addInnovation()"><i class="fas fa-plus"></i> 항목 추가</button>
+            </div>
+            <!-- 누적 예산 절감액 카드 -->
+            <div class="gu-card p-6 border-t-4 border-t-emerald-500">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">누적 예산 절감액</p>
+                <h3 class="text-4xl font-black text-slate-800"><span id="innovation-total-savings">₩ 0</span></h3>
+            </div>
+            <div id="innovation-tab-list" class="space-y-4"></div>
+        </section>
+
+        <section id="emergency" class="tab-content max-w-7xl mx-auto space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <h2 class="text-2xl font-black text-slate-800">응급상황 대응 매뉴얼</h2>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="goToWorkerHome()"
+                        class="worker-only flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors">
+                        <i class="fas fa-home"></i> 홈으로
+                    </button>
+                    <button type="button" id="emergency-add-btn"
+                        class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600"
+                        onclick="addEmergencyContact()"><i class="fas fa-plus"></i> 항목 추가</button>
+                </div>
+            </div>
+            <!-- 기본 원칙 -->
+            <div class="gu-card p-6 bg-amber-50 border-l-4 border-amber-500">
+                <h3 class="text-lg font-black text-slate-800 mb-2">기본 원칙</h3>
+                <p class="text-slate-700 font-bold">선(先) 환자 이송 및 조치 → 후(後) 사고 보고 (병원 후송을 지연 시키는 사례가 없을 것)</p>
+            </div>
+            <!-- 대응 절차 -->
+            <div class="gu-card p-6">
+                <h3 class="text-lg font-black text-slate-800 mb-4">대응 절차</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <p class="text-xs font-black text-slate-500 uppercase mb-2">주간 근무시간</p>
+                        <p class="font-bold text-slate-800">안전보건팀 즉시 통보</p>
+                        <p class="text-sm text-slate-600 mt-1">안전보건팀 주관으로 병원 이송 및 조치 진행</p>
+                    </div>
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <p class="text-xs font-black text-slate-500 uppercase mb-2">야간/휴일</p>
+                        <p class="font-bold text-slate-800">최초 발견자 주관 · 즉시 이송</p>
+                        <p class="text-sm text-slate-600 mt-1">선 조치 후 안전보건팀에 통보</p>
+                    </div>
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <p class="text-xs font-black text-slate-500 uppercase mb-2">협력업체 사고</p>
+                        <p class="font-bold text-slate-800">해당 업체 관리자 이송 원칙</p>
+                        <p class="text-sm text-slate-600 mt-1">부재 시 해당 작업부서 관리자가 조치</p>
+                    </div>
+                </div>
+            </div>
+            <!-- 부상 유형별 지정 병원 -->
+            <div class="gu-card p-6 overflow-hidden">
+                <h3 class="text-lg font-black text-slate-800 mb-2">부상 유형별 지정 병원</h3>
+                <p class="text-sm text-slate-600 mb-4">일반환자(봉합, 골절, 내과 등)는 당사 협력병원인 우리허브병원으로 우선 이송 원칙</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 border-b-2 border-slate-200">
+                                <th class="px-3 py-2 font-black text-slate-700">부상 유형</th>
+                                <th class="px-3 py-2 font-black text-slate-700">지정 병원</th>
+                                <th class="px-3 py-2 font-black text-slate-700">응급실 번호</th>
+                                <th class="px-3 py-2 font-black text-slate-700">소요시간</th>
+                                <th class="px-3 py-2 font-black text-slate-700">특이사항</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-700">
+                            <tr class="border-b border-slate-100">
+                                <td class="px-3 py-2">수지 절단</td>
+                                <td class="px-3 py-2">W병원 (수지접합)</td>
+                                <td class="px-3 py-2">053-550-5000</td>
+                                <td class="px-3 py-2">35분</td>
+                                <td class="px-3 py-2">[협력병원] 24시간 수술 가능</td>
+                            </tr>
+                            <tr class="border-b border-slate-100">
+                                <td class="px-3 py-2">중증 골절 · 단순 봉합 · 내·외과</td>
+                                <td class="px-3 py-2">우리허브병원 (우선 이송)</td>
+                                <td class="px-3 py-2">053-716-6330</td>
+                                <td class="px-3 py-2">20분</td>
+                                <td class="px-3 py-2">[협력병원] 자정(24:00) 마감</td>
+                            </tr>
+                            <tr class="border-b border-slate-100">
+                                <td class="px-3 py-2">화학 화상 (질산)</td>
+                                <td class="px-3 py-2">대구푸른병원</td>
+                                <td class="px-3 py-2">053-471-2800</td>
+                                <td class="px-3 py-2">40분</td>
+                                <td class="px-3 py-2">화상 전문센터 (24시간)</td>
+                            </tr>
+                            <tr class="border-b border-slate-100">
+                                <td class="px-3 py-2">심정지 · 의식불명</td>
+                                <td class="px-3 py-2">영남대병원</td>
+                                <td class="px-3 py-2">053-623-8001</td>
+                                <td class="px-3 py-2">45분</td>
+                                <td class="px-3 py-2">즉시 119 신고 / 권역응급센터</td>
+                            </tr>
+                            <tr class="border-b border-slate-100">
+                                <td class="px-3 py-2">안구 손상 (이물질)</td>
+                                <td class="px-3 py-2">봄이오는안과</td>
+                                <td class="px-3 py-2">053-614-7778</td>
+                                <td class="px-3 py-2">20분</td>
+                                <td class="px-3 py-2">18:30 진료 종료</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- 응급 연락망 (HOT-LINE) -->
+            <div class="gu-card p-8 border-l-8 border-l-red-500">
+                <h3 class="text-xl font-black text-red-600 mb-2">🚨 비상 연락망 (HOT-LINE)</h3>
+                <p class="text-sm text-slate-600 mb-4">사고 발생 시 즉시 유선 보고 필수</p>
+                <div id="emergency-contacts-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+            <!-- 중요 안내 -->
+            <div class="gu-card p-6 bg-slate-50 border border-slate-200">
+                <h3 class="text-lg font-black text-slate-800 mb-2">중요 안내</h3>
+                <p class="text-slate-700">협력병원(W병원, 우리허브병원) 우선 이송을 통해 신속한 치료가 가능합니다. 응급상황 발생 시 당황하지 말고 본 매뉴얼에 따라 차분히
+                    대응하시기 바랍니다.</p>
+            </div>
+        </section>
+
+        <section id="survey-results" class="admin-only hidden tab-content max-w-7xl mx-auto space-y-6">
+            <h2 class="text-2xl font-black text-slate-800">설문조사 결과</h2>
+            <div class="gu-card p-8">
+                <p class="text-slate-600">응답 데이터가 없습니다.</p>
+            </div>
+        </section>
+
+        <section id="health-checkup" class="admin-only hidden tab-content max-w-7xl mx-auto space-y-6">
+            <h2 class="text-2xl font-black text-slate-800">건강검진 관리</h2>
+            <div class="gu-card p-8">
+                <p class="text-slate-600">인원 데이터가 없습니다.</p>
+            </div>
+        </section>
+
+        <section id="msds" class="admin-only hidden tab-content max-w-7xl mx-auto space-y-6">
+            <h2 class="text-2xl font-black text-slate-800">MSDS 관리</h2>
+            <div class="gu-card p-6 border-l-8 border-l-amber-500">
+                <p class="text-sm font-bold text-slate-600">유해·위험 화학물질 물질안전보건자료 비치·열람 관리</p>
+            </div>
+            <div class="gu-card p-4">
+                <label class="block text-sm font-bold text-slate-700 mb-2">화학물질 검색</label>
+                <input type="text" id="msds-search" placeholder="제품명 또는 CAS번호로 검색..."
+                    class="w-full md:max-w-md px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-amber-500"
+                    oninput="renderMsdsTable(this.value.trim())">
+            </div>
+            <div class="gu-card overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 border-b-2 border-slate-200">
+                                <th class="px-4 py-3 text-sm font-black text-slate-700">제품명</th>
+                                <th class="px-4 py-3 text-sm font-black text-slate-700">CAS번호</th>
+                                <th class="px-4 py-3 text-sm font-black text-slate-700">용도</th>
+                                <th class="px-4 py-3 text-sm font-black text-slate-700">위험도</th>
+                                <th class="px-4 py-3 text-sm font-black text-slate-700 text-center w-28">MSDS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="msds-table-body"></tbody>
+                    </table>
+                </div>
+                <p id="msds-empty-msg" class="hidden px-4 py-6 text-slate-500 text-sm font-bold text-center">검색 결과가
+                    없습니다.</p>
+            </div>
+        </section>
+
+        <section id="stretching" class="tab-content max-w-7xl mx-auto space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800">스트레칭 영상</h2>
+                    <p class="text-sm font-bold text-slate-500 mt-1">근골격계 부담 예방을 위한 실전 스트레칭 가이드</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="goToWorkerHome()"
+                        class="worker-only flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors">
+                        <i class="fas fa-home"></i> 홈으로
+                    </button>
+                    <button type="button" id="stretching-add-btn"
+                        class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600"
+                        onclick="addStretchingVideo()"><i class="fas fa-plus"></i> 항목 추가</button>
+                </div>
+            </div>
+            <!-- 스트레칭 영상 추가 모달 -->
+            <div id="stretching-add-modal"
+                class="hidden fixed inset-0 z-[100] bg-slate-900/80 flex items-center justify-center p-4">
+                <div class="gu-card p-6 max-w-md w-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-black text-slate-800">스트레칭 영상 추가</h3>
+                        <button type="button" onclick="closeStretchingAddModal()"
+                            class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">영상 제목 *</label>
+                            <input type="text" id="stretching-add-title" placeholder="예: 목·어깨 스트레칭"
+                                class="w-full px-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:border-teal-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">설명</label>
+                            <textarea id="stretching-add-description" placeholder="영상에 대한 설명을 입력하세요" rows="3"
+                                class="w-full px-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:border-teal-500"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">영상 URL *</label>
+                            <input type="text" id="stretching-add-url" placeholder="https://youtube.com/watch?v=..."
+                                class="w-full px-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:border-teal-500">
+                        </div>
+                        <div class="flex gap-2 pt-2">
+                            <button type="button" onclick="saveStretchingVideo()"
+                                class="flex-1 px-4 py-3 rounded-xl font-bold bg-teal-500 text-white hover:bg-teal-600 transition-colors">
+                                <i class="fas fa-save"></i> 저장
+                            </button>
+                            <button type="button" onclick="closeStretchingAddModal()"
+                                class="px-4 py-3 rounded-xl font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors">
+                                취소
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="stretching-video-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </section>
+    </main>
+
+    <script>
+        // ========== 0. 구글 시트 백엔드 URL (배포 후 여기에 붙여넣기) ==========
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbziwcFQgIxJ4D8Jq84e76pMoezKup2pntr02ZfQscYKEdkzojrPf0F_GTg961kcizZTmg/exec';
+
+        // ========== 1. 데이터 초기화 (기본값, 시트에서 덮어씀) ==========
+        let NOISE_DATA = [
+            { factory: '1공장', processName: '프레스', processDept: '1공장', measuredDb: 96.4, standardDb: 87.7, result: '초과', protectionGear: '귀마개' },
+            { factory: '1공장', processName: 'CO2용접', processDept: '1공장', measuredDb: 88.3, standardDb: 87.7, result: '초과', protectionGear: '귀마개' },
+            { factory: '1공장', processName: '가공/연마', processDept: '1공장', measuredDb: 88.1, standardDb: 87.7, result: '초과', protectionGear: '귀마개' },
+            { factory: '1공장', processName: '스폿용접', processDept: '1공장', measuredDb: 89.1, standardDb: 87.7, result: '초과', protectionGear: '귀마개' },
+            { factory: '2공장', processName: '프레스', processDept: '2공장', measuredDb: 88.1, standardDb: 87.7, result: '초과', protectionGear: '귀마개' }
+        ];
+
+        const MSDS_DATA = [
+            { id: 1, productName: '아세톤', casNo: '67-64-1', usage: '세정·탈지 (현장)', riskLevel: '높음', fileUrl: 'https://msds.kosha.or.kr/kcic/msds/search.do' },
+            { id: 2, productName: '도장용 시너 (신나)', casNo: '8030-30-6', usage: '도장 희석 (도장반)', riskLevel: '높음', fileUrl: 'https://msds.kosha.or.kr/kcic/msds/search.do' },
+            { id: 3, productName: '용접봉 E7016', casNo: '-', usage: '용접 (용접반)', riskLevel: '중간', fileUrl: 'https://msds.kosha.or.kr/kcic/msds/search.do' },
+            { id: 4, productName: '에폭시 접착제', casNo: '1675-54-3', usage: '접착·충전 (조립·현장)', riskLevel: '중간', fileUrl: 'https://msds.kosha.or.kr/kcic/msds/search.do' }
+        ];
+
+        let CONSULTATION_SCHEDULE = {
+            currentFactory: 0,
+            factory1: [
+                "강민성", "강태호", "고병해", "권유겸", "권은희", "김다솔", "김도훈", "김도훈", "김민조", "김병화",
+                "김성호", "감새헌", "김수민", "김양식", "김영철", "김영해", "김영환", "김완국", "김전호", "김준동"
+            ],
+            factory2: [
+                "박인학", "전성호", "김성진", "김준영", "김지환", "김진균", "김진환", "김찬민", "박원규", "송룡슈",
+                "송영빈", "여동현", "오상흠", "윤진영", "이대응"
+            ]
+        };
+
+        // 의약품 설문조사 URL 변수 (Google Sheets에서 로드되거나 localStorage에서 복원)
+        let medicineSurveyUrlFromServer = '';
+
+        let SYSTEM_CONFIG = {
+            emergencyContacts: [
+                { id: 1, category: "응급구조", name: "119 응급구조", phone: "119", description: "중증 응급상황 즉시 신고", icon: "fa-ambulance", color: "red", order: 1 },
+                { id: 2, category: "내부", name: "박기태 선임 (응급의료 최우선)", phone: "010-9008-2687", description: "사고 발생 시 즉시 유선 보고 필수", icon: "fa-user-md", color: "red", order: 2 },
+                { id: 3, category: "내부", name: "조철제 팀장 (비상 총괄)", phone: "010-7557-6887", description: "비상 총괄 관리", icon: "fa-user-tie", color: "orange", order: 3 },
+                { id: 4, category: "내부", name: "박원석 (안전관리)", phone: "010-8495-1318", description: "안전관리 담당", icon: "fa-shield-alt", color: "blue", order: 4 },
+                { id: 5, category: "내부", name: "김수민 (안전관리)", phone: "010-6564-5027", description: "안전관리 담당", icon: "fa-shield-alt", color: "blue", order: 5 }
+            ],
+            hospitals: [
+                { id: 1, name: "우리허브병원", phone: "053-716-6330", emergencyPhone: "053-716-6330", address: "대구시 현풍/구지", specialty: "일반 공상 및 응급 상황", note: "우선 이송, 자정(24:00) 마감", isMOU: true, priority: 1, color: "teal", estimatedTime: "20분" },
+                { id: 2, name: "W병원", phone: "053-550-5000", emergencyPhone: "053-550-5000", address: "대구시 달서구", specialty: "수지접합 전문", note: "24시간 수술 가능, 절단 사고 등 중증 외상 시 이송", isMOU: true, priority: 2, color: "blue", estimatedTime: "35분" },
+                { id: 3, name: "대구푸른병원", phone: "053-471-2800", emergencyPhone: "053-471-2800", specialty: "화상 전문센터", note: "화학 화상(질산) 등 화상 전문, 24시간 운영", isMOU: false, priority: 3, color: "orange", estimatedTime: "40분" },
+                { id: 4, name: "영남대병원", phone: "053-623-8001", emergencyPhone: "053-623-8001", specialty: "권역응급센터", note: "심정지·의식불명 등 중증 응급 시, 즉시 119 신고 후 이송", isMOU: false, priority: 4, color: "red", estimatedTime: "45분" },
+                { id: 5, name: "봄이오는안과", phone: "053-614-7778", emergencyPhone: "053-614-7778", specialty: "안구 손상 (이물질)", note: "18:30 진료 종료", isMOU: false, priority: 5, color: "purple", estimatedTime: "20분" }
+            ],
+            announcements: { title: "구영테크 보건시스템", description: "작업자 건강과 안전을 위한 보건 관리", imageUrl: "" },
+            metadata: { lastUpdated: "2026-02-12T16:56:00", updatedBy: "박기태 선임", version: "3.9" }
+        };
+
+        let APP_DATA = {
+            stats: { total_members: 106, consulted_rate: 77.3, zero_accident: "2개월" },
+            expenses_2025: [
+                { month: 1, items: [{ name: "이영준", amount: 251860, hospital: "병원" }] },
+                { month: 2, items: [{ name: "이영준", amount: 15000, hospital: "병원" }, { name: "하다현", amount: 427370, hospital: "병원" }, { name: "박래경", amount: 491570, hospital: "병원" }, { name: "김동우", amount: 513970, hospital: "대학병원" }] },
+                { month: 3, items: [{ name: "이주호", amount: 76300, hospital: "약국" }, { name: "문영남", amount: 166780, hospital: "병원" }, { name: "박래경", amount: 195470, hospital: "병원" }, { name: "김동우", amount: 6541480, hospital: "대학병원" }] },
+                { month: 4, items: [{ name: "김동우", amount: 171620, hospital: "대학병원" }, { name: "곽용호", amount: 1474000, hospital: "병원" }] },
+                { month: 5, items: [{ name: "김동우", amount: 2544600, hospital: "대학병원" }, { name: "경용호", amount: 660650, hospital: "병원" }, { name: "김지환", amount: 412900, hospital: "병원" }] },
+                { month: 6, items: [{ name: "김동우", amount: 67640, hospital: "대학병원" }, { name: "곽용호", amount: 321127, hospital: "병원" }, { name: "김진희", amount: 189720, hospital: "병원" }] },
+                { month: 7, items: [{ name: "곽용호", amount: 746336, hospital: "병원" }, { name: "손재웅", amount: 314400, hospital: "약국" }, { name: "김종남", amount: 5297900, hospital: "대학병원" }] },
+                { month: 8, items: [{ name: "김종남", amount: 102800, hospital: "대학병원" }] },
+                { month: 9, items: [{ name: "김종남", amount: 807440, hospital: "대학병원" }, { name: "문영남", amount: 4858130, hospital: "병원" }, { name: "김풍원", amount: 1235000, hospital: "병원" }] },
+                { month: 10, items: [{ name: "김종남", amount: 59170, hospital: "대학병원" }, { name: "문영남", amount: 655320, hospital: "병원" }, { name: "김풍원", amount: 923130, hospital: "병원" }] },
+                { month: 11, items: [] },
+                { month: 12, items: [] }
+            ],
+            expenses_2026: [{ month: 7, items: [] }, { month: 8, items: [] }, { month: 9, items: [] }, { month: 10, items: [] }, { month: 11, items: [] }, { month: 12, items: [] }],
+            floorplans: {},
+            risks: [
+                { type: "밀폐공간(질식)", dept: "전 공정", health: "산소결핍, 유해가스", action: "복합가스측정기 구매 완료", level: "Critical" },
+                { type: "소음", dept: "프레스, 용접", health: "소음성 난청", action: "귀마개 착용 및 특수검진", level: "Critical" },
+                { type: "근골격계 부담", dept: "조립반, 물류", health: "요통, 어깨 결림", action: "유해요인조사 실시", level: "High" },
+                { type: "용접 흄", dept: "용접반", health: "폐기능 저하", action: "국소배기, 특급마스크", level: "High" },
+                { type: "유기용제", dept: "도장반", health: "간기능 이상", action: "밀폐용기 개선, 환기", level: "Mid" }
+            ],
+            innovations: [
+                { category: "Cost", title: "근골격계 조사 자체 수행", desc: "외부 위탁 없이 직접 실시하여 500만원 예산 절감", date: "2024.12", savings: 5000000, imageUrl: "" },
+                { category: "Safety", title: "화학물질 관리 체계 고도화", desc: "현장 전수 조사 및 MSDS 보관함 추가 설치, 공정관리 요령 부착", date: "2025.02", imageUrl: "" },
+                { category: "System", title: "안전보건 방송 시스템 구축", desc: "1·2·3공장 교육 방송 동시 송출 시스템 완비", date: "2025.06", imageUrl: "" },
+                { category: "Cost", title: "보건관리 전문기관 대통합", desc: "영남대→대한산업보건협회 변경으로 연간 5,113,440원 절감 + S등급 달성", date: "2025.11", savings: 5113440, imageUrl: "" },
+                { category: "Health", title: "근골격계 예방 (2공장)", desc: "유해요인조사 완료", date: "2025.01", imageUrl: "" },
+                { category: "Network", title: "외부 벤치마킹", desc: "메가젠 안전보건 교류", date: "2025.11", imageUrl: "" },
+                { category: "Edu", title: "전문성 강화", desc: "가스농도 측정평가 교육 이수", date: "2025.09", imageUrl: "" },
+                { category: "System", title: "법령 대응 강화", desc: "밀폐공간 법령 개정 대응 측정기 구매", date: "2025.11", imageUrl: "" },
+                { category: "Visual", title: "조도 측정 결과 보고 및 개선 일정 추진", desc: "1·2공장 작업장 전 구역 조도 측정 실시. 2공장 전 구역 기준 충족. 1공장 용접부스·축압기 미달 구역 개선 시행.", date: "2025.09", imageUrl: "" },
+                { category: "Process", title: "행정 효율화", desc: "소모품 결제 통합 (법인카드 월 1회 일괄)", date: "2026.01", imageUrl: "" },
+                { category: "Visual", title: "현장 시각화 개선", desc: "맨홀·위험구역 황색 삼각형 도색 및 경고 표지 부착", date: "2026.01", imageUrl: "" },
+                { category: "Safety", title: "비상 대응 프로세스 수립", desc: "응급상황 Flowchart 및 연락망 신규 정립", date: "2026.01", imageUrl: "" },
+                { category: "System", title: "자체 보건 전산 시스템 개발", desc: "웹 기반 보건시스템(G-System) 구축으로 데이터 자동화 및 행정 효율화", date: "2026.02", savings: 10000000, imageUrl: "" },
+                { category: "Cost", title: "협력병원(W병원, 우리허브) MOU 할인", desc: "임직원 진료비 10% 할인 혜택 적용 (자동 집계)", date: "2025.01", savings: 0, id: "hospital_mou", imageUrl: "" }
+            ],
+            members: [
+                { name: "김규주", dept: "1공장", risk: "Highest", note: "소음성 난청 (양측)", isIntensiveCare: true, counseling: { 1: { date: "01/15", count: 1 }, 2: { date: "02/10", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+                { name: "남덕현", dept: "1공장", risk: "Highest", note: "고혈압 (중)당뇨", isIntensiveCare: true, counseling: { 1: { date: "01/20", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+                { name: "박기태", dept: "1공장", risk: "Highest", note: "소음감각", isIntensiveCare: true, counseling: { 1: null, 2: { date: "02/15", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+                { name: "박태양", dept: "1공장", risk: "Highest", note: "당뇨병", isIntensiveCare: true, counseling: { 1: { date: "01/10", count: 1 }, 2: { date: "02/20", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+                { name: "송치훈", dept: "1공장", risk: "Highest", note: "고혈압", isIntensiveCare: true, counseling: { 1: { date: "01/12", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+                { name: "양병석", dept: "1공장", risk: "High", note: "CO2용접", isIntensiveCare: false, counseling: { 1: null, 2: { date: "02/25", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+                { name: "오지웅", dept: "1공장", risk: "Highest", note: "만성신부전", isIntensiveCare: true, counseling: { 1: { date: "01/18", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+                { name: "제창희", dept: "1공장", risk: "Highest", note: "뇌심혈관 고위험", isIntensiveCare: true, counseling: { 1: { date: "01/25", count: 1 }, 2: null, 3: { date: "03/15", count: 1 }, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+                { name: "하대준", dept: "1공장", risk: "Highest", note: "폐기능 저하", isIntensiveCare: true, counseling: { 1: null, 2: { date: "02/18", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+                { name: "황동민", dept: "1공장", risk: "High", note: "관절염/허리부", isIntensiveCare: false, counseling: { 1: { date: "01/30", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+                { name: "문영채", dept: "2공장", risk: "Highest", note: "당뇨", isIntensiveCare: true, counseling: { 1: { date: "01/22", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+                { name: "백대용", dept: "2공장", risk: "High", note: "근골", isIntensiveCare: false, counseling: { 1: null, 2: { date: "02/12", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+                { name: "안성형", dept: "2공장", risk: "Highest", note: "당뇨", isIntensiveCare: true, counseling: { 1: { date: "01/28", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+                { name: "전영용", dept: "2공장", risk: "High", note: "근골", isIntensiveCare: false, counseling: { 1: null, 2: { date: "02/24", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } }
+            ],
+            stretchingVideos: [
+                { id: 1, title: "구영테크 스트레칭 영상", description: "근골격계 부담 예방을 위한 실전 스트레칭 가이드", videoUrl: "https://youtu.be/oYmiL6Bh_ak", thumbnail: "", duration: "", category: "전체", createdAt: "2026-02-12" }
+            ]
+        };
+
+        const HEALTH_NEWS = [
+            { title: "겨울철 혈압 관리, 직장인에게 특히 중요한 이유", summary: "기온이 1℃ 떨어질 때마다 수축기 혈압이 평균 1mmHg 상승한다는 보고가 있습니다. 고혈압·심혈관 질환 병력이 있는 근로자는 보온, 규칙적인 약 복용, 카페인·나트륨 조절이 중요합니다.", source: "대한고혈압학회 · 질병관리청 가이드 요약", date: "2026-02-10", category: "심혈관·고혈압" },
+            { title: "3분 목·어깨 스트레칭으로 근골격계 부담 줄이기", summary: "프레스·용접·조립 공정에서 1시간 이상 같은 자세가 지속되면 목·어깨·허리 통증 위험이 크게 증가합니다. 작업 중 1~2시간마다 3분씩 가벼운 스트레칭을 시행하면 통증 호소율을 유의하게 줄일 수 있습니다.", source: "산업안전보건공단 KOSHA Guide 요약", date: "2026-02-05", category: "근골격계 부담" },
+            { title: "야간·교대근무자의 수면 위생 수칙", summary: "야간근무 후 90분 낮잠은 피로 회복에 도움이 되지만, 2시간 이상 과다수면은 생체리듬을 더 흐트러뜨릴 수 있습니다. 일정한 기상시간 유지, 카페인 섭취 시간 제한, 수면 전 스마트폰 사용 최소화가 핵심입니다.", source: "대한수면의학회 권고안 정리", date: "2026-01-28", category: "수면·교대근무" },
+            { title: "소음 작업장 청력보호구 착용의 중요성", summary: "85dB 이상 소음이 발생하는 공정에서는 반드시 귀마개 등 청력보호구를 착용해야 합니다. 착용하지 않을 경우 소음성 난청이 진행될 수 있으며, 한번 손상된 청력은 회복이 어렵습니다.", source: "산업안전보건공단", date: "2026-02-01", category: "소음·청력" },
+            { title: "당뇨·고혈압 관리, 정기 상담이 필요한 이유", summary: "만성질환 보유 근로자는 분기 1회 이상 보건관리자와 상담하여 약 복용 여부, 식이·운동 조절 상태를 점검하는 것이 좋습니다. 조기 관리로 합병증을 예방할 수 있습니다.", source: "질병관리청 산업장 보건관리 가이드", date: "2026-01-15", category: "만성질환" }
+        ];
+
+        const SAFETY_QUOTES = [
+            '안전은 생명입니다.',
+            '정리정돈은 안전의 시작입니다.',
+            '한 번의 부주의가 평생을 바꿉니다.',
+            '안전 수칙은 지키기 위해 있는 것입니다.',
+            '위험을 아는 것이 첫 번째 예방입니다.',
+            '오늘의 안전이 내일의 행복입니다.',
+            '작은 부주의가 큰 사고를 부릅니다.',
+            '안전 모드, 항상 켜 두세요.'
+        ];
+
+        const slides = ['dashboard', 'noise', 'expense', 'risk-factors', 'innovation'];
+
+        // ========== 탭 전환 ==========
+        function goToWorkerHome() {
+            if (!isAdminLoggedIn()) {
+                changeTab('worker-home');
+            } else {
+                changeTab('dashboard');
+            }
+        }
+
+        function changeTab(tabId) {
+            const contentEl = document.getElementById(tabId);
+            if (!contentEl) return;
+            const isAdmin = isAdminLoggedIn();
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            contentEl.classList.add('active');
+            if (isAdmin && contentEl.classList.contains('admin-only')) {
+                contentEl.classList.remove('hidden');
+            } else if (!isAdmin && contentEl.classList.contains('admin-only')) {
+                contentEl.classList.add('hidden');
+                if (tabId === 'dashboard') {
+                    goToWorkerHome();
+                    return;
+                }
+            }
+            document.querySelectorAll('.nav-item').forEach(el => { el.classList.remove('active'); el.classList.add('text-slate-500'); });
+            const activeBtn = document.getElementById('nav-' + tabId);
+            if (activeBtn) { activeBtn.classList.add('active'); activeBtn.classList.remove('text-slate-500'); }
+            updateWorkerOnlyElements();
+            if (tabId === 'noise') {
+                showNoiseFloorplan(1);
+                setNoiseFilter('all');
+            }
+            // 의약품조사 탭으로 전환 시 링크 표시
+            if (tabId === 'medicine-survey') {
+                renderMedicineSurveyUserArea();
+            }
+            // 스트레칭 탭으로 전환 시 영상 표시
+            if (tabId === 'stretching') {
+                renderStretchingVideos();
+            }
+            // 소음현황 탭으로 전환 시 배치도 표시
+            if (tabId === 'noise') {
+                showNoiseFloorplan(1);
+            }
+        }
+
+        function updateWorkerOnlyElements() {
+            const isAdmin = isAdminLoggedIn();
+            document.querySelectorAll('.worker-only').forEach(el => {
+                if (isAdmin) el.classList.add('hidden');
+                else el.classList.remove('hidden');
+            });
+        }
+
+        // ========== 초기화 ==========
+        let chartInstances = {};
+        let currentExpenseYear = 2025;
+
+        function hideDataLoadingOverlay() {
+            const el = document.getElementById('data-loading-overlay');
+            if (el) el.classList.add('hidden');
+        }
+
+        function applyDataFromServer(data) {
+            if (!data) return;
+            if (Array.isArray(data.members)) APP_DATA.members = data.members;
+            if (Array.isArray(data.risks)) APP_DATA.risks = data.risks;
+            if (Array.isArray(data.noise)) {
+                NOISE_DATA = data.noise.map(function (n) {
+                    var m = Number(n.measuredDb);
+                    var s = Number(n.standardDb);
+                    m = isNaN(m) ? n.measuredDb : Math.round(m * 10) / 10;
+                    s = isNaN(s) ? n.standardDb : Math.round(s * 10) / 10;
+                    return Object.assign({}, n, { measuredDb: m, standardDb: s });
+                });
+            }
+            if (Array.isArray(data.innovations)) APP_DATA.innovations = data.innovations;
+            if (Array.isArray(data.expenses_2025)) APP_DATA.expenses_2025 = data.expenses_2025;
+            if (Array.isArray(data.expenses_2026)) APP_DATA.expenses_2026 = data.expenses_2026;
+            // 배치도 데이터 처리 (Google Sheets 우선, localStorage fallback)
+            if (data.floorplans && typeof data.floorplans === 'object') {
+                const floorplansFromServer = data.floorplans;
+                // 빈 객체가 아닌 경우에만 사용
+                if (floorplansFromServer && (floorplansFromServer.factory1 || floorplansFromServer.factory2)) {
+                    // Google Sheets에서 로드된 데이터를 우선적으로 사용 (다른 기기에서도 보이도록)
+                    APP_DATA.floorplans = floorplansFromServer;
+                    if (floorplansFromServer.factory1) {
+                        window.floorplan_1 = floorplansFromServer.factory1;
+                    }
+                    if (floorplansFromServer.factory2) {
+                        window.floorplan_2 = floorplansFromServer.factory2;
+                    }
+
+                    // Google Sheets에서 로드된 값도 localStorage에 저장 (로컬 캐시)
+                    localStorage.setItem('noise_floorplans', JSON.stringify(floorplansFromServer));
+
+                    // 배치도 즉시 표시
+                    showNoiseFloorplan(1);
+                } else {
+                    // Google Sheets에 데이터가 없으면 localStorage에서 복원 시도
+                    const savedFloorplans = localStorage.getItem('noise_floorplans');
+                    if (savedFloorplans) {
+                        try {
+                            const parsed = JSON.parse(savedFloorplans);
+                            if (parsed && typeof parsed === 'object' && (parsed.factory1 || parsed.factory2)) {
+                                if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                                APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, parsed);
+                                if (parsed.factory1) window.floorplan_1 = parsed.factory1;
+                                if (parsed.factory2) window.floorplan_2 = parsed.factory2;
+                                showNoiseFloorplan(1);
+                            }
+                        } catch (e) {
+                            console.error('배치도 복원 오류:', e);
+                        }
+                    }
+                }
+            } else {
+                // floorplans 데이터가 없으면 localStorage에서 복원 시도
+                const savedFloorplans = localStorage.getItem('noise_floorplans');
+                if (savedFloorplans) {
+                    try {
+                        const parsed = JSON.parse(savedFloorplans);
+                        if (parsed && typeof parsed === 'object' && (parsed.factory1 || parsed.factory2)) {
+                            if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                            APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, parsed);
+                            if (parsed.factory1) window.floorplan_1 = parsed.factory1;
+                            if (parsed.factory2) window.floorplan_2 = parsed.factory2;
+                            showNoiseFloorplan(1);
+                        }
+                    } catch (e) {
+                        console.error('배치도 복원 오류:', e);
+                    }
+                }
+            }
+            if (data.config) {
+                // Config가 비어 있으면(서버가 빈 배열 반환) 기본 명단·연락망 유지
+                if (Array.isArray(data.config.emergencyContacts) && data.config.emergencyContacts.length > 0) SYSTEM_CONFIG.emergencyContacts = data.config.emergencyContacts;
+                if (Array.isArray(data.config.hospitals) && data.config.hospitals.length > 0) SYSTEM_CONFIG.hospitals = data.config.hospitals;
+                if (data.config.announcements) SYSTEM_CONFIG.announcements = data.config.announcements;
+                if (data.config.metadata) SYSTEM_CONFIG.metadata = data.config.metadata;
+                if (Array.isArray(data.config.factory1) && data.config.factory1.length > 0) CONSULTATION_SCHEDULE.factory1 = data.config.factory1;
+                if (Array.isArray(data.config.factory2) && data.config.factory2.length > 0) CONSULTATION_SCHEDULE.factory2 = data.config.factory2;
+                // 의약품 설문조사 URL 처리 (Google Sheets 우선, localStorage fallback)
+                if (data.config.hasOwnProperty('medicine_survey_url')) {
+                    const urlFromServer = String(data.config.medicine_survey_url || '').trim();
+                    if (urlFromServer) {
+                        // Google Sheets에서 로드된 값을 우선적으로 사용 (다른 기기에서도 보이도록)
+                        medicineSurveyUrlFromServer = urlFromServer;
+                        localStorage.setItem('medicine_survey_url', urlFromServer);
+                        // 의약품 조사 링크 즉시 표시
+                        renderMedicineSurveyUserArea();
+                    } else {
+                        // Google Sheets에 URL이 없으면 localStorage에서 복원 시도
+                        const savedUrl = localStorage.getItem('medicine_survey_url');
+                        if (savedUrl) {
+                            medicineSurveyUrlFromServer = savedUrl;
+                            renderMedicineSurveyUserArea();
+                        } else {
+                            medicineSurveyUrlFromServer = '';
+                            localStorage.removeItem('medicine_survey_url');
+                            renderMedicineSurveyUserArea();
+                        }
+                    }
+                } else {
+                    // medicine_survey_url 키가 없으면 localStorage에서 복원 시도
+                    const savedUrl = localStorage.getItem('medicine_survey_url');
+                    if (savedUrl) {
+                        medicineSurveyUrlFromServer = savedUrl;
+                        renderMedicineSurveyUserArea();
+                    }
+                }
+                // 스트레칭 영상 처리 (Google Sheets 우선, localStorage fallback)
+                if (data.config.hasOwnProperty('stretchingVideos') && Array.isArray(data.config.stretchingVideos)) {
+                    const videosFromServer = data.config.stretchingVideos;
+                    if (videosFromServer && videosFromServer.length > 0) {
+                        // Google Sheets에서 로드된 값을 우선적으로 사용 (다른 기기에서도 보이도록)
+                        APP_DATA.stretchingVideos = videosFromServer;
+                        localStorage.setItem('stretching_videos', JSON.stringify(videosFromServer));
+                        // 스트레칭 영상 즉시 표시
+                        renderStretchingVideos();
+                    } else {
+                        // Google Sheets에 데이터가 없으면 localStorage에서 복원 시도
+                        const savedVideos = localStorage.getItem('stretching_videos');
+                        if (savedVideos) {
+                            try {
+                                const videos = JSON.parse(savedVideos);
+                                if (Array.isArray(videos) && videos.length > 0) {
+                                    APP_DATA.stretchingVideos = videos;
+                                    renderStretchingVideos();
+                                } else {
+                                    APP_DATA.stretchingVideos = [];
+                                    localStorage.removeItem('stretching_videos');
+                                    renderStretchingVideos();
+                                }
+                            } catch (e) {
+                                console.error('스트레칭 영상 복원 오류:', e);
+                                APP_DATA.stretchingVideos = [];
+                                renderStretchingVideos();
+                            }
+                        } else {
+                            APP_DATA.stretchingVideos = [];
+                            localStorage.removeItem('stretching_videos');
+                            renderStretchingVideos();
+                        }
+                    }
+                } else {
+                    // stretchingVideos 키가 없거나 배열이 아니면 localStorage에서 복원 시도
+                    const savedVideos = localStorage.getItem('stretching_videos');
+                    if (savedVideos) {
+                        try {
+                            const videos = JSON.parse(savedVideos);
+                            if (Array.isArray(videos) && videos.length > 0) {
+                                APP_DATA.stretchingVideos = videos;
+                                renderStretchingVideos();
+                            }
+                        } catch (e) {
+                            console.error('스트레칭 영상 복원 오류:', e);
+                        }
+                    }
+                }
+            }
+        }
+
+        function loadDataFromSheets(silent) {
+            const overlay = document.getElementById('data-loading-overlay');
+            if (!silent && overlay) overlay.classList.remove('hidden');
+            if (!GAS_URL || GAS_URL.trim() === '') {
+                console.warn('⚠️ GAS_URL이 설정되지 않았습니다. Google Sheets 연동이 불가능합니다.');
+                hideDataLoadingOverlay();
+                initApp(silent);
+                return Promise.resolve();
+            }
+
+            // 디버깅: GAS_URL 확인
+            console.log('📡 Google Sheets 데이터 로드 시도:', GAS_URL);
+
+            // 캐시 방지를 위해 타임스탬프 추가 (쿼리스트링으로 충분하므로 headers 제거)
+            return fetch(GAS_URL + '?t=' + Date.now(), {
+                method: 'GET'
+                // headers 속성 제거: Preflight 요청을 방지하기 위해
+            })
+                .then(function (r) {
+                    if (!r.ok) {
+                        throw new Error('HTTP ' + r.status + ': ' + r.statusText);
+                    }
+                    return r.json();
+                })
+                .then(function (data) {
+                    console.log('✅ Google Sheets 데이터 로드 성공:', data);
+                    applyDataFromServer(data);
+                    hideDataLoadingOverlay();
+                    // 데이터 적용 직후 즉시 UI 갱신 (initApp 전에 먼저 실행)
+                    calculateDynamicSavings();
+                    updateTotalSavingsUI();
+                    renderCharts();
+                    renderHealthNews();
+                    renderSchedule();
+                    renderDashboardNoise();
+                    renderSafetyQuote();
+                    updateDashboardCounselingRate();
+                    calculateTotalSavings();
+                    filterList('All');
+                    setNoiseFilter('all');
+                    renderExpenseData(2025);
+                    // 그 다음 initApp 실행 (전체 초기화)
+                    initApp(silent);
+                    // 추가로 한 번 더 강제 갱신 (Race Condition 완전 방지)
+                    setTimeout(function () {
+                        calculateDynamicSavings();
+                        updateTotalSavingsUI();
+                        renderCharts();
+                        renderHealthNews();
+                        renderSchedule();
+                        renderDashboardNoise();
+                        renderSafetyQuote();
+                        updateDashboardCounselingRate();
+                        calculateTotalSavings();
+                        filterList('All');
+                        setNoiseFilter('all');
+                        renderMedicineSurveyUserArea(); // 의약품 설문조사 링크 재표시
+                        renderStretchingVideos(); // 스트레칭 영상 재표시
+                        showNoiseFloorplan(1); // 배치도 재표시
+                    }, 100);
+                })
+                .catch(function (error) {
+                    console.error('❌ Google Sheets 데이터 로드 실패:', error);
+                    console.error('GAS_URL:', GAS_URL);
+                    console.error('에러 상세:', error.message || error);
+
+                    // 사용자에게 알림 (개발 모드에서만)
+                    if (!silent) {
+                        const errorMsg = 'Google Sheets 연결 실패: ' + (error.message || '알 수 없는 오류');
+                        console.warn('⚠️', errorMsg);
+                        console.warn('💡 해결 방법:');
+                        console.warn('1. Google Apps Script가 웹 앱으로 배포되어 있는지 확인');
+                        console.warn('2. 배포 시 "액세스 권한: 모든 사용자"로 설정했는지 확인');
+                        console.warn('3. GAS_URL이 올바른지 확인');
+                    }
+
+                    hideDataLoadingOverlay();
+                    // 에러 발생 시에도 localStorage에서 데이터 복원 시도
+                    const savedUrl = localStorage.getItem('medicine_survey_url');
+                    if (savedUrl) {
+                        medicineSurveyUrlFromServer = savedUrl;
+                    }
+                    const savedVideos = localStorage.getItem('stretching_videos');
+                    if (savedVideos) {
+                        try {
+                            const videos = JSON.parse(savedVideos);
+                            if (Array.isArray(videos) && videos.length > 0) {
+                                APP_DATA.stretchingVideos = videos;
+                            }
+                        } catch (e) {
+                            console.error('스트레칭 영상 복원 오류:', e);
+                        }
+                    }
+                    const savedFloorplans = localStorage.getItem('noise_floorplans');
+                    if (savedFloorplans) {
+                        try {
+                            const floorplans = JSON.parse(savedFloorplans);
+                            if (floorplans && typeof floorplans === 'object' && (floorplans.factory1 || floorplans.factory2)) {
+                                if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                                APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, floorplans);
+                                if (floorplans.factory1) window.floorplan_1 = floorplans.factory1;
+                                if (floorplans.factory2) window.floorplan_2 = floorplans.factory2;
+                            }
+                        } catch (e) {
+                            console.error('배치도 복원 오류:', e);
+                        }
+                    }
+                    initApp(silent);
+                });
+        }
+
+        function apiPost(action, payload) {
+            if (!GAS_URL || GAS_URL.trim() === '') {
+                console.warn('⚠️ GAS_URL이 비어 있어 저장되지 않습니다.');
+                return Promise.resolve();
+            }
+
+            console.log('💾 Google Sheets에 저장 시도:', action, payload);
+
+            return fetch(GAS_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: action, payload: payload || {} })
+            })
+                .then(function (response) {
+                    // 응답을 텍스트로 먼저 읽어서 확인
+                    return response.text().then(function (text) {
+                        try {
+                            const data = JSON.parse(text);
+                            if (data.ok === false || data.message) {
+                                throw new Error(data.message || '저장 실패');
+                            }
+                            console.log('✅ Google Sheets 저장 성공:', action, data);
+                            // 저장 후 데이터 새로고침 (다른 사용자들이 볼 수 있도록)
+                            setTimeout(function () {
+                                loadDataFromSheets(true);
+                            }, 1000); // 1초 후 새로고침
+                            return Promise.resolve();
+                        } catch (parseError) {
+                            // JSON 파싱 실패 시에도 텍스트 응답 확인
+                            if (text && text.trim() !== '') {
+                                console.log('응답:', text);
+                            }
+                            if (!response.ok) {
+                                throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                            }
+                            // 응답이 비어있거나 성공인 경우
+                            console.log('✅ Google Sheets 저장 성공:', action);
+                            setTimeout(function () {
+                                loadDataFromSheets(true);
+                            }, 1000);
+                            return Promise.resolve();
+                        }
+                    });
+                })
+                .catch(function (error) {
+                    console.error('❌ Google Sheets 저장 실패:', action, error);
+                    console.error('GAS_URL:', GAS_URL);
+                    console.error('에러 상세:', error.message || error);
+                    console.error('💡 해결 방법:');
+                    console.error('1. Google Apps Script가 웹 앱으로 배포되어 있는지 확인');
+                    console.error('2. 배포 시 "액세스 권한: 모든 사용자"로 설정했는지 확인');
+                    console.error('3. GAS_URL이 올바른지 확인');
+                    console.error('4. 브라우저 개발자 도구(F12) > 네트워크 탭에서 요청 상태 확인');
+
+                    // 사용자에게 더 자세한 에러 메시지 표시
+                    const errorMsg = error.message || '알 수 없는 오류';
+                    throw new Error('Google Sheets 연결 실패: ' + errorMsg);
+                });
+        }
+
+        function initApp(preserveNavigation) {
+            const isAdmin = isAdminLoggedIn();
+            const total = APP_DATA.members.length;
+            const el = document.getElementById('dashboard-total-members');
+            if (el) el.textContent = total;
+            const listTotal = document.getElementById('list-total-members');
+            if (listTotal) listTotal.textContent = total;
+            updateDashboardCounselingRate();
+
+            if (SYSTEM_CONFIG && SYSTEM_CONFIG.announcements) {
+                const t = document.getElementById('announcement-title');
+                const d = document.getElementById('announcement-desc');
+                if (t) t.textContent = SYSTEM_CONFIG.announcements.title;
+                if (d) d.textContent = SYSTEM_CONFIG.announcements.description;
+            }
+            // 절감액 계산 및 UI 업데이트 (화면 그리기 전에 먼저 실행)
+            calculateDynamicSavings();
+            updateTotalSavingsUI();
+
+            renderCharts();
+            renderRiskFactors();
+            renderInnovations();
+            setNoiseFilter('all');
+            filterList('All');
+            renderExpenseData(2025);
+            renderEmergencyContacts();
+            renderSchedule();
+            renderDashboardNoise();
+            renderHealthNews();
+            renderSafetyQuote();
+            renderStretchingVideos();
+            renderMsdsTable();
+            renderMedicineSurveyUserArea(); // 의약품 설문조사 링크 표시
+            calculateTotalSavings();
+            updateWorkerOnlyElements();
+            updateAdminOnlyElements();
+            if (!preserveNavigation) {
+                if (!isAdmin) {
+                    changeTab('worker-home');
+                } else {
+                    changeTab('dashboard');
+                }
+            }
+        }
+
+        // ========== 안전 명언 렌더링 (백엔드 API 우선 사용) ==========
+        function renderSafetyQuote() {
+            const el = document.getElementById('safety-quote-text');
+            if (!el || !SAFETY_QUOTES.length) return;
+            var now = new Date();
+            var dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+            var idx = dayOfYear % SAFETY_QUOTES.length;
+            el.textContent = SAFETY_QUOTES[idx];
+        }
+
+        // ========== 병원비 10% 자동 할인 계산 함수 (순수 JavaScript) ==========
+        function calculateDynamicSavings() {
+            // 협력병원 목록
+            var mouHospitals = ['W병원', '우리허브', '우리허브병원'];
+            var totalDiscount = 0;
+
+            // 모든 연도의 병원비 데이터 순회
+            var allExpenses = [];
+
+            // 2025년 데이터 수집
+            if (APP_DATA.expenses_2025 && Array.isArray(APP_DATA.expenses_2025)) {
+                APP_DATA.expenses_2025.forEach(function (monthData) {
+                    if (monthData.items && Array.isArray(monthData.items)) {
+                        monthData.items.forEach(function (item) {
+                            if (item.hospital && item.amount) {
+                                allExpenses.push({
+                                    hospital: String(item.hospital).trim(),
+                                    amount: Number(item.amount) || 0
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            // 2026년 데이터 수집
+            if (APP_DATA.expenses_2026 && Array.isArray(APP_DATA.expenses_2026)) {
+                APP_DATA.expenses_2026.forEach(function (monthData) {
+                    if (monthData.items && Array.isArray(monthData.items)) {
+                        monthData.items.forEach(function (item) {
+                            if (item.hospital && item.amount) {
+                                allExpenses.push({
+                                    hospital: String(item.hospital).trim(),
+                                    amount: Number(item.amount) || 0
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            // 협력병원 지출 항목 찾기 및 10% 할인액 계산
+            allExpenses.forEach(function (expense) {
+                var hospitalName = expense.hospital.toLowerCase();
+                var isMouHospital = false;
+
+                // 협력병원인지 확인
+                for (var i = 0; i < mouHospitals.length; i++) {
+                    if (hospitalName.indexOf(mouHospitals[i].toLowerCase()) >= 0) {
+                        isMouHospital = true;
+                        break;
+                    }
+                }
+
+                // 협력병원이면 10% 할인액 누적
+                if (isMouHospital && expense.amount > 0) {
+                    totalDiscount += Math.round(expense.amount * 0.1);
+                }
+            });
+
+            // APP_DATA.innovations에서 hospital_mou 항목 찾아서 업데이트
+            if (APP_DATA.innovations && Array.isArray(APP_DATA.innovations)) {
+                var mouItem = APP_DATA.innovations.find(function (item) {
+                    return item.id === 'hospital_mou';
+                });
+
+                if (mouItem) {
+                    mouItem.savings = totalDiscount;
+                } else {
+                    // 없으면 추가
+                    APP_DATA.innovations.push({
+                        category: "Cost",
+                        title: "협력병원(W병원, 우리허브) MOU 할인",
+                        desc: "임직원 진료비 10% 할인 혜택 적용 (자동 집계)",
+                        date: "2025.01",
+                        savings: totalDiscount,
+                        id: "hospital_mou",
+                        imageUrl: ""
+                    });
+                }
+            }
+
+            return totalDiscount;
+        }
+
+        // ========== 총 절감액 합산 및 UI 반영 함수 ==========
+        function updateTotalSavingsUI() {
+            var totalSavings = 0;
+
+            // APP_DATA.innovations 배열을 순회하며 savings 합산
+            if (APP_DATA.innovations && Array.isArray(APP_DATA.innovations)) {
+                APP_DATA.innovations.forEach(function (item) {
+                    if (item.savings && !isNaN(item.savings)) {
+                        totalSavings += Number(item.savings);
+                    }
+                });
+            }
+
+            // 대시보드 UI 업데이트
+            var dashboardEl = document.getElementById('dashboard-total-savings');
+            if (dashboardEl) {
+                dashboardEl.textContent = '₩ ' + totalSavings.toLocaleString();
+            }
+
+            // 혁신성과 페이지의 총 절감액도 업데이트
+            var innovationEl = document.getElementById('innovation-total-savings');
+            if (innovationEl) {
+                innovationEl.textContent = '₩ ' + totalSavings.toLocaleString();
+            }
+
+            return totalSavings;
+        }
+
+        function updateSavingsBasedOnExpenses() {
+            calculateDynamicSavings();
+            updateTotalSavingsUI();
+        }
+
+        function calculateTotalSavings() {
+            calculateDynamicSavings();
+            var total = updateTotalSavingsUI();
+            return total;
+        }
+
+        function updateDashboardCounselingRate() {
+            const highestTotal = APP_DATA.members.filter(m => m.risk === 'Highest').length;
+            const highestCounseled = APP_DATA.members.filter(m => m.risk === 'Highest' && Object.values(m.counseling || {}).some(c => c !== null)).length;
+            const rate = highestTotal ? Math.round((highestCounseled / highestTotal) * 100) : 0;
+            const rateEl = document.getElementById('dashboard-counseling-rate');
+            if (rateEl) rateEl.textContent = rate;
+            const rateBar = document.getElementById('dashboard-counseling-rate-bar');
+            if (rateBar) rateBar.style.width = rate + '%';
+        }
+
+        function renderStretchingVideos() {
+            const container = document.getElementById('stretching-video-list');
+            if (!container) return;
+
+            // 1순위: Google Sheets에서 로드된 APP_DATA.stretchingVideos 사용 (다른 기기에서도 보이도록)
+            let list = APP_DATA.stretchingVideos || [];
+
+            // 2순위: localStorage fallback (로컬 캐시, Google Sheets 데이터가 없을 때만)
+            if ((!list || list.length === 0)) {
+                const savedVideos = localStorage.getItem('stretching_videos');
+                if (savedVideos) {
+                    try {
+                        const videos = JSON.parse(savedVideos);
+                        if (Array.isArray(videos) && videos.length > 0) {
+                            list = videos;
+                        }
+                    } catch (e) {
+                        console.error('스트레칭 영상 로드 오류:', e);
+                    }
+                }
+            }
+
+            const isAdmin = isAdminLoggedIn();
+            container.innerHTML = list.length > 0
+                ? list.map((v, i) => {
+                    // YouTube URL인 경우 임베드 형식으로 변환
+                    let videoDisplay = '';
+                    if (v.videoUrl) {
+                        const youtubeMatch = v.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+                        if (youtubeMatch) {
+                            const videoId = youtubeMatch[1];
+                            videoDisplay = `
+                            <div class="mt-4 rounded-xl overflow-hidden border-2 border-slate-200" style="height: 400px;">
+                                <iframe src="https://www.youtube.com/embed/${videoId}" title="${(v.title || '').replace(/"/g, '&quot;')}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            </div>
+                        `;
+                        } else {
+                            videoDisplay = `<a href="${v.videoUrl.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white font-black rounded-xl hover:bg-orange-600 transition-colors mt-4"><i class="fas fa-external-link-alt"></i> 영상 보기</a>`;
+                        }
+                    }
+
+                    return `
+                <div class="gu-card p-5 relative">
+                    ${isAdmin ? `<div class="absolute top-3 right-3 flex gap-1"><button type="button" onclick="editStretchingVideo(${i})" class="text-xs font-bold px-2 py-1 rounded bg-slate-200 text-slate-700 hover:bg-slate-300">수정</button><button type="button" onclick="deleteStretchingVideo(${i})" class="text-xs font-bold px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">삭제</button></div>` : ''}
+                    <div class="flex items-center gap-2 mb-2"><i class="fas fa-play-circle text-orange-500"></i><span class="font-black text-slate-800">${v.title || ''}</span></div>
+                    <p class="text-sm text-slate-600">${v.description || ''}</p>
+                    ${videoDisplay}
+                </div>
+            `;
+                }).join('')
+                : '<p class="text-slate-500">등록된 영상이 없습니다.</p>';
+        }
+        function addStretchingVideo() {
+            document.getElementById('stretching-add-title').value = '';
+            document.getElementById('stretching-add-description').value = '';
+            document.getElementById('stretching-add-url').value = '';
+            document.getElementById('stretching-add-modal').classList.remove('hidden');
+            window.currentStretchingEditIndex = null;
+        }
+        function closeStretchingAddModal() {
+            document.getElementById('stretching-add-modal').classList.add('hidden');
+            window.currentStretchingEditIndex = null;
+        }
+        function saveStretchingVideo() {
+            const title = document.getElementById('stretching-add-title').value.trim();
+            const description = document.getElementById('stretching-add-description').value.trim();
+            const videoUrl = document.getElementById('stretching-add-url').value.trim();
+            if (!title || !videoUrl) {
+                alert('영상 제목과 URL은 필수 입력 항목입니다.');
+                return;
+            }
+            if (window.currentStretchingEditIndex !== null && window.currentStretchingEditIndex !== undefined) {
+                const v = APP_DATA.stretchingVideos[window.currentStretchingEditIndex];
+                if (v) {
+                    v.title = title;
+                    v.description = description;
+                    v.videoUrl = videoUrl;
+                }
+            } else {
+                const id = Math.max(0, ...(APP_DATA.stretchingVideos || []).map(v => v.id || 0)) + 1;
+                APP_DATA.stretchingVideos.push({ id, title, description, videoUrl, thumbnail: '', duration: '', category: '전체', createdAt: new Date().toISOString().slice(0, 10) });
+            }
+
+            // localStorage에 저장 (로컬 캐시)
+            if (APP_DATA.stretchingVideos && APP_DATA.stretchingVideos.length > 0) {
+                localStorage.setItem('stretching_videos', JSON.stringify(APP_DATA.stretchingVideos));
+            } else {
+                localStorage.removeItem('stretching_videos');
+            }
+
+            renderStretchingVideos();
+
+            // Google Sheets에 저장 (다른 기기에서도 보이도록)
+            apiPost('saveStretchingVideos', APP_DATA.stretchingVideos).then(function () {
+                alert('✅ 스트레칭 영상이 Google Sheets에 저장되었습니다!\n\n이제 다른 기기(핸드폰 등)에서도 실시간으로 볼 수 있습니다.');
+            }).catch(function (error) {
+                const errorMsg = error && error.message ? error.message : '알 수 없는 오류';
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + errorMsg + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+
+            closeStretchingAddModal();
+        }
+        function editStretchingVideo(i) {
+            const v = APP_DATA.stretchingVideos[i]; if (!v) return;
+            window.currentStretchingEditIndex = i;
+            document.getElementById('stretching-add-title').value = v.title || '';
+            document.getElementById('stretching-add-description').value = v.description || '';
+            document.getElementById('stretching-add-url').value = v.videoUrl || '';
+            document.getElementById('stretching-add-modal').classList.remove('hidden');
+        }
+        function deleteStretchingVideo(i) {
+            if (!confirm('이 영상 항목을 삭제할까요?')) return;
+            APP_DATA.stretchingVideos.splice(i, 1);
+
+            // localStorage에 저장 (로컬 캐시)
+            if (APP_DATA.stretchingVideos && APP_DATA.stretchingVideos.length > 0) {
+                localStorage.setItem('stretching_videos', JSON.stringify(APP_DATA.stretchingVideos));
+            } else {
+                localStorage.removeItem('stretching_videos');
+            }
+
+            renderStretchingVideos();
+
+            // Google Sheets에 저장 (다른 기기에서도 보이도록)
+            apiPost('saveStretchingVideos', APP_DATA.stretchingVideos).then(function () {
+                // 조용히 저장 완료 (삭제는 사용자가 이미 확인했으므로 알림 불필요)
+            }).catch(function () {
+                alert('⚠️ 저장 중 오류가 발생했습니다. Google Sheets 연결을 확인해주세요.');
+            });
+        }
+
+        function renderCharts() {
+            const monthlyData2025 = Array(12).fill(0);
+            (APP_DATA.expenses_2025 || []).forEach(m => {
+                const total = (m.items || []).reduce((sum, item) => sum + (item.amount || 0), 0);
+                if (m.month >= 1 && m.month <= 12) monthlyData2025[m.month - 1] = total;
+            });
+            const costCanvas = document.getElementById('costChart');
+            if (costCanvas && typeof Chart !== 'undefined') {
+                if (chartInstances.cost) chartInstances.cost.destroy();
+                chartInstances.cost = new Chart(costCanvas, {
+                    type: 'line',
+                    data: {
+                        labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                        datasets: [{ label: '병원비(원)', data: monthlyData2025, borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.1)', fill: true, tension: 0.4 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
+                });
+            }
+            const riskCounts = { Highest: 0, High: 0, Mid: 0, Low: 0 };
+            (APP_DATA.members || []).forEach(m => { if (m.risk) riskCounts[m.risk] = (riskCounts[m.risk] || 0) + 1; });
+            const riskCanvas = document.getElementById('riskChart');
+            if (riskCanvas && typeof Chart !== 'undefined') {
+                if (chartInstances.risk) chartInstances.risk.destroy();
+                chartInstances.risk = new Chart(riskCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['최고위험', '고위험', '중위험', '저위험'],
+                        datasets: [{ data: [riskCounts.Highest || 0, riskCounts.High || 0, riskCounts.Mid || 0, riskCounts.Low || 0], backgroundColor: ['#EF4444', '#F97316', '#F59E0B', '#10B981'], borderWidth: 0 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+        }
+
+        function renderRiskFactors() {
+            const container = document.getElementById('risk-factors-container');
+            if (!container || !APP_DATA.risks) return;
+            const isAdmin = isAdminLoggedIn();
+            container.innerHTML = APP_DATA.risks.map((r, i) => `
+            <div class="gu-card p-8 border-l-8 ${r.level === 'Critical' ? 'border-l-red-500' : r.level === 'High' ? 'border-l-orange-500' : 'border-l-teal-500'}">
+                <div class="flex justify-between items-start mb-4">
+                    <div><h3 class="text-xl font-black">${r.type || ''}</h3><p class="text-xs font-bold text-slate-400">${r.dept || ''}</p></div>
+                    <div class="flex items-center gap-2">
+                        ${isAdmin ? `<button type="button" onclick="editRisk(${i})" class="text-xs font-bold px-2 py-1 rounded bg-slate-200 text-slate-700 hover:bg-slate-300">수정</button><button type="button" onclick="deleteRisk(${i})" class="text-xs font-bold px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">삭제</button>` : ''}
+                        <span class="px-3 py-1 rounded-full text-xs font-black ${r.level === 'Critical' ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'}">${r.level || ''}</span>
+                    </div>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-xl mb-2"><p class="text-xs font-black text-slate-400">건강영향</p><p class="text-sm font-bold">${r.health || ''}</p></div>
+                <div class="p-4 bg-green-50 rounded-xl"><p class="text-xs font-black text-green-600">조치사항</p><p class="text-sm font-bold text-green-800">${r.action || ''}</p></div>
+            </div>
+        `).join('');
+        }
+        function addRisk() {
+            const type = prompt('유해인자 유형 (예: 소음)', '');
+            if (type == null) return;
+            const dept = prompt('해당 부서', '전 공정');
+            const health = prompt('건강 영향', '');
+            const action = prompt('조치사항', '');
+            const level = prompt('위험등급 (Critical / High / Mid)', 'High');
+            APP_DATA.risks.push({ type: type || '', dept: dept || '', health: health || '', action: action || '', level: level || 'High' });
+            renderRiskFactors();
+            apiPost('saveRisks', APP_DATA.risks).then(function () {
+                console.log('✅ 유해인자 항목이 Google Sheets에 저장되었습니다.');
+            }).catch(function (error) {
+                console.error('❌ 유해인자 항목 저장 실패:', error);
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+        function editRisk(i) {
+            const r = APP_DATA.risks[i]; if (!r) return;
+            const type = prompt('유해인자 유형', r.type); if (type == null) return;
+            const dept = prompt('해당 부서', r.dept);
+            const health = prompt('건강 영향', r.health);
+            const action = prompt('조치사항', r.action);
+            const level = prompt('위험등급 (Critical / High / Mid)', r.level);
+            r.type = type || r.type; r.dept = dept !== null ? dept : r.dept; r.health = health !== null ? health : r.health; r.action = action !== null ? action : r.action; r.level = level || r.level;
+            renderRiskFactors();
+            apiPost('saveRisks', APP_DATA.risks).then(function () {
+                console.log('✅ 유해인자 항목이 Google Sheets에 저장되었습니다.');
+            }).catch(function (error) {
+                console.error('❌ 유해인자 항목 저장 실패:', error);
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+        function deleteRisk(i) {
+            if (!confirm('이 유해인자 항목을 삭제할까요?')) return;
+            APP_DATA.risks.splice(i, 1);
+            renderRiskFactors();
+            apiPost('saveRisks', APP_DATA.risks).then(function () {
+                console.log('✅ 유해인자 항목이 Google Sheets에 저장되었습니다.');
+            }).catch(function (error) {
+                console.error('❌ 유해인자 항목 저장 실패:', error);
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+
+        function renderInnovations() {
+            const el = document.getElementById('innovation-tab-list');
+            if (!el || !APP_DATA.innovations) return;
+            const isAdmin = isAdminLoggedIn();
+            updateSavingsBasedOnExpenses();
+            const html = APP_DATA.innovations.map((item, i) => {
+                var savingsText = '';
+                if (item.savings && item.savings > 0) {
+                    savingsText = '<div class="mt-2"><span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-700">절감액: ₩ ' + item.savings.toLocaleString() + '</span></div>';
+                }
+                return `
+            <div class="gu-card p-4 flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold flex-shrink-0">${i + 1}</div>
+                <div class="flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs font-black bg-slate-100">${item.category || ''}</span>
+                        <span class="text-xs font-bold text-slate-400">${item.date || ''}</span>
+                        ${isAdmin ? `<button type="button" onclick="editInnovation(${i})" class="text-xs font-bold px-2 py-1 rounded bg-slate-200 text-slate-700 hover:bg-slate-300">수정</button><button type="button" onclick="deleteInnovation(${i})" class="text-xs font-bold px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">삭제</button>` : ''}
+                    </div>
+                    <h4 class="font-black text-slate-800 mt-1">${item.title || ''}</h4>
+                    <p class="text-sm text-slate-600">${item.desc || ''}</p>
+                    ${savingsText}
+                </div>
+            </div>
+        `;
+            }).join('');
+            el.innerHTML = html;
+            calculateTotalSavings();
+        }
+        function addInnovation() {
+            const category = prompt('분류 (예: Cost, Safety)', 'System');
+            if (category == null) return;
+            const title = prompt('제목', '');
+            const desc = prompt('설명', '');
+            const date = prompt('일자 (예: 2025.01)', new Date().toISOString().slice(0, 7).replace('-', '.'));
+            const savings = prompt('절감액 (원, 없으면 0)', '0');
+            APP_DATA.innovations.push({ category: category || '', title: title || '', desc: desc || '', date: date || '', savings: savings ? parseInt(savings, 10) : 0, imageUrl: '' });
+            updateSavingsBasedOnExpenses();
+            renderInnovations();
+            calculateTotalSavings();
+            apiPost('saveInnovations', APP_DATA.innovations).then(function () {
+                console.log('✅ 혁신 성과 항목이 Google Sheets에 저장되었습니다.');
+            }).catch(function (error) {
+                console.error('❌ 혁신 성과 항목 저장 실패:', error);
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+        function editInnovation(i) {
+            const item = APP_DATA.innovations[i]; if (!item) return;
+            if (item.id === 'hospital_mou') {
+                alert('협력병원 MOU 할인은 병원비 지출 내역에 따라 자동으로 계산됩니다.');
+                return;
+            }
+            const category = prompt('분류', item.category); if (category == null) return;
+            const title = prompt('제목', item.title);
+            const desc = prompt('설명', item.desc);
+            const date = prompt('일자', item.date);
+            const savings = prompt('절감액 (원)', item.savings ? String(item.savings) : '0');
+            item.category = category !== null ? category : item.category;
+            item.title = title !== null ? title : item.title;
+            item.desc = desc !== null ? desc : item.desc;
+            item.date = date !== null ? date : item.date;
+            item.savings = savings ? parseInt(savings, 10) : (item.savings || 0);
+            updateSavingsBasedOnExpenses();
+            renderInnovations();
+            calculateTotalSavings();
+            apiPost('saveInnovations', APP_DATA.innovations).then(function () {
+                console.log('✅ 혁신 성과 항목이 Google Sheets에 저장되었습니다.');
+            }).catch(function (error) {
+                console.error('❌ 혁신 성과 항목 저장 실패:', error);
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+        function deleteInnovation(i) {
+            const item = APP_DATA.innovations[i];
+            if (item && item.id === 'hospital_mou') {
+                alert('협력병원 MOU 할인 항목은 삭제할 수 없습니다.');
+                return;
+            }
+            if (!confirm('이 성과 항목을 삭제할까요?')) return;
+            APP_DATA.innovations.splice(i, 1);
+            updateSavingsBasedOnExpenses();
+            renderInnovations();
+            calculateTotalSavings();
+            apiPost('saveInnovations', APP_DATA.innovations).then(function () {
+                console.log('✅ 혁신 성과 항목이 Google Sheets에 저장되었습니다.');
+            }).catch(function (error) {
+                console.error('❌ 혁신 성과 항목 저장 실패:', error);
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+
+        function renderEmergencyContacts() {
+            const container = document.getElementById('emergency-contacts-container');
+            if (!container || !SYSTEM_CONFIG.emergencyContacts) return;
+            const colorMap = { red: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-600', textLight: 'text-red-500' }, orange: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-600', textLight: 'text-orange-500' }, blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-600', textLight: 'text-blue-500' }, teal: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-600', textLight: 'text-teal-500' }, slate: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-600', textLight: 'text-slate-500' } };
+            const contacts = SYSTEM_CONFIG.emergencyContacts.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+            const isAdmin = isAdminLoggedIn();
+            container.innerHTML = contacts.map((c, idx) => {
+                const i = SYSTEM_CONFIG.emergencyContacts.indexOf(c);
+                const colors = colorMap[c.color] || colorMap.slate;
+                return `<div class="p-4 ${colors.bg} rounded-xl border ${colors.border} relative">
+                ${isAdmin ? `<div class="absolute top-2 right-2 flex gap-1"><button type="button" onclick="editEmergencyContact(${i})" class="text-xs font-bold px-2 py-1 rounded bg-slate-200 text-slate-700 hover:bg-slate-300">수정</button><button type="button" onclick="deleteEmergencyContact(${i})" class="text-xs font-bold px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">삭제</button></div>` : ''}
+                <div class="flex items-center gap-2 mb-2"><i class="fas ${c.icon || 'fa-phone'} ${colors.text}"></i><span class="font-black text-sm">${c.name || ''}</span></div>
+                <a href="tel:${(c.phone || '').replace(/"/g, '&quot;')}" class="block text-xl font-black ${colors.text} hover:opacity-90 underline">${c.phone || ''}</a>
+                <p class="text-xs ${colors.textLight} mt-1">${c.description || ''}</p>
+            </div>`;
+            }).join('');
+        }
+        function addEmergencyContact() {
+            const name = prompt('이름/호칭', '');
+            if (name == null) return;
+            const phone = prompt('연락처', '');
+            const description = prompt('설명', '');
+            const category = prompt('분류 (예: 내부, 응급구조)', '내부');
+            const order = parseInt(prompt('표시 순서 (숫자)', String((SYSTEM_CONFIG.emergencyContacts.length + 1))), 10) || SYSTEM_CONFIG.emergencyContacts.length + 1;
+            const id = Math.max(0, ...SYSTEM_CONFIG.emergencyContacts.map(c => c.id)) + 1;
+            SYSTEM_CONFIG.emergencyContacts.push({ id, category: category || '', name: name || '', phone: phone || '', description: description || '', icon: 'fa-phone', color: 'blue', order });
+            renderEmergencyContacts();
+            apiPost('saveEmergencyContacts', SYSTEM_CONFIG.emergencyContacts).then(function () {
+                console.log('✅ 응급연락망이 Google Sheets에 저장되었습니다.');
+            }).catch(function (error) {
+                console.error('❌ 응급연락망 저장 실패:', error);
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+        function editEmergencyContact(i) {
+            const c = SYSTEM_CONFIG.emergencyContacts[i]; if (!c) return;
+            const name = prompt('이름/호칭', c.name); if (name == null) return;
+            const phone = prompt('연락처', c.phone);
+            const description = prompt('설명', c.description);
+            const order = prompt('표시 순서', String(c.order || 0));
+            c.name = name !== null ? name : c.name; c.phone = phone !== null ? phone : c.phone; c.description = description !== null ? description : c.description; c.order = order !== null ? parseInt(order, 10) || 0 : c.order;
+            renderEmergencyContacts();
+            apiPost('saveEmergencyContacts', SYSTEM_CONFIG.emergencyContacts).then(function () {
+                console.log('✅ 응급연락망이 Google Sheets에 저장되었습니다.');
+            }).catch(function (error) {
+                console.error('❌ 응급연락망 저장 실패:', error);
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+        function deleteEmergencyContact(i) {
+            if (!confirm('이 연락처를 삭제할까요?')) return;
+            SYSTEM_CONFIG.emergencyContacts.splice(i, 1);
+            renderEmergencyContacts();
+            apiPost('saveEmergencyContacts', SYSTEM_CONFIG.emergencyContacts).then(function () {
+                console.log('✅ 응급연락망이 Google Sheets에 저장되었습니다.');
+            }).catch(function (error) {
+                console.error('❌ 응급연락망 저장 실패:', error);
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+
+        // ========== 건강상담 일정 (CONSULTATION_SCHEDULE) ==========
+        function showFactory(factoryNum) {
+            CONSULTATION_SCHEDULE.currentFactory = factoryNum;
+            document.querySelectorAll('.factory-tab').forEach(tab => {
+                tab.classList.remove('active', 'bg-purple-500', 'text-white');
+                tab.classList.add('bg-slate-100', 'text-slate-600');
+            });
+            const activeTab = document.getElementById('factory-tab-' + factoryNum);
+            if (activeTab) {
+                activeTab.classList.add('active', 'bg-purple-500', 'text-white');
+                activeTab.classList.remove('bg-slate-100', 'text-slate-600');
+            }
+            const searchEl = document.getElementById('schedule-search');
+            if (searchEl) searchEl.value = '';
+            renderSchedule();
+        }
+
+        function searchSchedule() {
+            renderSchedule();
+        }
+
+        function getDeptForScheduleName(name, factoryNum) {
+            if (!name) return factoryNum ? factoryNum + '공장' : '';
+            var member = (APP_DATA.members || []).find(function (m) { return m.name === name; });
+            if (member && member.dept) return member.dept;
+            return factoryNum ? factoryNum + '공장' : '';
+        }
+
+        function renderSchedule() {
+            const scheduleListEl = document.getElementById('schedule-list');
+            const scheduleCountEl = document.getElementById('schedule-count');
+            const scheduleSearchEl = document.getElementById('schedule-search');
+            if (!scheduleListEl || !scheduleCountEl) return;
+            const currentFactory = CONSULTATION_SCHEDULE.currentFactory;
+            var list;
+            if (currentFactory === 0) {
+                var f1 = (CONSULTATION_SCHEDULE.factory1 || []).map(function (n) { return { name: n, factoryNum: 1 }; });
+                var f2 = (CONSULTATION_SCHEDULE.factory2 || []).map(function (n) { return { name: n, factoryNum: 2 }; });
+                list = f1.concat(f2).filter(function (x) { return x.name; });
+                list.sort(function (a, b) { return (a.name || '').localeCompare(b.name || '', 'ko'); });
+            } else {
+                var arr = currentFactory === 1 ? (CONSULTATION_SCHEDULE.factory1 || []) : (CONSULTATION_SCHEDULE.factory2 || []);
+                list = arr.map(function (n) { return { name: n, factoryNum: currentFactory }; });
+            }
+            const searchTerm = (scheduleSearchEl && scheduleSearchEl.value) ? scheduleSearchEl.value.trim().toLowerCase() : '';
+            const filtered = list.filter(function (x) { return (x.name || '').toLowerCase().includes(searchTerm); });
+            scheduleCountEl.textContent = filtered.length + '명';
+            const label = currentFactory === 0 ? '전체' : currentFactory + '공장';
+            scheduleListEl.innerHTML = filtered.length > 0
+                ? filtered.map(function (item, index) {
+                    var dept = getDeptForScheduleName(item.name, item.factoryNum);
+                    var displayText = dept ? item.name + ' (' + dept + ')' : item.name;
+                    return '<div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-purple-50 transition-colors">' +
+                        '<div class="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-xs">' + (index + 1) + '</div>' +
+                        '<div class="font-bold text-slate-700">' + displayText + '</div>' +
+                        '<div class="ml-auto text-xs text-slate-500">' + label + '</div>' +
+                        '</div>';
+                }).join('')
+                : '<p class="text-center text-slate-400 py-8 text-sm font-bold">검색 결과가 없습니다.</p>';
+        }
+
+        function renderDashboardNoise() {
+            const container = document.getElementById('dashboard-noise-by-factory');
+            if (!container) return;
+            var byFactory = {};
+            (NOISE_DATA || []).forEach(function (n) {
+                if (n.result !== '초과') return;
+                var key = n.factory || n.processDept || '기타';
+                if (!byFactory[key]) byFactory[key] = [];
+                byFactory[key].push(n);
+            });
+            var factories = Object.keys(byFactory).sort();
+            if (factories.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 text-sm col-span-2">소음 기준 초과 공정이 없습니다.</p>';
+                return;
+            }
+            container.innerHTML = factories.map(function (factory) {
+                var items = byFactory[factory];
+                var rows = items.map(function (item) {
+                    var db = Number(item.measuredDb);
+                    var std = Number(item.standardDb);
+                    var exceed = isNaN(db) || isNaN(std) ? '' : '+' + (Math.round((db - std) * 10) / 10).toFixed(1) + ' dB';
+                    return '<div class="flex justify-between items-center py-1.5 border-b border-slate-100 last:border-0"><span class="font-bold text-slate-700">' + (item.processName || '-') + '</span><span class="text-sm text-red-600 font-bold">' + db + ' dB ' + (exceed ? '(' + exceed + ')' : '') + '</span></div>';
+                }).join('');
+                return '<div class="p-4 rounded-xl bg-slate-50 border border-slate-200"><h4 class="font-black text-slate-800 mb-3 flex items-center gap-2"><i class="fas fa-industry text-slate-500"></i>' + factory + '</h4><div class="space-y-0">' + rows + '</div></div>';
+            }).join('');
+        }
+
+        // ========== 건강 뉴스 (HEALTH_NEWS) ==========
+        function renderHealthNews() {
+            const container = document.getElementById('health-news-list');
+            const updatedAtEl = document.getElementById('health-news-updated-at');
+            if (!container) return;
+            if (updatedAtEl && HEALTH_NEWS.length > 0) updatedAtEl.textContent = HEALTH_NEWS[0].date + ' 기준';
+            container.innerHTML = HEALTH_NEWS.length > 0
+                ? HEALTH_NEWS.map((item, index) => `
+                <article class="flex gap-4 items-start">
+                    <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-black text-sm">${index + 1}</div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-black bg-emerald-50 text-emerald-700">${item.category}</span>
+                            <span class="text-[11px] font-bold text-slate-400">${item.date}</span>
+                        </div>
+                        <h4 class="font-black text-slate-800 mb-1">${item.title}</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed">${item.summary}</p>
+                        <p class="mt-1 text-xs text-slate-400">출처: ${item.source}</p>
+                    </div>
+                </article>
+            `).join('')
+                : '<p class="text-slate-500 text-sm">등록된 뉴스가 없습니다.</p>';
+        }
+
+        // ========== 소음 현황 (기준초과 뱃지 + 캡처 모드) ==========
+        function getNoiseProtectionRecommendation(db) {
+            if (db >= 85) return { text: '귀마개', icon: 'fa-ear-listen' };
+            if (db >= 80) return { text: '귀마개', icon: 'fa-ear-listen' };
+            return { text: '착용 권장', icon: 'fa-shield-alt' };
+        }
+
+        function checkNoiseProcessHasHighRisk(processDept) {
+            if (!APP_DATA.members || !APP_DATA.members.length) return false;
+            return APP_DATA.members.some(m => (m.dept === processDept || (processDept && m.dept && m.dept.indexOf(processDept) >= 0)) && (m.note && (m.note.indexOf('소음성 난청') >= 0 || m.note.indexOf('소음') >= 0)));
+        }
+
+        function renderNoiseCards(list) {
+            const container = document.getElementById('noise-cards-container');
+            if (!container) return;
+            const isAdmin = isAdminLoggedIn();
+            container.innerHTML = (list || []).map(item => {
+                const idx = NOISE_DATA.indexOf(item);
+                const exceed = item.result === '초과';
+                const rec = getNoiseProtectionRecommendation(item.measuredDb);
+                const hasHighRisk = checkNoiseProcessHasHighRisk(item.processDept || item.factory);
+                const cardClass = exceed ? 'noise-card-exceed' : 'noise-card-ok';
+                const exceedAmount = exceed ? (Math.round((item.measuredDb - item.standardDb) * 10) / 10) : 0;
+                return `
+                <div class="noise-card gu-card p-5 ${cardClass} relative">
+                    ${isAdmin && idx >= 0 ? `<div class="absolute top-3 right-3 flex gap-1"><button type="button" onclick="editNoiseItem(${idx})" class="text-xs font-bold px-2 py-1 rounded bg-slate-200 text-slate-700 hover:bg-slate-300">수정</button><button type="button" onclick="deleteNoiseItem(${idx})" class="text-xs font-bold px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">삭제</button></div>` : ''}
+                    <div class="flex items-start justify-between gap-2 mb-3">
+                        <span class="text-xs font-bold text-slate-500">${item.factory || ''}</span>
+                        ${exceed ? '<span class="text-xs font-bold px-2 py-0.5 rounded bg-red-500 text-white">기준초과</span>' : ''}
+                        </div>
+                    <h3 class="font-black text-slate-800 text-lg mb-3">${item.processName || ''}</h3>
+                    <div class="space-y-2 text-sm">
+                        <p class="flex justify-between"><span class="text-slate-500">측정값</span><span class="font-black">${Number(item.measuredDb).toFixed(1)} dB</span></p>
+                        <p class="flex justify-between"><span class="text-slate-500">노출기준</span><span>${Number(item.standardDb).toFixed(1)} dB</span></p>
+                        ${exceed ? '<p class="flex justify-between text-red-600 font-bold"><span>초과</span><span>+' + Number(exceedAmount).toFixed(1) + ' dB</span></p>' : '<p class="text-teal-600 font-bold">적합</p>'}
+                        <p class="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
+                            <span class="text-slate-500">착용 보호구</span>
+                            <span class="font-bold flex items-center gap-1"><i class="fas ${rec.icon} text-teal-600"></i> ${item.protectionGear || rec.text}</span>
+                        </p>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+        function addNoiseItem() {
+            const factory = prompt('공장 (예: 1공장)', '1공장');
+            if (factory == null) return;
+            const processName = prompt('공정명', '');
+            const measuredDbRaw = parseFloat(prompt('측정값(dB)', '85')) || 85;
+            const measuredDb = Math.round(measuredDbRaw * 10) / 10;
+            const standardDb = 87.7;
+            const result = measuredDb > standardDb ? '초과' : '적합';
+            const protectionGear = result === '초과' ? '귀마개' : '-';
+            NOISE_DATA.push({ factory, processName: processName || '', processDept: factory, measuredDb, standardDb, result, protectionGear });
+            const noiseMode = document.getElementById('noise-btn-exceed') && document.getElementById('noise-btn-exceed').classList.contains('active') ? 'exceed' : 'all';
+            setNoiseFilter(noiseMode);
+            apiPost('saveNoise', NOISE_DATA).then(function () {
+                console.log('✅ 소음 측정 데이터가 Google Sheets에 저장되었습니다.');
+            }).catch(function (error) {
+                console.error('❌ 소음 측정 데이터 저장 실패:', error);
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+        function editNoiseItem(i) {
+            const n = NOISE_DATA[i]; if (!n) return;
+            const processName = prompt('공정명', n.processName); if (processName == null) return;
+            const measuredDbRaw = parseFloat(prompt('측정값(dB)', String(n.measuredDb)));
+            n.processName = processName !== null ? processName : n.processName;
+            if (!isNaN(measuredDbRaw)) { const measuredDb = Math.round(measuredDbRaw * 10) / 10; n.measuredDb = measuredDb; n.result = measuredDb > (n.standardDb || 87.7) ? '초과' : '적합'; n.protectionGear = n.result === '초과' ? '귀마개' : '-'; }
+            const noiseMode = document.getElementById('noise-btn-exceed') && document.getElementById('noise-btn-exceed').classList.contains('active') ? 'exceed' : 'all';
+            setNoiseFilter(noiseMode);
+            apiPost('saveNoise', NOISE_DATA).then(function () {
+                console.log('✅ 소음 측정 데이터가 Google Sheets에 저장되었습니다.');
+            }).catch(function (error) {
+                console.error('❌ 소음 측정 데이터 저장 실패:', error);
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+        function deleteNoiseItem(i) {
+            if (!confirm('이 소음 측정 항목을 삭제할까요?')) return;
+            NOISE_DATA.splice(i, 1);
+            const noiseMode = document.getElementById('noise-btn-exceed') && document.getElementById('noise-btn-exceed').classList.contains('active') ? 'exceed' : 'all';
+            setNoiseFilter(noiseMode);
+            apiPost('saveNoise', NOISE_DATA).then(function () {
+                console.log('✅ 소음 측정 데이터가 Google Sheets에 저장되었습니다.');
+            }).catch(function (error) {
+                console.error('❌ 소음 측정 데이터 저장 실패:', error);
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+
+        function handleFloorplanUpload(factoryNum, input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            if (!file.type.startsWith('image/')) {
+                alert('이미지 파일만 업로드 가능합니다.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = document.getElementById('noise-floorplan-image');
+                const placeholder = document.getElementById('noise-floorplan-placeholder');
+                if (img) {
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+
+                    // window 객체와 APP_DATA에 즉시 저장 (로컬 표시용)
+                    window['floorplan_' + factoryNum] = e.target.result;
+                    if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                    APP_DATA.floorplans['factory' + factoryNum] = e.target.result;
+
+                    // localStorage에도 저장 (로컬 캐시)
+                    localStorage.setItem('noise_floorplans', JSON.stringify(APP_DATA.floorplans));
+
+                    alert(factoryNum + '공장 도면 이미지가 업로드되었습니다.\n\n⚠️ 중요: "저장" 버튼을 반드시 눌러서 Google Sheets에 저장해야 다른 기기(핸드폰 등)에서도 보입니다!');
+                }
+            };
+            reader.readAsDataURL(file);
+            input.value = '';
+        }
+        function saveFloorplanImages() {
+            if (!window.floorplan_1 && !window.floorplan_2) {
+                alert('저장할 이미지가 없습니다. 먼저 이미지를 업로드하세요.');
+                return;
+            }
+            if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+            if (window.floorplan_1) APP_DATA.floorplans.factory1 = window.floorplan_1;
+            if (window.floorplan_2) APP_DATA.floorplans.factory2 = window.floorplan_2;
+
+            // localStorage에 저장 (로컬 캐시)
+            if (APP_DATA.floorplans && (APP_DATA.floorplans.factory1 || APP_DATA.floorplans.factory2)) {
+                localStorage.setItem('noise_floorplans', JSON.stringify(APP_DATA.floorplans));
+            }
+
+            // Google Sheets에 저장 (다른 기기에서도 보이도록)
+            apiPost('saveFloorplans', APP_DATA.floorplans).then(function () {
+                alert('✅ 배치도 이미지가 Google Sheets에 저장되었습니다!\n\n이제 다른 기기(핸드폰 등)에서도 볼 수 있습니다.');
+
+                // 저장 후 즉시 표시
+                var currentFactory = 1;
+                document.querySelectorAll('.floorplan-tab').forEach(function (tab) {
+                    if (tab.classList.contains('active')) {
+                        var match = tab.id.match(/floorplan-tab-(\d)/);
+                        if (match) currentFactory = parseInt(match[1]);
+                    }
+                });
+                showNoiseFloorplan(currentFactory);
+            }).catch(function (error) {
+                const errorMsg = error && error.message ? error.message : '알 수 없는 오류';
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + errorMsg + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+
+        function showNoiseFloorplan(factoryNum) {
+            document.querySelectorAll('.floorplan-tab').forEach(tab => {
+                tab.classList.remove('active', 'bg-blue-500', 'text-white');
+                tab.classList.add('bg-slate-100', 'text-slate-600');
+            });
+            const activeTab = document.getElementById('floorplan-tab-' + factoryNum);
+            if (activeTab) {
+                activeTab.classList.add('active', 'bg-blue-500', 'text-white');
+                activeTab.classList.remove('bg-slate-100', 'text-slate-600');
+            }
+            const img = document.getElementById('noise-floorplan-image');
+            const placeholder = document.getElementById('noise-floorplan-placeholder');
+            if (img) {
+                var imageSrc = 'images/noise-floorplan-' + factoryNum + 'factory.png';
+
+                // 1순위: Google Sheets에서 로드된 APP_DATA.floorplans 사용 (다른 기기에서도 보이도록)
+                let floorplans = APP_DATA.floorplans || {};
+
+                // 2순위: window 객체에 저장된 이미지 (업로드 직후)
+                if (!floorplans['factory' + factoryNum] && window['floorplan_' + factoryNum]) {
+                    floorplans['factory' + factoryNum] = window['floorplan_' + factoryNum];
+                }
+
+                // 3순위: localStorage fallback (로컬 캐시, 다른 기기에서는 사용 안 함)
+                if (!floorplans['factory' + factoryNum]) {
+                    const savedFloorplans = localStorage.getItem('noise_floorplans');
+                    if (savedFloorplans) {
+                        try {
+                            const parsed = JSON.parse(savedFloorplans);
+                            if (parsed && typeof parsed === 'object' && parsed['factory' + factoryNum]) {
+                                floorplans = parsed;
+                                // APP_DATA에도 동기화 (다음 로드 시 우선 사용)
+                                if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                                APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, parsed);
+                                if (parsed.factory1) window.floorplan_1 = parsed.factory1;
+                                if (parsed.factory2) window.floorplan_2 = parsed.factory2;
+                            }
+                        } catch (e) {
+                            console.error('배치도 이미지 로드 오류:', e);
+                        }
+                    }
+                }
+
+                if (floorplans && floorplans['factory' + factoryNum]) {
+                    imageSrc = floorplans['factory' + factoryNum];
+                }
+
+                img.src = imageSrc;
+                img.alt = factoryNum + '공장 소음 측정 위치도';
+                img.onerror = function () {
+                    this.style.display = 'none';
+                    if (placeholder) placeholder.style.display = 'block';
+                };
+                img.onload = function () {
+                    this.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                };
+            }
+        }
+
+        function setNoiseFilter(mode) {
+            document.querySelectorAll('.noise-filter-btn').forEach(btn => { btn.classList.remove('active', 'bg-red-500', 'text-white'); btn.classList.add('bg-slate-200', 'text-slate-600'); });
+            const btn = document.getElementById('noise-btn-' + mode);
+            if (btn) { btn.classList.add('active'); if (mode === 'exceed') btn.classList.add('bg-red-500', 'text-white'); else btn.classList.add('bg-slate-300'); btn.classList.remove('bg-slate-200'); }
+            const list = mode === 'exceed' ? NOISE_DATA.filter(n => n.result === '초과') : NOISE_DATA;
+            renderNoiseCards(list);
+        }
+
+        function renderMsdsTable(filterText) {
+            const tbody = document.getElementById('msds-table-body');
+            const emptyMsg = document.getElementById('msds-empty-msg');
+            if (!tbody) return;
+            const q = (filterText || '').toLowerCase();
+            const list = q
+                ? MSDS_DATA.filter(m => (m.productName || '').toLowerCase().includes(q) || (m.casNo || '').toLowerCase().includes(q))
+                : MSDS_DATA;
+            tbody.innerHTML = list.map(m => `
+            <tr class="border-b border-slate-100 hover:bg-amber-50/50">
+                <td class="px-4 py-3 font-bold text-slate-800">${m.productName || '-'}</td>
+                <td class="px-4 py-3 text-sm font-bold text-slate-600">${m.casNo || '-'}</td>
+                <td class="px-4 py-3 text-sm text-slate-600">${m.usage || '-'}</td>
+                <td class="px-4 py-3"><span class="text-xs font-bold px-2 py-1 rounded ${m.riskLevel === '높음' ? 'bg-red-100 text-red-800' : m.riskLevel === '중간' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'}">${m.riskLevel || '-'}</span></td>
+                <td class="px-4 py-3 text-center"><a href="${m.fileUrl || '#'}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg font-bold text-sm bg-amber-500 text-white hover:bg-amber-600"><i class="fas fa-external-link-alt"></i> MSDS 보기</a></td>
+            </tr>
+        `).join('');
+            if (emptyMsg) {
+                emptyMsg.classList.toggle('hidden', list.length > 0);
+            }
+        }
+
+        // ========== 의약품 설문조사 URL 관리 (localStorage로 영구 저장) ==========
+        function getMedicineSurveyUrl() {
+            // 1순위: Google Sheets에서 로드된 값 (다른 기기에서도 보이도록)
+            // 2순위: localStorage에 저장된 값 (로컬 캐시, fallback)
+            // 3순위: 빈 문자열
+            return medicineSurveyUrlFromServer || localStorage.getItem('medicine_survey_url') || '';
+        }
+
+        function saveMedicineSurveyUrl() {
+            const input = document.getElementById('medicine-survey-url');
+            const url = (input && input.value) ? input.value.trim() : '';
+
+            // 로컬에 즉시 저장 (로컬 표시용)
+            medicineSurveyUrlFromServer = url;
+            if (url) {
+                localStorage.setItem('medicine_survey_url', url);
+            } else {
+                localStorage.removeItem('medicine_survey_url');
+            }
+
+            renderMedicineSurveyUserArea();
+
+            // Google Sheets에 저장 (다른 기기에서도 보이도록)
+            apiPost('saveMedicineSurveyUrl', { url: url }).then(function () {
+                alert('✅ 설문조사 링크가 Google Sheets에 저장되었습니다!\n\n이제 다른 기기(핸드폰 등)에서도 실시간으로 볼 수 있습니다.');
+            }).catch(function (error) {
+                const errorMsg = error && error.message ? error.message : '알 수 없는 오류';
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + errorMsg + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+        function renderMedicineSurveyUserArea() {
+            const area = document.getElementById('medicine-survey-user-area');
+            const urlInput = document.getElementById('medicine-survey-url');
+            if (!area) return;
+            const url = getMedicineSurveyUrl();
+            if (urlInput) urlInput.value = url;
+            if (url) {
+                area.innerHTML = `
+                <div class="space-y-4">
+                    <a href="${url.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-8 py-4 bg-teal-500 text-white font-black text-lg rounded-xl hover:bg-teal-600 transition-colors"><i class="fas fa-external-link-alt"></i> 설문 참여하기</a>
+                    <div class="mt-4 rounded-xl overflow-hidden border-2 border-slate-200" style="height: 520px;">
+                        <iframe src="${url.replace(/"/g, '&quot;')}" title="의약품 수요 설문" class="w-full h-full"></iframe>
+                    </div>
+                </div>
+            `;
+            } else {
+                area.innerHTML = '<div class="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-8 text-center"><p class="text-slate-600 font-bold mb-2">예시: 설문이 등록되면 이곳에 참여 버튼과 설문 화면이 표시됩니다.</p><p class="text-sm text-slate-500">관리자 로그인 후 상단 [설문조사 URL]에 구글 폼 링크 등을 입력해 주세요.</p><p class="text-xs text-slate-400 mt-4">예: https://docs.google.com/forms/d/... </p></div>';
+            }
+        }
+
+        function toggleNoiseShareMode() {
+            const shareView = document.getElementById('noise-share-view');
+            const toolbar = document.querySelector('.noise-toolbar');
+            if (!shareView) return;
+            if (shareView.classList.contains('hidden')) {
+                const exceedList = NOISE_DATA.filter(n => n.result === '초과');
+                const shareCards = document.getElementById('noise-share-cards');
+                shareCards.innerHTML = exceedList.map(item => {
+                    const rec = getNoiseProtectionRecommendation(item.measuredDb);
+                    const hasHighRisk = checkNoiseProcessHasHighRisk(item.processDept || item.factory);
+                    const exceedAmount = Math.round((item.measuredDb - item.standardDb) * 10) / 10;
+                    return `
+                    <div class="noise-card gu-card p-5 noise-card-exceed">
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <span class="text-xs font-bold text-slate-500">${item.factory}</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-red-500 text-white">기준초과</span>
+                        </div>
+                        <h3 class="font-black text-slate-800 text-lg mb-2">${item.processName}</h3>
+                        <p class="text-sm font-bold">${Number(item.measuredDb).toFixed(1)} dB (기준 ${Number(item.standardDb).toFixed(1)} dB) · +${Number(exceedAmount).toFixed(1)} dB 초과</p>
+                        <p class="text-sm text-slate-600 mt-1"><i class="fas ${rec.icon} text-teal-600"></i> ${item.protectionGear || rec.text}</p>
+                    </div>
+                `;
+                }).join('');
+                shareView.classList.remove('hidden');
+                if (toolbar) toolbar.classList.add('hidden');
+            } else {
+                shareView.classList.add('hidden');
+                if (toolbar) toolbar.classList.remove('hidden');
+            }
+        }
+
+        // ========== PT 발표 모드 ==========
+        let ptMode = false;
+        let ptCurrentIndex = 0;
+
+        function togglePTMode() {
+            ptMode = !ptMode;
+            const bar = document.getElementById('pt-mode-bar');
+            const aside = document.getElementById('main-aside');
+            const header = document.querySelector('header');
+            const main = document.querySelector('main');
+            const ptBtn = document.getElementById('pt-mode-btn');
+            if (ptMode) {
+                if (bar) bar.classList.remove('hidden');
+                if (aside) aside.style.display = 'none';
+                if (header) header.style.display = 'none';
+                if (ptBtn) ptBtn.classList.add('hidden');
+                document.body.classList.add('pt-mode');
+                if (main) main.classList.add('pt-mode-content');
+                ptCurrentIndex = 0;
+                renderPTSlide();
+                document.addEventListener('keydown', ptHandleKeydown);
+            } else {
+                if (bar) bar.classList.add('hidden');
+                if (aside) aside.style.removeProperty('display');
+                if (header) header.style.removeProperty('display');
+                if (ptBtn) ptBtn.classList.remove('hidden');
+                document.body.classList.remove('pt-mode');
+                if (main) main.classList.remove('pt-mode-content');
+                document.removeEventListener('keydown', ptHandleKeydown);
+            }
+        }
+
+        function ptHandleKeydown(e) {
+            if (e.key === 'ArrowLeft') ptPrevSlide();
+            if (e.key === 'ArrowRight') ptNextSlide();
+        }
+
+        function ptPrevSlide() {
+            ptCurrentIndex = ptCurrentIndex <= 0 ? slides.length - 1 : ptCurrentIndex - 1;
+            renderPTSlide();
+        }
+
+        function ptNextSlide() {
+            ptCurrentIndex = ptCurrentIndex >= slides.length - 1 ? 0 : ptCurrentIndex + 1;
+            renderPTSlide();
+        }
+
+        function renderPTSlide() {
+            const indicator = document.getElementById('pt-slide-indicator');
+            const tabId = slides[ptCurrentIndex];
+            changeTab(tabId);
+            if (indicator) indicator.textContent = (ptCurrentIndex + 1) + ' / ' + slides.length;
+        }
+
+        // ========== 집중관리 명단 ==========
+        let listFilterType = 'All';
+        let listSearchQuery = '';
+
+        function filterList(type) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === type);
+                if (btn.dataset.filter === type) { btn.classList.add('bg-slate-800', 'text-white'); btn.classList.remove('bg-red-50', 'bg-orange-50', 'bg-slate-200', 'text-red-600', 'text-orange-600', 'text-slate-600'); }
+                else { btn.classList.remove('bg-slate-800', 'text-white'); btn.classList.add('bg-slate-200', 'text-slate-600'); }
+            });
+            listFilterType = type;
+            applyListFilter();
+        }
+
+        function searchMembers(q) {
+            listSearchQuery = (q || '').trim();
+            applyListFilter();
+        }
+
+        function applyListFilter() {
+            let filtered = APP_DATA.members;
+            if (listFilterType === 'Highest') filtered = filtered.filter(m => m.risk === 'Highest');
+            if (listFilterType === 'Pending') filtered = filtered.filter(m => !Object.values(m.counseling || {}).some(c => c !== null));
+            if (listSearchQuery) filtered = filtered.filter(m => (m.name || '').toLowerCase().includes(listSearchQuery.toLowerCase()));
+            renderMemberTable(filtered);
+        }
+
+        function toggleCounselingByBtn(btn) {
+            const name = btn.getAttribute('data-name');
+            const dept = btn.getAttribute('data-dept');
+            const month = btn.getAttribute('data-month');
+            if (name != null && dept != null && month != null) toggleCounseling(name, dept, month);
+        }
+
+        function toggleCounseling(name, dept, month) {
+            const m = APP_DATA.members.find(mem => mem.name === name && mem.dept === dept);
+            if (!m) return;
+            if (!m.counseling) m.counseling = { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null };
+            const key = parseInt(month, 10);
+            if (key < 1 || key > 12) return;
+            const now = new Date();
+            const dateStr = (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0');
+            if (m.counseling[key] !== null && m.counseling[key] !== undefined) {
+                m.counseling[key] = null;
+            } else {
+                m.counseling[key] = { date: dateStr, count: 1 };
+            }
+            applyListFilter();
+            updateDashboardCounselingRate();
+            apiPost('saveMembers', APP_DATA.members).then(function () {
+                console.log('✅ 집중관리 명단이 Google Sheets에 저장되었습니다.');
+            }).catch(function (error) {
+                console.error('❌ 집중관리 명단 저장 실패:', error);
+                alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+            });
+        }
+
+        function renderMemberTable(members) {
+            const tbody = document.getElementById('member-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = (members || []).map(m => {
+                const isIntensive = m.isIntensiveCare === true;
+                const rowClass = isIntensive ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-slate-50';
+                const badge = isIntensive ? '<span class="ml-2 px-2 py-0.5 bg-yellow-400 text-yellow-900 rounded text-[10px] font-black">집중관찰</span>' : '';
+                const counseling = m.counseling || {};
+                const monthCells = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(mon => {
+                    const done = counseling[mon] !== null && counseling[mon] !== undefined;
+                    const name = (m.name || '').replace(/"/g, '&quot;');
+                    const dept = (m.dept || '').replace(/"/g, '&quot;');
+                    return `<td class="p-2 text-center"><button type="button" onclick="toggleCounselingByBtn(this)" data-name="${name}" data-dept="${dept}" data-month="${mon}" class="w-7 h-7 rounded-full inline-flex items-center justify-center text-xs font-bold ${done ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}">${done ? 'O' : '－'}</button></td>`;
+                }).join('');
+                return `<tr class="${rowClass}"><td class="p-3 font-bold">${m.name}${badge}</td><td class="p-3 text-slate-500 font-bold">${m.dept}</td><td class="p-3"><span class="status-badge ${m.risk === 'Highest' ? 'status-highest' : 'status-high'}">${m.risk}</span></td><td class="p-3 text-xs font-bold text-slate-600">${m.note}</td>${monthCells}</tr>`;
+            }).join('');
+        }
+
+        // ========== 병원비 ==========
+        function changeExpenseYear(year) {
+            currentExpenseYear = year;
+            document.querySelectorAll('.expense-year-btn').forEach(btn => {
+                const active = parseInt(btn.dataset.year) === year;
+                btn.classList.toggle('active', active);
+                if (active) { btn.classList.add('bg-teal-500', 'text-white'); btn.classList.remove('text-slate-600', 'hover:bg-slate-100'); }
+                else { btn.classList.remove('bg-teal-500', 'text-white'); btn.classList.add('text-slate-600', 'hover:bg-slate-100'); }
+            });
+            renderExpenseData(year);
+        }
+
+        function renderExpenseData(year) {
+            const data = year === 2026 ? APP_DATA.expenses_2026 : APP_DATA.expenses_2025;
+            const monthlyData = Array(12).fill(0);
+            let allItems = [];
+            (data || []).forEach(m => {
+                const total = (m.items || []).reduce((sum, item) => sum + (item.amount || 0), 0);
+                monthlyData[m.month - 1] = total;
+                (m.items || []).forEach(item => allItems.push({ ...item, month: m.month }));
+            });
+            const totalAmount = monthlyData.reduce((a, b) => a + b, 0);
+            const count = allItems.length;
+            const avg = count > 0 ? Math.round(totalAmount / count) : 0;
+            const totalEl = document.getElementById('expense-total');
+            if (totalEl) totalEl.textContent = '₩' + totalAmount.toLocaleString();
+            const countEl = document.getElementById('expense-count');
+            if (countEl) countEl.textContent = count + '건';
+            const avgEl = document.getElementById('expense-avg');
+            if (avgEl) avgEl.textContent = '₩' + avg.toLocaleString();
+            const canvas = document.getElementById('expenseChart');
+            if (canvas && typeof Chart !== 'undefined') {
+                if (chartInstances.expense) chartInstances.expense.destroy();
+                chartInstances.expense = new Chart(canvas, {
+                    type: 'line',
+                    data: {
+                        labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                        datasets: [{ label: year + '년', data: monthlyData, borderColor: '#14B8A6', backgroundColor: 'rgba(20,184,166,0.1)', fill: true, tension: 0.4 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
+                });
+            }
+            // 병원비 데이터 변경 시 절감액 재계산
+            calculateDynamicSavings();
+            updateTotalSavingsUI();
+        }
+
+        // ========== 인증 ==========
+        const ADMIN_PASSWORD = 'gyt6111!';
+
+        function isAdminLoggedIn() {
+            return localStorage.getItem('g_auth_mode') === 'admin';
+        }
+
+        function toggleAuth() {
+            if (isAdminLoggedIn()) {
+                localStorage.removeItem('g_auth_mode');
+                updateAuthUI();
+                updateAdminOnlyElements();
+                changeTab('worker-home');
+            } else {
+                document.getElementById('auth-modal').classList.remove('hidden');
+                document.getElementById('auth-password').value = '';
+                document.getElementById('auth-error').classList.add('hidden');
+            }
+        }
+
+        function attemptLogin() {
+            const password = document.getElementById('auth-password').value;
+            if (password === ADMIN_PASSWORD) {
+                localStorage.setItem('g_auth_mode', 'admin');
+                document.getElementById('auth-modal').classList.add('hidden');
+                updateAuthUI();
+                updateAdminOnlyElements();
+                changeTab('dashboard');
+            } else {
+                document.getElementById('auth-error').classList.remove('hidden');
+            }
+        }
+
+        function updateAuthUI() {
+            const isAdmin = isAdminLoggedIn();
+            const desktopText = document.getElementById('auth-btn-desktop-text');
+            if (desktopText) desktopText.textContent = isAdmin ? '관리자 모드' : '관리자 로그인';
+            const desktopBtn = document.getElementById('auth-btn-desktop');
+            if (desktopBtn) {
+                if (isAdmin) { desktopBtn.className = 'w-full px-4 py-2 rounded-lg font-bold text-sm bg-red-500 text-white hover:bg-red-600 transition-colors flex items-center justify-center gap-2'; desktopBtn.innerHTML = '<i class="fas fa-unlock"></i> <span id="auth-btn-desktop-text">관리자 모드</span>'; desktopBtn.onclick = toggleAuth; }
+                else { desktopBtn.className = 'w-full px-4 py-2 rounded-lg font-bold text-sm bg-teal-500 text-white hover:bg-teal-600 transition-colors flex items-center justify-center gap-2'; desktopBtn.innerHTML = '<i class="fas fa-lock"></i> <span id="auth-btn-desktop-text">관리자 로그인</span>'; desktopBtn.onclick = toggleAuth; }
+            }
+        }
+
+        function updateAdminOnlyElements() {
+            const isAdmin = isAdminLoggedIn();
+            document.querySelectorAll('.admin-only').forEach(el => {
+                if (isAdmin) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+            updateWorkerOnlyElements();
+            renderRiskFactors();
+            renderInnovations();
+            renderEmergencyContacts();
+            renderStretchingVideos(); // 관리자 모드 전환 시에도 스트레칭 영상 표시
+            renderMedicineSurveyUserArea(); // 관리자 모드 전환 시에도 링크 표시
+            showNoiseFloorplan(1); // 관리자 모드 전환 시에도 배치도 표시
+            const noiseMode = document.getElementById('noise-btn-exceed') && document.getElementById('noise-btn-exceed').classList.contains('active') ? 'exceed' : 'all';
+            setNoiseFilter(noiseMode);
+        }
+
+        function renderNavigation() {
+            if (!isAdminLoggedIn()) {
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+            } else {
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+            }
+            updateWorkerOnlyElements();
+        }
+
+        // 초기 데이터를 Google Sheets에 저장하는 함수 (한 번만 실행)
+        function initializeDefaultData() {
+            // 이미 초기화되었는지 확인
+            const initialized = localStorage.getItem('data_initialized');
+            if (initialized === 'true') {
+                return; // 이미 초기화됨
+            }
+
+            // Google Sheets에 데이터가 없을 때만 초기값 저장
+            if (GAS_URL && GAS_URL.trim() !== '') {
+                // 스트레칭 영상 초기값
+                const defaultStretchingVideos = [
+                    {
+                        id: 1,
+                        title: "구영테크 스트레칭 영상",
+                        description: "근골격계 부담 예방을 위한 실전 스트레칭 가이드",
+                        videoUrl: "https://youtu.be/oYmiL6Bh_ak",
+                        thumbnail: "",
+                        duration: "",
+                        category: "전체",
+                        createdAt: new Date().toISOString().slice(0, 10)
+                    }
+                ];
+
+                // 의약품 설문조사 URL 초기값
+                const defaultMedicineSurveyUrl = "https://docs.google.com/forms/d/e/1FAIpQLSc8GB-tbu8QhWnoItYi7lS26tyLX0KzQvNZ-bwc-Cqw-bHpsQ/viewform?usp=sharing&ouid=110501763882946908099";
+
+                // Google Sheets에서 현재 데이터 확인 후, 없으면 초기값 저장
+                fetch(GAS_URL + '?t=' + Date.now())
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        let needsSave = false;
+
+                        // 스트레칭 영상이 없으면 저장
+                        if (!data.config || !data.config.stretchingVideos || !Array.isArray(data.config.stretchingVideos) || data.config.stretchingVideos.length === 0) {
+                            apiPost('saveStretchingVideos', defaultStretchingVideos);
+                            needsSave = true;
+                            console.log('✅ 스트레칭 영상 초기값 저장');
+                        }
+
+                        // 의약품 설문조사 URL이 없으면 저장
+                        if (!data.config || !data.config.medicine_survey_url || data.config.medicine_survey_url.trim() === '') {
+                            apiPost('saveMedicineSurveyUrl', { url: defaultMedicineSurveyUrl });
+                            needsSave = true;
+                            console.log('✅ 의약품 설문조사 URL 초기값 저장');
+                        }
+
+                        if (needsSave) {
+                            localStorage.setItem('data_initialized', 'true');
+                            console.log('✅ 초기 데이터 저장 완료');
+                        }
+                    })
+                    .catch(function (error) {
+                        console.warn('초기 데이터 확인 실패:', error);
+                    });
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', function () {
+            localStorage.removeItem('g_auth_mode');
+
+            // 초기 데이터 설정 (한 번만 실행)
+            initializeDefaultData();
+
+            // 페이지 로드 시 localStorage에서 의약품 설문조사 URL 복원
+            const savedUrl = localStorage.getItem('medicine_survey_url');
+            if (savedUrl && !medicineSurveyUrlFromServer) {
+                medicineSurveyUrlFromServer = savedUrl;
+            }
+
+            // 페이지 로드 시 localStorage에서 스트레칭 영상 복원
+            const savedVideos = localStorage.getItem('stretching_videos');
+            if (savedVideos) {
+                try {
+                    const videos = JSON.parse(savedVideos);
+                    if (Array.isArray(videos) && videos.length > 0) {
+                        // Google Sheets에서 로드되지 않았거나 비어있으면 localStorage 값 사용
+                        if (!APP_DATA.stretchingVideos || APP_DATA.stretchingVideos.length === 0) {
+                            APP_DATA.stretchingVideos = videos;
+                        }
+                    }
+                } catch (e) {
+                    console.error('스트레칭 영상 복원 오류:', e);
+                }
+            }
+
+            // 페이지 로드 시 localStorage에서 배치도 이미지 복원
+            const savedFloorplans = localStorage.getItem('noise_floorplans');
+            if (savedFloorplans) {
+                try {
+                    const floorplans = JSON.parse(savedFloorplans);
+                    if (floorplans && typeof floorplans === 'object') {
+                        // Google Sheets에서 로드되지 않았거나 비어있으면 localStorage 값 사용
+                        if (!APP_DATA.floorplans || (!APP_DATA.floorplans.factory1 && !APP_DATA.floorplans.factory2)) {
+                            if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                            APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, floorplans);
+                            if (floorplans.factory1) window.floorplan_1 = floorplans.factory1;
+                            if (floorplans.factory2) window.floorplan_2 = floorplans.factory2;
+                        }
+                    }
+                } catch (e) {
+                    console.error('배치도 이미지 복원 오류:', e);
+                }
+            }
+
+            renderNavigation();
+            updateAuthUI();
+            updateAdminOnlyElements();
+            renderMedicineSurveyUserArea(); // 초기 로드 시에도 링크 표시
+            renderStretchingVideos(); // 초기 로드 시에도 스트레칭 영상 표시
+            showNoiseFloorplan(1); // 초기 로드 시에도 배치도 표시
+
+            // 초기 데이터 로드
+            loadDataFromSheets();
+
+            // 실시간 연동: 10초마다 Google Sheets에서 데이터 자동 새로고침
+            // (다른 기기에서 수정한 내용이 실시간으로 반영됨)
+            // GitHub Pages 사용 시 다른 사용자들이 최신 데이터를 볼 수 있도록 짧은 간격으로 새로고침
+            setInterval(function () {
+                loadDataFromSheets(true); // silent 모드로 조용히 새로고침
+            }, 10000); // 10초마다 (더 빠른 동기화)
+        });
+    </script>
+</body>
+
+</html>

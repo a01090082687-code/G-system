@@ -1,0 +1,42 @@
+{
+  "name": "G-System 보건시스템",
+  "short_name": "G-System",
+  "description": "구영테크 보건시스템 - 건강관리 및 안전 관리 플랫폼",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F1F5F9",
+  "theme_color": "#064E3B",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "productivity", "business"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "대시보드",
+      "short_name": "대시보드",
+      "description": "메인 대시보드로 이동",
+      "url": "/?tab=dashboard",
+      "icons": [{ "src": "/static/icons/dashboard.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "응급연락망",
+      "short_name": "응급",
+      "description": "응급 연락망 보기",
+      "url": "/?tab=emergency",
+      "icons": [{ "src": "/static/icons/emergency.png", "sizes": "96x96" }]
+    }
+  ]
+}
