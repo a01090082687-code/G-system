@@ -155,9 +155,11 @@
             padding: 30px;
             border-radius: 20px;
             text-align: center;
-            max-width: 300px;
+            max-width: 400px;
             width: 90%;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .game-over-title {
@@ -173,6 +175,106 @@
             margin-bottom: 20px;
         }
 
+        .ranking-section {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .ranking-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #558b2f;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .ranking-list {
+            background: #f1f8e9;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e8f5e9;
+            font-size: 14px;
+        }
+
+        .ranking-item:last-child {
+            border-bottom: none;
+        }
+
+        .ranking-rank {
+            font-weight: bold;
+            color: #66bb6a;
+            min-width: 30px;
+        }
+
+        .ranking-name {
+            flex: 1;
+            text-align: left;
+            margin-left: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ranking-score {
+            font-weight: bold;
+            color: #558b2f;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .name-input-section {
+            margin: 15px 0;
+        }
+
+        .name-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #81c784;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .name-input:focus {
+            outline: none;
+            border-color: #66bb6a;
+            box-shadow: 0 0 5px rgba(102, 187, 106, 0.3);
+        }
+
+        .register-btn {
+            background: linear-gradient(135deg, #81c784 0%, #66bb6a 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 187, 106, 0.4);
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .register-btn:active {
+            transform: scale(0.95);
+        }
+
+        .register-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .restart-btn {
             background: linear-gradient(135deg, #81c784 0%, #66bb6a 100%);
             color: white;
@@ -184,10 +286,18 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 4px 15px rgba(102, 187, 106, 0.4);
+            width: 100%;
         }
 
         .restart-btn:active {
             transform: scale(0.95);
+        }
+
+        .loading {
+            text-align: center;
+            color: #66bb6a;
+            font-size: 14px;
+            margin: 10px 0;
         }
 
         .start-screen {
@@ -320,12 +430,17 @@
         <div class="start-screen" id="startScreen">
             <div class="start-title">🏥 건강 지키기 캐치 게임 🏥</div>
             <div class="instructions">
-                <h3>게임 방법</h3>
+                <h3>🎮 게임 방법</h3>
+                <p style="text-align: center; color: #558b2f; font-weight: bold; margin-bottom: 15px; font-size: 16px;">
+                    좋은 아이템을 먹고 나쁜 아이템을 피하세요!
+                </p>
                 <ul>
-                    <li>✅ 좋은 아이템: 💊 🍎 💧 (+10점)</li>
-                    <li>❌ 나쁜 아이템: 🦠 🚬 🍺 (생명력 -1)</li>
-                    <li>🎯 바구니를 좌우로 움직여 아이템을 받으세요!</li>
+                    <li>✅ <strong>좋은 아이템</strong>: 💊(비타민) 🍎(사과) 💧(물방울) → <strong>+10점</strong></li>
+                    <li>❌ <strong>나쁜 아이템</strong>: 🦠(바이러스) 🚬(담배) 🍺(맥주) → <strong>생명력 -1</strong></li>
+                    <li>🎯 바구니(🏥)를 좌우로 움직여 아이템을 받으세요!</li>
                     <li>💔 생명력이 0이 되면 게임 오버입니다</li>
+                    <li>📈 점수가 높아질수록 난이도가 올라갑니다</li>
+                    <li>🏆 Top 10 랭킹에 도전하세요!</li>
                 </ul>
             </div>
             <button class="start-btn" id="startBtn">게임 시작</button>
@@ -335,6 +450,19 @@
             <div class="game-over-content">
                 <div class="game-over-title">게임 오버</div>
                 <div class="final-score">최종 점수: <span id="finalScore">0</span></div>
+                
+                <div class="ranking-section">
+                    <div class="ranking-title">🏆 명예의 전당 Top 10</div>
+                    <div class="ranking-list" id="rankingList">
+                        <div class="loading">랭킹 불러오는 중...</div>
+                    </div>
+                </div>
+
+                <div class="name-input-section">
+                    <input type="text" class="name-input" id="playerName" placeholder="이름을 입력하세요 (최대 10자)" maxlength="10">
+                    <button class="register-btn" id="registerBtn">랭킹 등록</button>
+                </div>
+
                 <button class="restart-btn" id="restartBtn">다시 시작</button>
             </div>
         </div>
@@ -350,11 +478,17 @@
                 lives: 3,
                 isPlaying: false,
                 gameSpeed: 2000,
-                minSpeed: 1500,
+                minSpeed: 800,
                 items: [],
                 basketPosition: 50, // 백분율
-                animationId: null
+                animationId: null,
+                badItemRatio: 0.4, // 나쁜 아이템 비율 (40%)
+                difficultyLevel: 0, // 난이도 레벨 (0, 1, 2, 3...)
+                itemInterval: 2000 // 아이템 생성 간격
             };
+
+            // GAS URL (index.html의 GAS_URL과 동일하게 설정)
+            const GAS_URL = 'https://script.google.com/macros/s/AKfycbxKQ7DSfpBhiBE3JOSam39bvs8argQaf0s6hQJIMpH5l5knJKVfEfcW3lpCTODjLBMkiw/exec';
 
             // DOM 요소
             const elements = {
@@ -366,7 +500,10 @@
                 gameOver: document.getElementById('gameOver'),
                 startBtn: document.getElementById('startBtn'),
                 restartBtn: document.getElementById('restartBtn'),
-                finalScore: document.getElementById('finalScore')
+                finalScore: document.getElementById('finalScore'),
+                rankingList: document.getElementById('rankingList'),
+                playerName: document.getElementById('playerName'),
+                registerBtn: document.getElementById('registerBtn')
             };
 
             // 아이템 정의
@@ -443,7 +580,8 @@
             function createItem() {
                 if (!gameState.isPlaying) return;
 
-                const isGood = Math.random() > 0.4; // 60% 확률로 좋은 아이템
+                // 난이도에 따라 나쁜 아이템 비율 증가
+                const isGood = Math.random() > gameState.badItemRatio;
                 const items = isGood ? goodItems : badItems;
                 const emoji = items[Math.floor(Math.random() * items.length)];
 
@@ -534,10 +672,23 @@
                 elements.score.textContent = gameState.score;
             }
 
-            // 난이도 증가
+            // 난이도 증가 (50점, 100점, 150점마다)
             function increaseDifficulty() {
-                const speedReduction = Math.floor(gameState.score / 100) * 50;
-                gameState.gameSpeed = Math.max(gameState.minSpeed, 2000 - speedReduction);
+                const newLevel = Math.floor(gameState.score / 50);
+                
+                if (newLevel > gameState.difficultyLevel) {
+                    gameState.difficultyLevel = newLevel;
+                    
+                    // 속도 증가 (최소 800ms까지)
+                    const speedReduction = newLevel * 200;
+                    gameState.gameSpeed = Math.max(gameState.minSpeed, 2000 - speedReduction);
+                    
+                    // 나쁜 아이템 비율 증가 (최대 70%까지)
+                    gameState.badItemRatio = Math.min(0.7, 0.4 + (newLevel * 0.05));
+                    
+                    // 아이템 생성 간격 감소 (최소 500ms까지)
+                    gameState.itemInterval = Math.max(500, 2000 - (newLevel * 200));
+                }
             }
 
             // 생명력 감소
@@ -570,11 +721,17 @@
                 gameState.score = 0;
                 gameState.lives = 3;
                 gameState.gameSpeed = 2000;
+                gameState.minSpeed = 800;
+                gameState.badItemRatio = 0.4;
+                gameState.difficultyLevel = 0;
+                gameState.itemInterval = 2000;
                 gameState.items = [];
                 gameState.basketPosition = 50;
                 
                 elements.startScreen.classList.add('hidden');
                 elements.gameOver.classList.remove('show');
+                elements.playerName.value = '';
+                elements.registerBtn.disabled = false;
                 
                 updateScore();
                 updateLives();
@@ -594,7 +751,9 @@
                 
                 createItem();
                 
-                const nextInterval = 800 + Math.random() * 1200; // 0.8초 ~ 2초 사이
+                // 난이도에 따라 간격 조절
+                const variance = gameState.itemInterval * 0.3;
+                const nextInterval = gameState.itemInterval - variance + Math.random() * (variance * 2);
                 setTimeout(createItemInterval, nextInterval);
             }
 
@@ -603,6 +762,111 @@
                 gameState.isPlaying = false;
                 elements.finalScore.textContent = gameState.score;
                 elements.gameOver.classList.add('show');
+                
+                // 랭킹 불러오기
+                loadRankings();
+            }
+
+            // 랭킹 불러오기
+            function loadRankings() {
+                elements.rankingList.innerHTML = '<div class="loading">랭킹 불러오는 중...</div>';
+                
+                if (!GAS_URL || GAS_URL.trim() === '') {
+                    elements.rankingList.innerHTML = '<div class="loading">랭킹 서버 연결 실패</div>';
+                    return;
+                }
+
+                fetch(GAS_URL + '?action=getRankings&t=' + Date.now())
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data.ok && data.rankings) {
+                            displayRankings(data.rankings);
+                        } else {
+                            elements.rankingList.innerHTML = '<div class="loading">랭킹 데이터 없음</div>';
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('랭킹 로드 오류:', error);
+                        elements.rankingList.innerHTML = '<div class="loading">랭킹 불러오기 실패</div>';
+                    });
+            }
+
+            // 랭킹 표시
+            function displayRankings(rankings) {
+                if (!rankings || rankings.length === 0) {
+                    elements.rankingList.innerHTML = '<div class="loading">아직 랭킹이 없습니다</div>';
+                    return;
+                }
+
+                let html = '';
+                rankings.forEach(function(rank, index) {
+                    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : (index + 1) + '위';
+                    html += '<div class="ranking-item">';
+                    html += '<span class="ranking-rank">' + medal + '</span>';
+                    html += '<span class="ranking-name">' + (rank.name || '익명') + '</span>';
+                    html += '<span class="ranking-score">' + rank.score + '점</span>';
+                    html += '</div>';
+                });
+                elements.rankingList.innerHTML = html;
+            }
+
+            // 랭킹 등록
+            function registerRanking() {
+                const playerName = elements.playerName.value.trim();
+                
+                if (!playerName) {
+                    alert('이름을 입력해주세요!');
+                    return;
+                }
+
+                if (playerName.length > 10) {
+                    alert('이름은 10자 이하로 입력해주세요!');
+                    return;
+                }
+
+                if (!GAS_URL || GAS_URL.trim() === '') {
+                    alert('랭킹 서버 연결 실패');
+                    return;
+                }
+
+                elements.registerBtn.disabled = true;
+                elements.registerBtn.textContent = '등록 중...';
+
+                fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'saveRanking',
+                        payload: {
+                            name: playerName,
+                            score: gameState.score
+                        }
+                    })
+                })
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data.ok) {
+                            alert('랭킹 등록 완료!');
+                            loadRankings(); // 랭킹 새로고침
+                            elements.playerName.value = '';
+                        } else {
+                            alert('랭킹 등록 실패: ' + (data.message || '알 수 없는 오류'));
+                            elements.registerBtn.disabled = false;
+                            elements.registerBtn.textContent = '랭킹 등록';
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('랭킹 등록 오류:', error);
+                        alert('랭킹 등록 중 오류가 발생했습니다.');
+                        elements.registerBtn.disabled = false;
+                        elements.registerBtn.textContent = '랭킹 등록';
+                    });
             }
 
             // 게임 재시작
@@ -613,6 +877,14 @@
             // 이벤트 리스너 등록
             elements.startBtn.addEventListener('click', startGame);
             elements.restartBtn.addEventListener('click', restartGame);
+            elements.registerBtn.addEventListener('click', registerRanking);
+            
+            // 엔터키로 랭킹 등록
+            elements.playerName.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    registerRanking();
+                }
+            });
 
             // 컨트롤 설정
             setupControls();

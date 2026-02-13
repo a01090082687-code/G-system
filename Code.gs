@@ -9,11 +9,21 @@ var SHEET_NAMES = {
   noise: 'Noise',
   expenses: 'Expenses',
   innovations: 'Innovations',
-  config: 'Config'
+  config: 'Config',
+  gameRankings: 'GameRankings'
 };
 
 function doGet(e) {
   try {
+    var action = e.parameter.action;
+    
+    // 게임 랭킹 조회
+    if (action === 'getRankings') {
+      var rankings = getRankings();
+      return createJsonResponse({ ok: true, rankings: rankings });
+    }
+    
+    // 기본 데이터 조회
     var result = getAllData();
     return createJsonResponse(result);
   } catch (err) {
@@ -80,6 +90,11 @@ function doPost(e) {
       case 'saveFloorplans':
         writeConfigKey(ss, 'floorplans', payload);
         out.ok = true;
+        break;
+      case 'saveRanking':
+        saveRanking(ss, payload.name, payload.score);
+        out.ok = true;
+        out.message = 'Ranking saved successfully';
         break;
       default:
         out.message = 'Unknown action: ' + action;
@@ -317,4 +332,72 @@ function getOrCreateSheet(ss, name) {
   var sh = ss.getSheetByName(name);
   if (!sh) sh = ss.insertSheet(name);
   return sh;
+}
+
+// ========== 게임 랭킹 관련 함수 ==========
+
+function getRankings() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = getOrCreateSheet(ss, SHEET_NAMES.gameRankings);
+  var data = sh.getDataRange().getValues();
+  
+  if (data.length < 2) {
+    return [];
+  }
+  
+  var rankings = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (row[0] && row[1] !== undefined) {
+      rankings.push({
+        name: String(row[0] || '').trim(),
+        score: Number(row[1]) || 0,
+        date: row[2] || new Date().toISOString()
+      });
+    }
+  }
+  
+  // 점수 내림차순 정렬
+  rankings.sort(function(a, b) {
+    return b.score - a.score;
+  });
+  
+  // Top 10만 반환
+  return rankings.slice(0, 10);
+}
+
+function saveRanking(ss, name, score) {
+  if (!name || !name.trim()) {
+    throw new Error('Name is required');
+  }
+  if (score === undefined || score === null || isNaN(score)) {
+    throw new Error('Score is required');
+  }
+  
+  var sh = getOrCreateSheet(ss, SHEET_NAMES.gameRankings);
+  var data = sh.getDataRange().getValues();
+  
+  // 헤더가 없으면 추가
+  if (data.length < 1 || !data[0] || data[0][0] !== 'name') {
+    sh.clear();
+    sh.getRange(1, 1, 1, 3).setValues([['name', 'score', 'date']]);
+    data = [['name', 'score', 'date']];
+  }
+  
+  // 새 랭킹 추가
+  var now = new Date();
+  sh.appendRow([name.trim().substring(0, 10), Number(score), now]);
+  
+  // 전체 랭킹 가져오기
+  var allRankings = getRankings();
+  
+  // Top 10만 유지 (나머지 삭제)
+  if (allRankings.length > 10) {
+    sh.clear();
+    sh.getRange(1, 1, 1, 3).setValues([['name', 'score', 'date']]);
+    for (var i = 0; i < 10; i++) {
+      var rank = allRankings[i];
+      sh.appendRow([rank.name, rank.score, rank.date]);
+    }
+  }
 }
