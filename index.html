@@ -761,14 +761,22 @@
         if (Array.isArray(data.expenses_2026)) APP_DATA.expenses_2026 = data.expenses_2026;
         if (data.floorplans && typeof data.floorplans === 'object') {
             const floorplansFromServer = data.floorplans;
+            // Google Sheets에서 로드된 데이터를 우선적으로 사용 (다른 기기에서도 보이도록)
             APP_DATA.floorplans = floorplansFromServer;
-            if (floorplansFromServer.factory1) window.floorplan_1 = floorplansFromServer.factory1;
-            if (floorplansFromServer.factory2) window.floorplan_2 = floorplansFromServer.factory2;
+            if (floorplansFromServer.factory1) {
+                window.floorplan_1 = floorplansFromServer.factory1;
+            }
+            if (floorplansFromServer.factory2) {
+                window.floorplan_2 = floorplansFromServer.factory2;
+            }
             
-            // Google Sheets에서 로드된 값도 localStorage에 저장 (동기화)
+            // Google Sheets에서 로드된 값도 localStorage에 저장 (로컬 캐시)
             if (floorplansFromServer && (floorplansFromServer.factory1 || floorplansFromServer.factory2)) {
                 localStorage.setItem('noise_floorplans', JSON.stringify(floorplansFromServer));
             }
+            
+            // 배치도 즉시 표시
+            showNoiseFloorplan(1);
         }
         if (data.config) {
             // Config가 비어 있으면(서버가 빈 배열 반환) 기본 명단·연락망 유지
@@ -780,19 +788,29 @@
             if (Array.isArray(data.config.factory2) && data.config.factory2.length > 0) CONSULTATION_SCHEDULE.factory2 = data.config.factory2;
             if (data.config.hasOwnProperty('medicine_survey_url')) {
                 const urlFromServer = String(data.config.medicine_survey_url || '').trim();
+                // Google Sheets에서 로드된 값을 우선적으로 사용 (다른 기기에서도 보이도록)
                 medicineSurveyUrlFromServer = urlFromServer;
-                // Google Sheets에서 로드된 값도 localStorage에 저장 (동기화)
+                // localStorage에도 저장 (로컬 캐시)
                 if (urlFromServer) {
                     localStorage.setItem('medicine_survey_url', urlFromServer);
+                } else {
+                    localStorage.removeItem('medicine_survey_url');
                 }
+                // 의약품 조사 링크 즉시 표시
+                renderMedicineSurveyUserArea();
             }
             if (data.config.hasOwnProperty('stretchingVideos') && Array.isArray(data.config.stretchingVideos)) {
                 const videosFromServer = data.config.stretchingVideos;
+                // Google Sheets에서 로드된 값을 우선적으로 사용 (다른 기기에서도 보이도록)
                 APP_DATA.stretchingVideos = videosFromServer;
-                // Google Sheets에서 로드된 값도 localStorage에 저장 (동기화)
+                // localStorage에도 저장 (로컬 캐시)
                 if (videosFromServer && videosFromServer.length > 0) {
                     localStorage.setItem('stretching_videos', JSON.stringify(videosFromServer));
+                } else {
+                    localStorage.removeItem('stretching_videos');
                 }
+                // 스트레칭 영상 즉시 표시
+                renderStretchingVideos();
             }
         }
     }
@@ -1052,17 +1070,21 @@
         const container = document.getElementById('stretching-video-list');
         if (!container) return;
         
-        // localStorage에서도 확인 (사용자 모드에서도 표시되도록)
+        // 1순위: Google Sheets에서 로드된 APP_DATA.stretchingVideos 사용 (다른 기기에서도 보이도록)
         let list = APP_DATA.stretchingVideos || [];
-        const savedVideos = localStorage.getItem('stretching_videos');
-        if ((!list || list.length === 0) && savedVideos) {
-            try {
-                const videos = JSON.parse(savedVideos);
-                if (Array.isArray(videos) && videos.length > 0) {
-                    list = videos;
+        
+        // 2순위: localStorage fallback (로컬 캐시, Google Sheets 데이터가 없을 때만)
+        if ((!list || list.length === 0)) {
+            const savedVideos = localStorage.getItem('stretching_videos');
+            if (savedVideos) {
+                try {
+                    const videos = JSON.parse(savedVideos);
+                    if (Array.isArray(videos) && videos.length > 0) {
+                        list = videos;
+                    }
+                } catch (e) {
+                    console.error('스트레칭 영상 로드 오류:', e);
                 }
-            } catch (e) {
-                console.error('스트레칭 영상 로드 오류:', e);
             }
         }
         
@@ -1127,7 +1149,7 @@
             APP_DATA.stretchingVideos.push({ id, title, description, videoUrl, thumbnail: '', duration: '', category: '전체', createdAt: new Date().toISOString().slice(0, 10) });
         }
         
-        // localStorage에 영구 저장 (사용자 모드에서도 유지되도록)
+        // localStorage에 저장 (로컬 캐시)
         if (APP_DATA.stretchingVideos && APP_DATA.stretchingVideos.length > 0) {
             localStorage.setItem('stretching_videos', JSON.stringify(APP_DATA.stretchingVideos));
         } else {
@@ -1135,7 +1157,14 @@
         }
         
         renderStretchingVideos();
-        apiPost('saveStretchingVideos', APP_DATA.stretchingVideos);
+        
+        // Google Sheets에 저장 (다른 기기에서도 보이도록)
+        apiPost('saveStretchingVideos', APP_DATA.stretchingVideos).then(function() {
+            alert('✅ 스트레칭 영상이 Google Sheets에 저장되었습니다!\n\n이제 다른 기기(핸드폰 등)에서도 실시간으로 볼 수 있습니다.');
+        }).catch(function() {
+            alert('⚠️ 저장 중 오류가 발생했습니다. Google Sheets 연결을 확인해주세요.');
+        });
+        
         closeStretchingAddModal();
     }
     function editStretchingVideo(i) {
@@ -1150,7 +1179,7 @@
         if (!confirm('이 영상 항목을 삭제할까요?')) return;
         APP_DATA.stretchingVideos.splice(i, 1);
         
-        // localStorage에 영구 저장 (사용자 모드에서도 유지되도록)
+        // localStorage에 저장 (로컬 캐시)
         if (APP_DATA.stretchingVideos && APP_DATA.stretchingVideos.length > 0) {
             localStorage.setItem('stretching_videos', JSON.stringify(APP_DATA.stretchingVideos));
         } else {
@@ -1158,7 +1187,13 @@
         }
         
         renderStretchingVideos();
-        apiPost('saveStretchingVideos', APP_DATA.stretchingVideos);
+        
+        // Google Sheets에 저장 (다른 기기에서도 보이도록)
+        apiPost('saveStretchingVideos', APP_DATA.stretchingVideos).then(function() {
+            // 조용히 저장 완료 (삭제는 사용자가 이미 확인했으므로 알림 불필요)
+        }).catch(function() {
+            alert('⚠️ 저장 중 오류가 발생했습니다. Google Sheets 연결을 확인해주세요.');
+        });
     }
 
     function renderCharts() {
@@ -1557,14 +1592,16 @@
                 img.src = e.target.result;
                 img.style.display = 'block';
                 if (placeholder) placeholder.style.display = 'none';
-                window['floorplan_' + factoryNum] = e.target.result;
                 
-                // 즉시 localStorage에 저장 (저장 버튼 누르기 전에도 표시되도록)
+                // window 객체와 APP_DATA에 즉시 저장 (로컬 표시용)
+                window['floorplan_' + factoryNum] = e.target.result;
                 if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
                 APP_DATA.floorplans['factory' + factoryNum] = e.target.result;
+                
+                // localStorage에도 저장 (로컬 캐시)
                 localStorage.setItem('noise_floorplans', JSON.stringify(APP_DATA.floorplans));
                 
-                alert(factoryNum + '공장 도면 이미지가 업로드되었습니다. 저장 버튼을 눌러 서버에 저장하세요.');
+                alert(factoryNum + '공장 도면 이미지가 업로드되었습니다.\n\n⚠️ 중요: "저장" 버튼을 반드시 눌러서 Google Sheets에 저장해야 다른 기기(핸드폰 등)에서도 보입니다!');
             }
         };
         reader.readAsDataURL(file);
@@ -1579,27 +1616,27 @@
         if (window.floorplan_1) APP_DATA.floorplans.factory1 = window.floorplan_1;
         if (window.floorplan_2) APP_DATA.floorplans.factory2 = window.floorplan_2;
         
-        // localStorage에 영구 저장 (사용자 모드에서도 유지되도록)
+        // localStorage에 저장 (로컬 캐시)
         if (APP_DATA.floorplans && (APP_DATA.floorplans.factory1 || APP_DATA.floorplans.factory2)) {
             localStorage.setItem('noise_floorplans', JSON.stringify(APP_DATA.floorplans));
         }
         
-        apiPost('saveFloorplans', APP_DATA.floorplans);
-        alert('배치도 이미지가 저장되었습니다.');
-        var currentFactory = 1;
-        document.querySelectorAll('.floorplan-tab').forEach(function(tab) {
-            if (tab.classList.contains('active')) {
-                var match = tab.id.match(/floorplan-tab-(\d)/);
-                if (match) currentFactory = parseInt(match[1]);
-            }
+        // Google Sheets에 저장 (다른 기기에서도 보이도록)
+        apiPost('saveFloorplans', APP_DATA.floorplans).then(function() {
+            alert('✅ 배치도 이미지가 Google Sheets에 저장되었습니다!\n\n이제 다른 기기(핸드폰 등)에서도 볼 수 있습니다.');
+            
+            // 저장 후 즉시 표시
+            var currentFactory = 1;
+            document.querySelectorAll('.floorplan-tab').forEach(function(tab) {
+                if (tab.classList.contains('active')) {
+                    var match = tab.id.match(/floorplan-tab-(\d)/);
+                    if (match) currentFactory = parseInt(match[1]);
+                }
+            });
+            showNoiseFloorplan(currentFactory);
+        }).catch(function() {
+            alert('⚠️ 저장 중 오류가 발생했습니다. Google Sheets 연결을 확인해주세요.');
         });
-        if (currentFactory === 1 && window.floorplan_1) {
-            const img = document.getElementById('noise-floorplan-image');
-            if (img) img.src = APP_DATA.floorplans.factory1;
-        } else if (currentFactory === 2 && window.floorplan_2) {
-            const img = document.getElementById('noise-floorplan-image');
-            if (img) img.src = APP_DATA.floorplans.factory2;
-        }
     }
 
     function showNoiseFloorplan(factoryNum) {
@@ -1617,22 +1654,31 @@
         if (img) {
             var imageSrc = 'images/noise-floorplan-' + factoryNum + 'factory.png';
             
-            // localStorage에서도 확인 (사용자 모드에서도 표시되도록)
+            // 1순위: Google Sheets에서 로드된 APP_DATA.floorplans 사용 (다른 기기에서도 보이도록)
             let floorplans = APP_DATA.floorplans || {};
-            const savedFloorplans = localStorage.getItem('noise_floorplans');
-            if ((!floorplans || !floorplans['factory' + factoryNum]) && savedFloorplans) {
-                try {
-                    const parsed = JSON.parse(savedFloorplans);
-                    if (parsed && typeof parsed === 'object') {
-                        floorplans = parsed;
-                        // APP_DATA에도 동기화
-                        if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
-                        APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, parsed);
-                        if (parsed.factory1) window.floorplan_1 = parsed.factory1;
-                        if (parsed.factory2) window.floorplan_2 = parsed.factory2;
+            
+            // 2순위: window 객체에 저장된 이미지 (업로드 직후)
+            if (!floorplans['factory' + factoryNum] && window['floorplan_' + factoryNum]) {
+                floorplans['factory' + factoryNum] = window['floorplan_' + factoryNum];
+            }
+            
+            // 3순위: localStorage fallback (로컬 캐시, 다른 기기에서는 사용 안 함)
+            if (!floorplans['factory' + factoryNum]) {
+                const savedFloorplans = localStorage.getItem('noise_floorplans');
+                if (savedFloorplans) {
+                    try {
+                        const parsed = JSON.parse(savedFloorplans);
+                        if (parsed && typeof parsed === 'object' && parsed['factory' + factoryNum]) {
+                            floorplans = parsed;
+                            // APP_DATA에도 동기화 (다음 로드 시 우선 사용)
+                            if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                            APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, parsed);
+                            if (parsed.factory1) window.floorplan_1 = parsed.factory1;
+                            if (parsed.factory2) window.floorplan_2 = parsed.factory2;
+                        }
+                    } catch (e) {
+                        console.error('배치도 이미지 로드 오류:', e);
                     }
-                } catch (e) {
-                    console.error('배치도 이미지 로드 오류:', e);
                 }
             }
             
@@ -1685,8 +1731,8 @@
 
     // ========== 의약품 설문조사 URL 관리 (localStorage로 영구 저장) ==========
     function getMedicineSurveyUrl() {
-        // 1순위: Google Sheets에서 로드된 값
-        // 2순위: localStorage에 저장된 값
+        // 1순위: Google Sheets에서 로드된 값 (다른 기기에서도 보이도록)
+        // 2순위: localStorage에 저장된 값 (로컬 캐시, fallback)
         // 3순위: 빈 문자열
         return medicineSurveyUrlFromServer || localStorage.getItem('medicine_survey_url') || '';
     }
@@ -1695,22 +1741,21 @@
         const input = document.getElementById('medicine-survey-url');
         const url = (input && input.value) ? input.value.trim() : '';
         
-        // 메모리 변수에 저장
+        // 로컬에 즉시 저장 (로컬 표시용)
         medicineSurveyUrlFromServer = url;
-        
-        // localStorage에 영구 저장 (사용자 모드에서도 유지되도록)
         if (url) {
             localStorage.setItem('medicine_survey_url', url);
         } else {
             localStorage.removeItem('medicine_survey_url');
         }
         
-        // UI 즉시 업데이트
         renderMedicineSurveyUserArea();
         
-        // Google Sheets에도 저장 (백업)
+        // Google Sheets에 저장 (다른 기기에서도 보이도록)
         apiPost('saveMedicineSurveyUrl', { url: url }).then(function() {
-            alert(url ? '설문조사 링크가 저장되었습니다. (모든 사용자에게 표시됩니다)' : '링크가 삭제되었습니다.');
+            alert('✅ 설문조사 링크가 Google Sheets에 저장되었습니다!\n\n이제 다른 기기(핸드폰 등)에서도 실시간으로 볼 수 있습니다.');
+        }).catch(function() {
+            alert('⚠️ 저장 중 오류가 발생했습니다. Google Sheets 연결을 확인해주세요.');
         });
     }
     function renderMedicineSurveyUserArea() {
@@ -2055,7 +2100,15 @@
         renderMedicineSurveyUserArea(); // 초기 로드 시에도 링크 표시
         renderStretchingVideos(); // 초기 로드 시에도 스트레칭 영상 표시
         showNoiseFloorplan(1); // 초기 로드 시에도 배치도 표시
+        
+        // 초기 데이터 로드
         loadDataFromSheets();
+        
+        // 실시간 연동: 30초마다 Google Sheets에서 데이터 자동 새로고침
+        // (다른 기기에서 수정한 내용이 실시간으로 반영됨)
+        setInterval(function() {
+            loadDataFromSheets(true); // silent 모드로 조용히 새로고침
+        }, 30000); // 30초마다
     });
     </script>
 </body>
