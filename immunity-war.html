@@ -141,7 +141,7 @@
         </div>
         <div class="start-screen" id="startScreen">
             <div class="start-title">🛡️ Immunity War</div>
-            <div class="version-info version-title">Ver 3.0 (2026.02.14 13:30 Update)</div>
+            <div class="version-info version-title">Ver 3.1 (Hardcore Mode)</div>
             <div class="start-desc">좌우 드래그로 이동. 🟦 파란 문=화력UP 🟥 빨간 문=화력DOWN<br>📦 보급상자 파괴 시 무기 업그레이드! 👹 보스 처치 후 👑 황금 게이트!</div>
             <button class="btn" id="btnStart">게임 시작</button>
         </div>
@@ -208,12 +208,13 @@
 
         var SYR_W = 14, SYR_H = 24, SYR_VY = -11;
         var GATE_W_RATIO = 0.22, GATE_H = 56, GATE_VY = 1.6, GATE_GAP = 0.06;
-        var ENEMY_SPAWN_BASE = 28, GATE_SPAWN = 640, BOX_SPAWN = 400;
+        var ENEMY_SPAWN_BASE = 16, GATE_SPAWN = 640, BOX_SPAWN = 400;
         var BOSS_HP_BASE = 80;
         var WAVE_BOSS_EVERY = 5;
         var DIFFICULTY_INTERVAL = 30 * FPS; // 30초
 
-        var goodLabels = ['비타민 섭취 x2', '운동 +10', '수면 x3', '물 섭취 +20'];
+        var goodLabelsAdd = [{ label: '운동 +1', add: 1 }, { label: '수면 +2', add: 2 }, { label: '물 섭취 +1', add: 1 }, { label: '비타민 +2', add: 2 }, { label: '휴식 +1', add: 1 }];
+        var goodLabelsMult = [{ label: '비타민 섭취 x2', mult: 2 }, { label: '수면 x3', mult: 3 }];
         var badLabels = ['음주 ÷2', '흡연 -10', '과로 ÷2'];
 
         function screenShake(magnitude, duration) {
@@ -289,8 +290,9 @@
         function addEnemy() {
             var type = Math.random() > 0.5 ? '🦠' : '😈';
             var r = 16 + Math.random() * 10;
-            var hp = Math.max(1, Math.floor((1 + r / 12) * state.difficultyScale));
-            var vy = (0.8 + Math.random() * 0.6) * state.difficultyScale;
+            var baseHp = Math.max(1, Math.floor((1 + r / 12) * state.difficultyScale));
+            var hp = Math.max(2, baseHp * 2);
+            var vy = (0.8 + Math.random() * 0.6) * state.difficultyScale * 1.5;
             var laneX = Math.random() < 0.5 ? cw * 0.25 : cw * 0.75;
             state.enemies.push({
                 x: laneX,
@@ -333,17 +335,25 @@
             });
         }
 
+        function pickGoodGate() {
+            if (Math.random() < 0.1) {
+                var o = goodLabelsMult[Math.floor(Math.random() * goodLabelsMult.length)];
+                return { label: o.label, addBonus: 0, multBonus: o.mult };
+            }
+            var o = goodLabelsAdd[Math.floor(Math.random() * goodLabelsAdd.length)];
+            return { label: o.label, addBonus: o.add, multBonus: 0 };
+        }
         function addGates() {
             var good = Math.random() > 0.5;
             var gw = cw * GATE_W_RATIO;
             var gateVy = GATE_VY * state.difficultyScale;
             var leftX = cw * 0.25 - gw / 2;
             var rightX = cw * 0.75 - gw / 2;
-            var l1 = good ? goodLabels[Math.floor(Math.random() * goodLabels.length)] : badLabels[Math.floor(Math.random() * badLabels.length)];
-            var l2 = good ? badLabels[Math.floor(Math.random() * badLabels.length)] : goodLabels[Math.floor(Math.random() * goodLabels.length)];
+            var g1 = good ? pickGoodGate() : { label: badLabels[Math.floor(Math.random() * badLabels.length)], addBonus: 0, multBonus: 0 };
+            var g2 = good ? { label: badLabels[Math.floor(Math.random() * badLabels.length)], addBonus: 0, multBonus: 0 } : pickGoodGate();
             state.gates.push(
-                { x: leftX, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: good, label: l1 },
-                { x: rightX, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: !good, label: l2 }
+                { x: leftX, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: good, label: g1.label, addBonus: g1.addBonus, multBonus: g1.multBonus },
+                { x: rightX, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: !good, label: g2.label, addBonus: g2.addBonus, multBonus: g2.multBonus }
             );
         }
 
@@ -544,10 +554,13 @@
 
             if (!state.boss) {
                 state.spawnEnemy++;
-                var spawnRate = Math.max(14, ENEMY_SPAWN_BASE - Math.floor(state.wave * 1));
+                var spawnRate = Math.max(6, ENEMY_SPAWN_BASE - Math.floor(state.wave * 1));
                 if (state.spawnEnemy >= spawnRate) {
                     state.spawnEnemy = 0;
-                    if (!isBossWave) addEnemy();
+                    if (!isBossWave) {
+                        addEnemy();
+                        addEnemy();
+                    }
                 }
             }
 
@@ -662,7 +675,11 @@
                             document.getElementById('powerUpMsg').classList.add('gold');
                             document.getElementById('flash').classList.add('gold');
                         } else {
-                            state.fireCount = Math.min(12, state.fireCount + (Math.random() > 0.5 ? 2 : 1));
+                            if (g.multBonus) {
+                                state.fireCount = Math.min(12, state.fireCount * g.multBonus);
+                            } else {
+                                state.fireCount = Math.min(12, state.fireCount + (g.addBonus || 1));
+                            }
                             state.fireInterval = Math.max(5, state.fireInterval - 1);
                             document.getElementById('powerUpMsg').textContent = 'Power UP!';
                             document.getElementById('powerUpMsg').classList.remove('gold');
