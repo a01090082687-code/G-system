@@ -141,8 +141,8 @@
         </div>
         <div class="start-screen" id="startScreen">
             <div class="start-title">🛡️ Immunity War</div>
-            <div class="version-info version-title">Ver 3.1 (Hardcore Mode)</div>
-            <div class="start-desc">좌우 드래그로 이동. 🟦 파란 문=화력UP 🟥 빨간 문=화력DOWN<br>📦 보급상자 파괴 시 무기 업그레이드! 👹 보스 처치 후 👑 황금 게이트!</div>
+            <div class="version-info version-title">Ver 4.0 (Final Polished)</div>
+            <div class="start-desc">좌우 드래그로 이동. 🟦 좋은 문=총알 영구 증가 · 🟥 나쁜 문/적 접촉=총알 감소<br>📦 보급상자=총알+3 · 👹 보스 처치 후 👑 황금 게이트!</div>
             <button class="btn" id="btnStart">게임 시작</button>
         </div>
         <div class="go-screen" id="goScreen">
@@ -201,14 +201,15 @@
             shakeMag: 0,
             spawnEnemy: 0,
             spawnGate: 0,
-            spawnBox: 0,
-            weaponOverride: null,
-            weaponUntil: 0
+            spawnBox: 0
         };
 
         var SYR_W = 14, SYR_H = 24, SYR_VY = -11;
         var GATE_W_RATIO = 0.22, GATE_H = 56, GATE_VY = 1.6, GATE_GAP = 0.06;
-        var ENEMY_SPAWN_BASE = 16, GATE_SPAWN = 640, BOX_SPAWN = 400;
+        var ENEMY_SPAWN_BASE = 16, GATE_SPAWN = 1280, BOX_SPAWN = 400;
+        var SPEED_MULT = 1.3;
+        var PLAYER_BOTTOM_MARGIN = 0.15;
+        var HITBOX_SCALE = 0.6;
         var BOSS_HP_BASE = 80;
         var WAVE_BOSS_EVERY = 5;
         var DIFFICULTY_INTERVAL = 30 * FPS; // 30초
@@ -256,33 +257,23 @@
             screenShake(12, 25);
         }
 
-        function addSyringe(angleOffset, isGiant) {
+        function addSyringe() {
             var baseX = state.px * cw;
-            var count = isGiant ? 1 : (state.weaponOverride === 'shotgun' ? 5 : state.fireCount);
-            var angles = [];
-            if (state.weaponOverride === 'shotgun') {
-                for (var i = 0; i < 5; i++) angles.push(-30 + 15 * i + (angleOffset || 0));
-            } else if (isGiant) {
-                angles = [0];
-            } else {
-                var spread = (state.fireCount * 8) / 2;
-                for (var i = 0; i < count; i++)
-                    angles.push(count === 1 ? 0 : (i - (count - 1) / 2) * 6);
-            }
-            var gw = isGiant ? 32 : SYR_W;
-            var gh = isGiant ? 48 : SYR_H;
-            var vy = isGiant ? -14 : SYR_VY;
-            for (var j = 0; j < angles.length; j++) {
-                var rad = (angles[j] * Math.PI) / 180;
+            var count = state.fireCount;
+            var py = ch * (1 - PLAYER_BOTTOM_MARGIN) - state.playerH;
+            var spread = (count * 8) / 2;
+            for (var i = 0; i < count; i++) {
+                var angle = count === 1 ? 0 : (i - (count - 1) / 2) * 6;
+                var rad = (angle * Math.PI) / 180;
                 state.syringes.push({
-                    x: baseX - gw / 2 + Math.sin(rad) * 20,
-                    y: ch - state.playerH - 20,
-                    w: gw,
-                    h: gh,
-                    vy: vy * Math.cos(rad),
+                    x: baseX - SYR_W / 2 + Math.sin(rad) * 20,
+                    y: py + state.playerH - 10,
+                    w: SYR_W,
+                    h: SYR_H,
+                    vy: SYR_VY * Math.cos(rad),
                     vx: Math.sin(rad) * 4,
-                    giant: !!isGiant,
-                    piercing: !!isGiant
+                    giant: false,
+                    piercing: false
                 });
             }
         }
@@ -292,10 +283,10 @@
             var r = 16 + Math.random() * 10;
             var baseHp = Math.max(1, Math.floor((1 + r / 12) * state.difficultyScale));
             var hp = Math.max(2, baseHp * 2);
-            var vy = (0.8 + Math.random() * 0.6) * state.difficultyScale * 1.5;
-            var laneX = Math.random() < 0.5 ? cw * 0.25 : cw * 0.75;
+            var vy = (0.8 + Math.random() * 0.6) * state.difficultyScale * SPEED_MULT;
+            var x = cw * 0.1 + Math.random() * (cw * 0.8);
             state.enemies.push({
-                x: laneX,
+                x: x,
                 y: -r * 2,
                 r: r,
                 hp: hp,
@@ -315,20 +306,20 @@
                 r: r,
                 hp: hp,
                 maxHp: hp,
-                vy: 1.2 * state.difficultyScale,
+                vy: 1.2 * state.difficultyScale * SPEED_MULT,
                 type: type
             };
         }
 
         function addGoldenGate() {
             var gw = cw * 0.35;
-            var laneX = Math.random() < 0.5 ? cw * 0.25 : cw * 0.75;
+            var x = cw * 0.1 + Math.random() * (cw * 0.8 - gw);
             state.gates.push({
-                x: laneX - gw / 2,
+                x: x,
                 y: -GATE_H,
                 w: gw,
                 h: GATE_H,
-                vy: GATE_VY * state.difficultyScale,
+                vy: GATE_VY * state.difficultyScale * SPEED_MULT,
                 good: true,
                 gold: true,
                 label: '👑 슈퍼 면역 x5'
@@ -346,14 +337,17 @@
         function addGates() {
             var good = Math.random() > 0.5;
             var gw = cw * GATE_W_RATIO;
-            var gateVy = GATE_VY * state.difficultyScale;
-            var leftX = cw * 0.25 - gw / 2;
-            var rightX = cw * 0.75 - gw / 2;
+            var gateVy = GATE_VY * state.difficultyScale * SPEED_MULT;
+            var zoneW = cw * 0.8 - gw;
+            var x1 = cw * 0.1 + Math.random() * zoneW;
+            var x2 = cw * 0.1 + Math.random() * zoneW;
+            if (Math.abs(x1 - x2) < gw) x2 = x1 + gw + Math.random() * (zoneW - gw);
+            if (x2 > cw * 0.9 - gw) x2 = cw * 0.9 - gw;
             var g1 = good ? pickGoodGate() : { label: badLabels[Math.floor(Math.random() * badLabels.length)], addBonus: 0, multBonus: 0 };
             var g2 = good ? { label: badLabels[Math.floor(Math.random() * badLabels.length)], addBonus: 0, multBonus: 0 } : pickGoodGate();
             state.gates.push(
-                { x: leftX, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: good, label: g1.label, addBonus: g1.addBonus, multBonus: g1.multBonus },
-                { x: rightX, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: !good, label: g2.label, addBonus: g2.addBonus, multBonus: g2.multBonus }
+                { x: x1, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: good, label: g1.label, addBonus: g1.addBonus, multBonus: g1.multBonus },
+                { x: x2, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: !good, label: g2.label, addBonus: g2.addBonus, multBonus: g2.multBonus }
             );
         }
 
@@ -362,24 +356,21 @@
             var w = 48 + Math.random() * 20;
             var h = 40 + Math.random() * 14;
             var hp = 12 + Math.floor(Math.random() * 12);
-            var laneX = Math.random() < 0.5 ? cw * 0.25 : cw * 0.75;
+            var x = cw * 0.1 + Math.random() * (cw * 0.8 - w);
             state.boxes.push({
-                x: laneX - w / 2,
+                x: x,
                 y: -h - 20,
                 w: w,
                 h: h,
                 hp: hp,
                 maxHp: hp,
-                vy: 1.4 * state.difficultyScale,
+                vy: 1.4 * state.difficultyScale * SPEED_MULT,
                 type: type
             });
         }
 
         function dropWeaponUpgrade(x, y) {
-            var kinds = ['shotgun', 'gatling', 'giant'];
-            var kind = kinds[Math.floor(Math.random() * kinds.length)];
-            state.weaponOverride = kind;
-            state.weaponUntil = FPS * 15; // 15초
+            state.fireCount = Math.min(99, state.fireCount + 3);
             addParticles(x, y, '#38bdf8', 16, 1.2);
             screenShake(6, 12);
         }
@@ -410,7 +401,7 @@
         function hitBulletEnemy(b, e) {
             var bx = b.x + b.w / 2, by = b.y + b.h / 2;
             var dx = bx - e.x, dy = by - e.y;
-            var r = (e.r || 20) + (b.giant ? 8 : 0);
+            var r = (e.r || 20);
             return dx * dx + dy * dy < r * r;
         }
 
@@ -419,13 +410,22 @@
             return bx >= box.x && bx <= box.x + box.w && by >= box.y && by <= box.y + box.h;
         }
 
+        function getPlayerHitbox() {
+            var py = ch * (1 - PLAYER_BOTTOM_MARGIN) - state.playerH;
+            var cx = state.px * cw;
+            var cy = py + state.playerH / 2;
+            var hw = state.playerW * HITBOX_SCALE / 2;
+            var hh = state.playerH * HITBOX_SCALE / 2;
+            return { left: cx - hw, right: cx + hw, top: cy - hh, bottom: cy + hh };
+        }
         function hitPlayerGate(g) {
-            var px = state.px * cw;
-            var py = ch - state.playerH - 8;
-            var pt = py, pb = py + state.playerH;
-            var gt = g.y, gb = g.y + g.h;
-            if (pb >= gt && pt <= gb && px >= g.x && px <= g.x + g.w) return true;
-            return false;
+            var h = getPlayerHitbox();
+            var gb = g.y + g.h;
+            var gt = g.y;
+            if (gb < h.top) return false;
+            if (gt > h.bottom) return false;
+            if (h.right < g.x || h.left > g.x + g.w) return false;
+            return true;
         }
 
         function loop() {
@@ -437,11 +437,6 @@
             state.gameTime++;
             if (state.gameTime > 30 * FPS && state.gameTime % DIFFICULTY_INTERVAL === 0)
                 state.difficultyScale = Math.min(3, state.difficultyScale + 0.1);
-
-            if (state.weaponUntil > 0) {
-                state.weaponUntil--;
-                if (state.weaponUntil <= 0) state.weaponOverride = null;
-            }
 
             var shakeX = 0, shakeY = 0;
             if (state.shakeTime > 0) {
@@ -460,16 +455,10 @@
             ctx.fillStyle = bgGrad;
             ctx.fillRect(-10, -10, cw + 20, ch + 20);
 
-            var fireInterval = state.fireInterval;
-            if (state.weaponOverride === 'gatling') fireInterval = Math.max(3, Math.floor(state.fireInterval / 3));
             state.fireTick++;
-            if (state.fireTick >= fireInterval) {
+            if (state.fireTick >= state.fireInterval) {
                 state.fireTick = 0;
-                if (state.weaponOverride === 'giant') {
-                    addSyringe(0, true);
-                } else {
-                    addSyringe();
-                }
+                addSyringe();
             }
 
             for (var i = state.syringes.length - 1; i >= 0; i--) {
@@ -480,15 +469,14 @@
                     state.syringes.splice(i, 1);
                     continue;
                 }
-                var fontSize = s.giant ? 36 : 20;
-                ctx.font = fontSize + 'px Arial';
+                ctx.font = '20px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText('💉', s.x + s.w / 2, s.y + s.h / 2);
 
                 var hitSomething = false;
                 if (state.boss && hitBulletEnemy(s, state.boss)) {
-                    var bossDmg = s.giant ? 5 : 1;
+                    var bossDmg = 1;
                     state.boss.hp -= bossDmg;
                     addDamageNumber(state.boss.x, state.boss.y - state.boss.r - 10, bossDmg, state.boss.hp <= state.boss.maxHp * 0.2);
                     state.syringes.splice(i, 1);
@@ -499,7 +487,7 @@
                         addGoldenGate();
                         state.boss = null;
                         state.wave++;
-                        state.fireCount = Math.min(20, state.fireCount + 2);
+                        state.fireCount = Math.min(99, state.fireCount + 2);
                         document.getElementById('waveEl').textContent = state.wave;
                         document.getElementById('fireEl').textContent = state.fireCount;
                     }
@@ -507,13 +495,14 @@
                 }
 
                 for (var j = state.enemies.length - 1; j >= 0; j--) {
-                    if (hitSomething && !s.piercing) break;
+                    if (hitSomething) break;
                     var e = state.enemies[j];
                     if (hitBulletEnemy(s, e)) {
-                        var dmg = s.giant ? 5 : 1;
+                        var dmg = 1;
                         e.hp -= dmg;
-                        addDamageNumber(e.x, e.y - e.r, dmg, dmg > 1);
-                        if (!s.piercing) { state.syringes.splice(i, 1); hitSomething = true; }
+                        addDamageNumber(e.x, e.y - e.r, dmg, false);
+                        state.syringes.splice(i, 1);
+                        hitSomething = true;
                         if (e.hp <= 0) {
                             addParticles(e.x, e.y, '#f87171', 16, 1);
                             state.enemies.splice(j, 1);
@@ -524,7 +513,7 @@
                                 document.getElementById('waveEl').textContent = state.wave;
                             }
                         }
-                        if (!s.piercing) break;
+                        break;
                     }
                 }
 
@@ -533,7 +522,7 @@
                     if (hitBulletBox(s, box)) {
                         box.hp--;
                         addDamageNumber(box.x + box.w / 2, box.y, 1, false);
-                        if (!s.piercing) state.syringes.splice(i, 1);
+                        state.syringes.splice(i, 1);
                         hitSomething = true;
                         if (box.hp <= 0) {
                             addParticles(box.x + box.w / 2, box.y + box.h / 2, '#fbbf24', 22, 1.3);
@@ -564,7 +553,8 @@
                 }
             }
 
-            for (var i = 0; i < state.enemies.length; i++) {
+            var h = getPlayerHitbox();
+            for (var i = state.enemies.length - 1; i >= 0; i--) {
                 var e = state.enemies[i];
                 e.y += e.vy;
                 if (e.y - e.r > ch) {
@@ -576,6 +566,26 @@
                     ctx.restore();
                     return;
                 }
+                var ex1 = e.x - e.r, ex2 = e.x + e.r, ey1 = e.y - e.r, ey2 = e.y + e.r;
+                if (ex2 >= h.left && ex1 <= h.right && ey2 >= h.top && ey1 <= h.bottom) {
+                    state.fireCount = Math.max(0, state.fireCount - 2);
+                    state.enemies.splice(i, 1);
+                    addParticles(e.x, e.y, '#f87171', 12, 1);
+                    screenShake(4, 8);
+                    document.getElementById('fireEl').textContent = state.fireCount;
+                    if (state.fireCount <= 0) {
+                        state.run = false;
+                        if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+                        document.getElementById('finalScore').textContent = state.score;
+                        document.getElementById('goScreen').classList.add('show');
+                        loadRankings();
+                        ctx.restore();
+                        return;
+                    }
+                }
+            }
+            for (var i = 0; i < state.enemies.length; i++) {
+                var e = state.enemies[i];
                 ctx.font = (e.r * 1.6) + 'px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -669,18 +679,18 @@
                 if (hitPlayerGate(g)) {
                     if (g.good) {
                         if (g.gold) {
-                            state.fireCount = Math.min(20, state.fireCount * 5);
+                            state.fireCount = Math.min(99, state.fireCount * 5);
                             state.fireInterval = Math.max(3, state.fireInterval - 2);
                             document.getElementById('powerUpMsg').textContent = '👑 슈퍼 면역!';
                             document.getElementById('powerUpMsg').classList.add('gold');
                             document.getElementById('flash').classList.add('gold');
                         } else {
                             if (g.multBonus) {
-                                state.fireCount = Math.min(12, state.fireCount * g.multBonus);
+                                state.fireCount = Math.min(99, state.fireCount * g.multBonus);
                             } else {
-                                state.fireCount = Math.min(12, state.fireCount + (g.addBonus || 1));
+                                state.fireCount = Math.min(99, state.fireCount + (g.addBonus || 1));
                             }
-                            state.fireInterval = Math.max(5, state.fireInterval - 1);
+                            state.fireInterval = Math.max(4, state.fireInterval - 1);
                             document.getElementById('powerUpMsg').textContent = 'Power UP!';
                             document.getElementById('powerUpMsg').classList.remove('gold');
                             document.getElementById('flash').classList.remove('gold');
@@ -694,7 +704,7 @@
                         }, 1200);
                     } else {
                         state.fireCount = Math.max(1, Math.floor(state.fireCount / 2));
-                        state.fireInterval = Math.min(18, state.fireInterval + 2);
+                        state.fireInterval = Math.min(20, state.fireInterval + 1);
                     }
                     document.getElementById('fireEl').textContent = state.fireCount;
                     state.gates.splice(k, 1);
@@ -734,11 +744,22 @@
                 ctx.globalAlpha = 1;
             }
 
-            var py = ch - state.playerH - 12;
+            var py = ch * (1 - PLAYER_BOTTOM_MARGIN) - state.playerH;
+            var playerCx = state.px * cw;
+            var playerCy = py + state.playerH / 2;
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillStyle = '#fbbf24';
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.strokeText('Lv. ' + state.fireCount, playerCx, py - 4);
+            ctx.fillText('Lv. ' + state.fireCount, playerCx, py - 4);
             ctx.font = '44px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(Gupaengi, state.px * cw, py + state.playerH / 2);
+            ctx.fillStyle = '#333';
+            ctx.fillText(Gupaengi, playerCx, playerCy);
 
             document.getElementById('scoreEl').textContent = state.score;
             ctx.restore();
@@ -764,8 +785,6 @@
             state.boxes = [];
             state.boss = null;
             state.shakeTime = 0;
-            state.weaponOverride = null;
-            state.weaponUntil = 0;
             state.spawnEnemy = 0;
             state.spawnGate = 0;
             state.spawnBox = 0;
