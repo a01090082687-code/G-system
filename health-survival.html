@@ -103,6 +103,13 @@
         var POISON_DMG = 0.4;
         var JOY_RADIUS = 48;
         var JOY_BASE_X = 70;
+        var BOSS_INTERVAL = 60 * 30;
+        var BOSS_R = 28;
+        var BOSS_HP_BASE = 25;
+        var BOSS_SPEED = 1.0;
+        var BOSS_PROJECTILE_SPEED = 6;
+        var BOSS_FIRE_INTERVAL = 90;
+        var BOSS_PROJECTILE_R = 10;
         var SKILLS_LIST = [
             { id: 'ricochet', name: '안전모', icon: '⛑️', desc: '총알 1회 튕김' },
             { id: 'speed', name: '안전화', icon: '🥾', desc: '발사속도 +25%' },
@@ -120,6 +127,8 @@
             health: 3, shield: 0, score: 0,
             xp: 0, xpToLevel: 10, level: 1, xpOrbs: [],
             enemies: [], syringes: [], particles: [],
+            bosses: [], bossProjectiles: [],
+            lastBossSpawn: 0,
             fireTick: 0, spawnTick: 0,
             difficultyScale: 0.85,
             skills: { ricochet: false, speed: false, multishot: 0, crit: false, poison: false },
@@ -207,6 +216,20 @@
             });
         }
 
+        function addBoss() {
+            var w = cw || 400;
+            var h = ch || 600;
+            var R = Math.max(w, h) * 0.55 + 70;
+            var angle = Math.random() * Math.PI * 2;
+            var ex = w/2 + Math.cos(angle) * R;
+            var ey = h/2 + Math.sin(angle) * R;
+            var hp = BOSS_HP_BASE + Math.floor(state.difficultyScale * 5);
+            state.bosses.push({
+                x: ex, y: ey, r: BOSS_R, hp: hp, maxHp: hp,
+                type: '👹', fireTick: 0
+            });
+        }
+
         function addSyringeToward(tx, ty) {
             var count = 1 + state.skills.multishot;
             var spread = count > 1 ? 0.15 : 0;
@@ -229,12 +252,17 @@
             return { x: bx + dx/dist*JOY_RADIUS, y: by + dy/dist*JOY_RADIUS };
         }
 
-        function nearestEnemy() {
+        function nearestTarget() {
             var best = null, bestD = 1e9;
             for (var i = 0; i < state.enemies.length; i++) {
                 var e = state.enemies[i];
                 var d = (e.x - state.px)**2 + (e.y - state.py)**2;
                 if (d < bestD && d < 380*380) { bestD = d; best = e; }
+            }
+            for (var j = 0; j < state.bosses.length; j++) {
+                var b = state.bosses[j];
+                var d = (b.x - state.px)**2 + (b.y - state.py)**2;
+                if (d < bestD && d < 420*420) { bestD = d; best = b; }
             }
             return best;
         }
@@ -331,7 +359,7 @@
             state.fireTick++;
             if (state.fireTick >= interval) {
                 state.fireTick = 0;
-                var near = nearestEnemy();
+                var near = nearestTarget();
                 if (near) addSyringeToward(near.x, near.y);
             }
 
@@ -373,6 +401,25 @@
                         break;
                     }
                 }
+                if (!hit) {
+                    for (var j = state.bosses.length - 1; j >= 0; j--) {
+                        var b = state.bosses[j];
+                        var d = (s.x - b.x)**2 + (s.y - b.y)**2;
+                        if (d < (b.r + SYR_R)*(b.r + SYR_R)) {
+                            var dmg = (state.skills.crit && Math.random() < 0.15) ? 2 : 1;
+                            b.hp -= dmg;
+                            hit = true;
+                            if (b.hp <= 0) {
+                                addXpOrb(b.x, b.y, 8);
+                                addParticles(b.x, b.y, '#dc2626', 12);
+                                state.bosses.splice(j, 1);
+                                screenShake(6);
+                            }
+                            state.syringes.splice(i,1);
+                            break;
+                        }
+                    }
+                }
                 if (hit) break;
             }
 
@@ -385,6 +432,59 @@
                 if (state.gameTime > 60*20 && Math.random() < 0.25) addEnemy();
             }
             if (state.gameTime > 0 && state.gameTime % (60*45) === 0) state.difficultyScale = Math.min(3.2, state.difficultyScale + 0.25);
+
+            if (state.gameTime >= BOSS_INTERVAL && state.gameTime - state.lastBossSpawn >= BOSS_INTERVAL) {
+                addBoss();
+                state.lastBossSpawn = state.gameTime;
+            }
+
+            for (var i = state.bosses.length - 1; i >= 0; i--) {
+                var b = state.bosses[i];
+                var bdx = state.px - b.x, bdy = state.py - b.y;
+                var blen = Math.sqrt(bdx*bdx + bdy*bdy) || 1;
+                b.x += (bdx/blen) * BOSS_SPEED;
+                b.y += (bdy/blen) * BOSS_SPEED;
+                b.fireTick++;
+                if (b.fireTick >= BOSS_FIRE_INTERVAL) {
+                    b.fireTick = 0;
+                    var ax = state.px - b.x, ay = state.py - b.y;
+                    var L = Math.sqrt(ax*ax + ay*ay) || 1;
+                    state.bossProjectiles.push({
+                        x: b.x, y: b.y,
+                        vx: (ax/L) * BOSS_PROJECTILE_SPEED,
+                        vy: (ay/L) * BOSS_PROJECTILE_SPEED
+                    });
+                }
+            }
+
+            for (var i = state.bossProjectiles.length - 1; i >= 0; i--) {
+                var p = state.bossProjectiles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < -50 || p.x > cw+50 || p.y < -50 || p.y > ch+50) {
+                    state.bossProjectiles.splice(i, 1);
+                    continue;
+                }
+                var pd = (p.x - state.px)**2 + (p.y - state.py)**2;
+                if (pd < (PLAYER_R + BOSS_PROJECTILE_R)*(PLAYER_R + BOSS_PROJECTILE_R)) {
+                    if (state.shield > 0) { state.shield--; updateSkillIcons(); }
+                    else {
+                        state.health--;
+                        document.getElementById('healthEl').textContent = state.health;
+                        if (state.health <= 0) {
+                            state.run = false;
+                            document.getElementById('finalScore').textContent = state.score;
+                            document.getElementById('goScreen').classList.add('show');
+                            loadRankings();
+                            animationId = requestAnimationFrame(loop);
+                            return;
+                        }
+                    }
+                    state.bossProjectiles.splice(i, 1);
+                    addParticles(p.x, p.y, '#b91c1c', 6);
+                    screenShake(4);
+                }
+            }
 
             for (var i = state.enemies.length - 1; i >= 0; i--) {
                 var e = state.enemies[i];
@@ -424,6 +524,29 @@
                     state.enemies.splice(i, 1);
                     addParticles(e.x, e.y, '#ef4444', 10);
                     screenShake(8);
+                }
+            }
+
+            for (var i = state.bosses.length - 1; i >= 0; i--) {
+                var b = state.bosses[i];
+                var touchDistB = (b.x - state.px)**2 + (b.y - state.py)**2;
+                if (touchDistB < (PLAYER_R + b.r)*(PLAYER_R + b.r)) {
+                    if (state.shield > 0) { state.shield--; updateSkillIcons(); }
+                    else {
+                        state.health--;
+                        document.getElementById('healthEl').textContent = state.health;
+                        if (state.health <= 0) {
+                            state.run = false;
+                            document.getElementById('finalScore').textContent = state.score;
+                            document.getElementById('goScreen').classList.add('show');
+                            loadRankings();
+                            animationId = requestAnimationFrame(loop);
+                            return;
+                        }
+                    }
+                    state.bosses.splice(i, 1);
+                    addParticles(b.x, b.y, '#ef4444', 12);
+                    screenShake(10);
                 }
             }
 
@@ -481,6 +604,23 @@
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = '#475569';
                 ctx.fillText(e.type, e.x + state.shakeX, e.y + state.shakeY);
+            });
+
+            state.bosses.forEach(function(b) {
+                if (b.x < -50 || b.x > cw+50 || b.y < -50 || b.y > ch+50) return;
+                ctx.font = (b.r*2)+'px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#7f1d1d';
+                ctx.fillText(b.type, b.x + state.shakeX, b.y + state.shakeY);
+            });
+
+            state.bossProjectiles.forEach(function(p) {
+                if (p.x < -20 || p.x > cw+20 || p.y < -20 || p.y > ch+20) return;
+                ctx.fillStyle = '#b91c1c';
+                ctx.beginPath();
+                ctx.arc(p.x + state.shakeX, p.y + state.shakeY, BOSS_PROJECTILE_R, 0, Math.PI*2);
+                ctx.fill();
             });
 
             state.syringes.forEach(function(s) {
@@ -558,6 +698,9 @@
                 state.level = 1;
                 state.xpOrbs = [];
                 state.enemies = [];
+                state.bosses = [];
+                state.bossProjectiles = [];
+                state.lastBossSpawn = 0;
                 state.syringes = [];
                 state.particles = [];
                 state.fireTick = 0;
