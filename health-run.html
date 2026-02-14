@@ -38,7 +38,7 @@
         </div>
         <div class="start-screen" id="startScreen">
             <div class="start-title">🐧 헬스 런</div>
-            <div class="version-info version-title">Ver 1.1 (Run)</div>
+            <div class="version-info version-title">Ver 2.0 (Speed & Sound)</div>
             <div class="start-desc"><strong>장르:</strong> 왼쪽에서 오른쪽으로 달리는 횡스크롤 런닝 액션.<br><strong>조작:</strong> 화면 터치 시 점프, 공중 터치 시 2단 점프.<br><strong>장애물:</strong> 🦠 바이러스(바닥/공중), 💨 매연 · 점프로 피하세요.<br><strong>아이템:</strong> 😷 마스크(보호막 1회), 💊 비타민(점수).</div>
             <button class="btn" id="btnStart">달리기 시작</button>
         </div>
@@ -51,6 +51,7 @@
     <script>
     (function() {
         'use strict';
+        // Applied: RUN_SPEED 14, JUMP 11/9.2, Sound jump/coin/crash
         var canvas = document.getElementById('c');
         var ctx = canvas ? canvas.getContext('2d') : null;
         var cw = 0, ch = 0;
@@ -67,15 +68,77 @@
         window.addEventListener('resize', resize);
         resize();
 
+        var Sound = (function() {
+            var ctx = null;
+            function init() { if (ctx) return; try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+            function pew() {
+                init(); if (!ctx) return;
+                var t = ctx.currentTime;
+                var o = ctx.createOscillator(); var g = ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.frequency.setValueAtTime(380, t);
+                o.frequency.exponentialRampToValueAtTime(520, t + 0.06);
+                o.type = 'sine'; g.gain.setValueAtTime(0.11, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+                o.start(t); o.stop(t + 0.06);
+            }
+            function ding() {
+                init(); if (!ctx) return;
+                var t = ctx.currentTime;
+                [988, 1318].forEach(function(freq, i) {
+                    var o = ctx.createOscillator(); var g = ctx.createGain();
+                    o.connect(g); g.connect(ctx.destination);
+                    o.frequency.setValueAtTime(freq, t + i * 0.06);
+                    o.type = 'sine'; g.gain.setValueAtTime(0.1, t + i * 0.06);
+                    g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.06 + 0.05);
+                    o.start(t + i * 0.06); o.stop(t + i * 0.06 + 0.05);
+                });
+            }
+            function boom() {
+                init(); if (!ctx) return;
+                var t = ctx.currentTime;
+                var o = ctx.createOscillator(); var g = ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.frequency.setValueAtTime(120, t);
+                o.frequency.exponentialRampToValueAtTime(45, t + 0.1);
+                o.type = 'sawtooth'; g.gain.setValueAtTime(0.1, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+                o.start(t); o.stop(t + 0.1);
+            }
+            function fail() {
+                init(); if (!ctx) return;
+                var t = ctx.currentTime;
+                var o = ctx.createOscillator(); var g = ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.frequency.setValueAtTime(180, t);
+                o.frequency.exponentialRampToValueAtTime(60, t + 0.2);
+                o.type = 'sawtooth'; g.gain.setValueAtTime(0.1, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+                o.start(t); o.stop(t + 0.2);
+            }
+            function startBeep() {
+                init(); if (!ctx) return;
+                var t = ctx.currentTime;
+                var o = ctx.createOscillator(); var g = ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.frequency.setValueAtTime(660, t);
+                o.frequency.exponentialRampToValueAtTime(880, t + 0.1);
+                o.type = 'sine'; g.gain.setValueAtTime(0.08, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+                o.start(t); o.stop(t + 0.1);
+            }
+            return { jump: pew, coin: ding, crash: boom, fail: fail, startBeep: startBeep, pew: pew, ding: ding, boom: boom };
+        })();
+
         var animationId = null;
         var Gupaengi = '🐧';
         var PLAYER_W = 44, PLAYER_H = 40;
         var GRAVITY_UP = -0.36;
         var GRAVITY_DOWN = -0.56;
-        var JUMP_VY = 14.5;
-        var DOUBLE_JUMP_VY = 12;
-        var RUN_SPEED_BASE = 10.5;
-        var SPEED_INCREASE_PER_DIST = 0.0014;
+        var JUMP_VY = 11.0;
+        var DOUBLE_JUMP_VY = 9.2;
+        var RUN_SPEED_BASE = 14.0;
+        var SPEED_INCREASE_PER_DIST = 0.0012;
         var FLOOR_Y_RATIO = 0.82;
         var GROUND_H = 24;
         var OBSTACLE_W = 34, OBSTACLE_H = 34;
@@ -84,7 +147,7 @@
         var MASK_SHIELD_MAX = 2;
         var VITAMIN_SCORE = 50;
         var FPS = 60;
-        var SPEED_BOOST_PER_10SEC = 0.28;
+        var SPEED_BOOST_PER_10SEC = 0.22;
 
         var state = {
             run: false, score: 0, health: 3, shield: 0,
@@ -164,6 +227,7 @@
                 var ot = state.floorY - o.y - o.h, ob = state.floorY - o.y;
                 if (!overlap(pl, pr, pb, pt, ol, or_, ob, ot)) continue;
                 state.obstacles.splice(i, 1);
+                Sound.crash();
                 if (state.shield > 0) {
                     state.shield--;
                     var sel = document.getElementById('shieldEl');
@@ -174,6 +238,7 @@
                     if (hel) hel.textContent = state.health;
                     if (state.health <= 0) {
                         state.run = false;
+                        Sound.fail();
                         if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
                         document.getElementById('finalScore').textContent = state.score;
                         document.getElementById('goScreen').classList.add('show');
@@ -189,6 +254,7 @@
                 var itop = state.floorY - it.y - it.h, ibot = state.floorY - it.y;
                 if (!overlap(pl, pr, pb, pt, il, ir, ibot, itop)) continue;
                 state.items.splice(i, 1);
+                Sound.coin();
                 if (it.type === '😷') {
                     state.shield = Math.min(MASK_SHIELD_MAX, state.shield + 1);
                     var sel = document.getElementById('shieldEl');
@@ -257,10 +323,12 @@
                 state.vy = JUMP_VY;
                 state.canDoubleJump = true;
                 state.scrollX += state.speed * 0.45;
+                Sound.jump();
             } else if (state.canDoubleJump) {
                 state.vy = DOUBLE_JUMP_VY;
                 state.canDoubleJump = false;
                 state.scrollX += state.speed * 0.28;
+                Sound.jump();
             }
         }
 
@@ -306,6 +374,7 @@
             updateHudScore();
             document.getElementById('startScreen').classList.add('hide');
             document.getElementById('goScreen').classList.remove('show');
+            Sound.startBeep();
             animationId = requestAnimationFrame(loop);
         }
 

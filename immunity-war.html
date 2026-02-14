@@ -53,7 +53,7 @@
         </div>
         <div class="start-screen" id="startScreen">
             <div class="start-title">🐧 면역 전쟁</div>
-            <div class="version-info version-title">Ver 4.2 (Shooter)</div>
+            <div class="version-info version-title">Ver 5.0 (Sound & Optimization)</div>
             <div class="start-desc">구팽이가 화면 아래에서 위로 주사기를 발사합니다.<br><strong>이동</strong>: 손가락/마우스를 움직이면 펭귄이 그 위치로 자유롭게 이동 · 문 통과 시 파워업!</div>
             <button class="btn" id="btnStart">게임 시작</button>
         </div>
@@ -69,6 +69,7 @@
     <script>
     (function() {
         'use strict';
+        // Applied: Ver 5.0 Sound & Optimization
         var GAS_URL = 'https://script.google.com/macros/s/AKfycbxKQ7DSfpBhiBE3JOSam39bvs8argQaf0s6hQJIMpH5l5knJKVfEfcW3lpCTODjLBMkiw/exec';
         var canvas = document.getElementById('c');
         var ctx = canvas ? canvas.getContext('2d') : null;
@@ -83,6 +84,52 @@
         window.addEventListener('resize', resize);
         resize();
 
+        var Sound = (function() {
+            var ctx = null;
+            function init() { if (ctx) return; try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+            function pew() {
+                init(); if (!ctx) return;
+                var o = ctx.createOscillator(); var g = ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.frequency.setValueAtTime(520, ctx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(280, ctx.currentTime + 0.06);
+                o.type = 'square'; g.gain.setValueAtTime(0.1, ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+                o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.06);
+            }
+            function boom() {
+                init(); if (!ctx) return;
+                var o = ctx.createOscillator(); var g = ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.frequency.setValueAtTime(120, ctx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.12);
+                o.type = 'sawtooth'; g.gain.setValueAtTime(0.15, ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+                o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.12);
+            }
+            function ding() {
+                init(); if (!ctx) return;
+                var o = ctx.createOscillator(); var g = ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.frequency.setValueAtTime(880, ctx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.1);
+                o.type = 'sine'; g.gain.setValueAtTime(0.12, ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+                o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.1);
+            }
+            function fail() {
+                init(); if (!ctx) return;
+                var o = ctx.createOscillator(); var g = ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.frequency.setValueAtTime(200, ctx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.25);
+                o.type = 'sawtooth'; g.gain.setValueAtTime(0.12, ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.25);
+            }
+            return { pew: pew, boom: boom, ding: ding, fail: fail, shoot: pew, explosion: boom, beep: ding };
+        })();
+
         var animationId = null;
         var Gupaengi = '🐧';
         var PLAYER_BOTTOM_MARGIN = 0.15;
@@ -94,7 +141,7 @@
         var SYR_W = 14, SYR_H = 24, SYR_VY = -11;
         var GATE_H = 56, GATE_VY = 1.6;
         var GATE_SPAWN_TICKS = 4800;
-        var ENEMY_SPAWN_TICKS = 147;
+        var ENEMY_SPAWN_BASE = 60;
         var ENEMY_COUNT_PER_SPAWN = 3;
         var MAX_ENEMY_ON_SCREEN = 14;
         var DIFFICULTY_TICKS = 60 * 30;
@@ -237,6 +284,7 @@
             if (state.fireTick >= state.fireInterval) {
                 state.fireTick = 0;
                 addSyringe();
+                Sound.pew();
             }
 
             for (var i = state.syringes.length - 1; i >= 0; i--) {
@@ -257,13 +305,14 @@
                         state.enemies.splice(j,1);
                         state.score += 12;
                         screenShake(2, 5);
+                        Sound.boom();
                     }
                     break;
                 }
             }
 
             state.spawnEnemyTick++;
-            if (state.spawnEnemyTick >= ENEMY_SPAWN_TICKS && state.enemies.length < MAX_ENEMY_ON_SCREEN) {
+            if (state.spawnEnemyTick >= ENEMY_SPAWN_BASE && state.enemies.length < MAX_ENEMY_ON_SCREEN) {
                 state.spawnEnemyTick = 0;
                 for (var n = 0; n < ENEMY_COUNT_PER_SPAWN; n++) {
                     if (state.enemies.length >= MAX_ENEMY_ON_SCREEN) break;
@@ -283,6 +332,7 @@
                 e.y += e.vy;
                 if (e.y - e.r > ch) {
                     state.run = false;
+                    Sound.fail();
                     if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
                     document.getElementById('finalScore').textContent = state.score;
                     document.getElementById('goScreen').classList.add('show');
@@ -299,6 +349,7 @@
                     updateHud();
                     if (state.fireCount <= 0) {
                         state.run = false;
+                        Sound.fail();
                         if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
                         document.getElementById('finalScore').textContent = state.score;
                         document.getElementById('goScreen').classList.add('show');
@@ -315,6 +366,7 @@
                 if (g.y > ch + GATE_H) { state.gates.splice(k,1); continue; }
                 if (hitPlayerGate(g)) {
                     if (g.good) {
+                        Sound.ding();
                         state.fireCount = Math.min(99, state.fireCount + (g.addBonus || 1));
                         var msg = document.getElementById('powerUpMsg');
                         var fl = document.getElementById('flash');
