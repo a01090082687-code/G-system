@@ -106,6 +106,7 @@
         .start-title { color: #ffffff; font-size: 24px; margin-bottom: 12px; text-align: center; }
         .start-desc { color: rgba(255, 255, 255, 0.95); font-size: 14px; line-height: 1.6; text-align: center; margin-bottom: 24px; }
         .btn { background: linear-gradient(135deg, #0ea5e9, #06b6d4); color: #fff; border: none; padding: 14px 36px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .version-info { color: rgba(255, 255, 255, 0.7); font-size: 12px; margin-top: 14px; }
         .go-screen {
             position: absolute;
             inset: 0;
@@ -140,7 +141,8 @@
         <div class="start-screen" id="startScreen">
             <div class="start-title">🛡️ Immunity War</div>
             <div class="start-desc">좌우 드래그로 이동. 🟦 파란 문=화력UP 🟥 빨간 문=화력DOWN<br>📦 보급상자 파괴 시 무기 업그레이드! 👹 보스 처치 후 👑 황금 게이트!</div>
-            <button class="btn" id="btnStart">시작</button>
+            <button class="btn" id="btnStart">게임 시작</button>
+            <div class="version-info">Ver 2.0 (Updated: 2026.02.14 13:10)</div>
         </div>
         <div class="go-screen" id="goScreen">
             <div class="go-title">게임 오버</div>
@@ -173,7 +175,7 @@
         resize();
 
         var FPS = 60;
-        var animationId = null;
+        let animationId = null;
         var Gupaengi = '🐧';
         var state = {
             run: false,
@@ -206,7 +208,6 @@
         var SYR_W = 14, SYR_H = 24, SYR_VY = -11;
         var GATE_W_RATIO = 0.22, GATE_H = 56, GATE_VY = 1.6, GATE_GAP = 0.06;
         var ENEMY_SPAWN_BASE = 55, GATE_SPAWN = 320, BOX_SPAWN = 400;
-        var LANE_LEFT = 0.25, LANE_RIGHT = 0.75;
         var BOSS_HP_BASE = 80;
         var WAVE_BOSS_EVERY = 5;
         var DIFFICULTY_INTERVAL = 30 * FPS; // 30초
@@ -289,11 +290,9 @@
             var r = 16 + Math.random() * 10;
             var hp = Math.max(1, Math.floor((1 + r / 12) * state.difficultyScale));
             var vy = (0.8 + Math.random() * 0.6) * state.difficultyScale;
-            var lane = Math.random() < 0.5 ? LANE_LEFT : LANE_RIGHT;
-            var laneX = cw * lane;
-            var jitter = (Math.random() - 0.5) * 24;
+            var laneX = Math.random() < 0.5 ? cw * 0.25 : cw * 0.75;
             state.enemies.push({
-                x: Math.max(r, Math.min(cw - r, laneX + jitter)),
+                x: laneX,
                 y: -r * 2,
                 r: r,
                 hp: hp,
@@ -318,10 +317,11 @@
             };
         }
 
-        function addGoldenGate(x) {
+        function addGoldenGate() {
             var gw = cw * 0.35;
+            var laneX = Math.random() < 0.5 ? cw * 0.25 : cw * 0.75;
             state.gates.push({
-                x: Math.max(10, Math.min(cw - gw - 10, x - gw / 2)),
+                x: laneX - gw / 2,
                 y: -GATE_H,
                 w: gw,
                 h: GATE_H,
@@ -336,8 +336,8 @@
             var good = Math.random() > 0.5;
             var gw = cw * GATE_W_RATIO;
             var gateVy = GATE_VY * state.difficultyScale;
-            var leftX = cw * LANE_LEFT - gw / 2;
-            var rightX = cw * LANE_RIGHT - gw / 2;
+            var leftX = cw * 0.25 - gw / 2;
+            var rightX = cw * 0.75 - gw / 2;
             var l1 = good ? goodLabels[Math.floor(Math.random() * goodLabels.length)] : badLabels[Math.floor(Math.random() * badLabels.length)];
             var l2 = good ? badLabels[Math.floor(Math.random() * badLabels.length)] : goodLabels[Math.floor(Math.random() * goodLabels.length)];
             state.gates.push(
@@ -351,11 +351,9 @@
             var w = 48 + Math.random() * 20;
             var h = 40 + Math.random() * 14;
             var hp = 12 + Math.floor(Math.random() * 12);
-            var lane = Math.random() < 0.5 ? LANE_LEFT : LANE_RIGHT;
-            var laneX = cw * lane - w / 2;
-            var jitter = (Math.random() - 0.5) * 20;
+            var laneX = Math.random() < 0.5 ? cw * 0.25 : cw * 0.75;
             state.boxes.push({
-                x: Math.max(10, Math.min(cw - w - 10, laneX + jitter)),
+                x: laneX - w / 2,
                 y: -h - 20,
                 w: w,
                 h: h,
@@ -487,7 +485,7 @@
                     if (state.boss.hp <= 0) {
                         addBossExplosion(state.boss.x, state.boss.y);
                         state.score += 500;
-                        addGoldenGate(state.boss.x);
+                        addGoldenGate();
                         state.boss = null;
                         state.wave++;
                         state.fireCount = Math.min(20, state.fireCount + 2);
@@ -557,7 +555,7 @@
                 e.y += e.vy;
                 if (e.y - e.r > ch) {
                     state.run = false;
-                    if (animationId != null) { cancelAnimationFrame(animationId); animationId = null; }
+                    if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
                     document.getElementById('finalScore').textContent = state.score;
                     document.getElementById('goScreen').classList.add('show');
                     loadRankings();
@@ -729,8 +727,8 @@
             animationId = requestAnimationFrame(loop);
         }
 
-        function start() {
-            if (animationId != null) { cancelAnimationFrame(animationId); animationId = null; }
+        function startGame() {
+            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
             state.run = true;
             state.score = 0;
             state.wave = 1;
@@ -836,8 +834,8 @@
                 });
         }
 
-        document.getElementById('btnStart').addEventListener('click', start);
-        document.getElementById('btnRetry').addEventListener('click', start);
+        document.getElementById('btnStart').addEventListener('click', startGame);
+        document.getElementById('btnRetry').addEventListener('click', startGame);
         document.getElementById('btnSubmit').addEventListener('click', submitRanking);
         document.getElementById('playerName').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') submitRanking();
