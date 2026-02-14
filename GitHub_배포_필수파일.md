@@ -6,10 +6,15 @@
 - **`index.html`** ⭐ (가장 중요!)
 - **`style.css`** ⭐ (스타일 파일)
 
-### 2. JavaScript 파일 (있는 경우)
+### 2. G-SYSTEM 오락실 게임 (필수)
+- **`immunity-war.html`** — 면역 전쟁
+- **`health-survival.html`** — 보건 서바이벌: 구팽이의 전설
+- **`health-run.html`** — 헬스 런
+
+### 3. JavaScript 파일 (있는 경우)
 - **`js/app.js`** (JavaScript 로직이 분리되어 있다면)
 
-### 3. 이미지 파일 (있는 경우)
+### 4. 이미지 파일 (있는 경우)
 - **`images/`** 폴더 전체 (이미지 파일들이 있다면)
 
 ---
@@ -41,11 +46,14 @@
 
 ```
 홈페이지/
-├── index.html          ⭐ 필수
-├── style.css           ⭐ 필수
+├── index.html              ⭐ 필수
+├── style.css               ⭐ 필수
+├── immunity-war.html       ⭐ 오락실 게임 1
+├── health-survival.html    ⭐ 오락실 게임 2
+├── health-run.html         ⭐ 오락실 게임 3
 ├── js/
-│   └── app.js         (JavaScript가 분리되어 있다면)
-└── images/            (이미지가 있다면)
+│   └── app.js             (JavaScript가 분리되어 있다면)
+└── images/                (이미지가 있다면)
     └── ...
 ```
 

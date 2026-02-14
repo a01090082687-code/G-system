@@ -6,37 +6,37 @@
     <title>보건 서바이벌: 구팽이의 전설 | G-SYSTEM 오락실</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: linear-gradient(180deg, #E0F7FA 0%, #80DEEA 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: none; -webkit-tap-highlight-color: transparent; }
+        body { background: #1a1a2e; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: none; -webkit-tap-highlight-color: transparent; }
         .wrap { width: 100%; max-width: 430px; height: 100vh; max-height: 820px; position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.6); }
-        #c { display: block; width: 100%; height: 100%; background: linear-gradient(180deg, #E0F7FA 0%, #80DEEA 100%); }
-        .hud { position: absolute; top: 0; left: 0; right: 0; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 5; }
-        .hud span { color: #333; font-size: 16px; font-weight: bold; font-family: sans-serif; text-shadow: 0 0 2px rgba(255,255,255,0.8); }
-        .start-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.75); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 24px; }
+        #c { display: block; width: 100%; height: 100%; background: #16213e; }
+        .hud { position: absolute; top: 0; left: 0; right: 0; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 5; }
+        .hud span { color: #eee; font-size: 14px; font-weight: bold; font-family: sans-serif; text-shadow: 0 1px 2px #000; }
+        .start-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 24px; pointer-events: auto; cursor: pointer; }
         .start-screen.hide { display: none; }
-        .start-title { color: #fff; font-size: 24px; margin-bottom: 12px; text-align: center; }
-        .start-desc { color: rgba(255,255,255,0.95); font-size: 14px; line-height: 1.6; text-align: center; margin-bottom: 24px; }
-        .btn { background: linear-gradient(135deg, #0ea5e9, #06b6d4); color: #fff; border: none; padding: 14px 36px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        .version-info { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 14px; }
-        .version-info.version-title { margin-top: 6px; margin-bottom: 8px; font-size: 14px; color: rgba(255,255,255,0.95); }
-        .go-screen { position: absolute; inset: 0; background: rgba(255,255,255,0.96); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 24px; }
+        .start-title { color: #fff; font-size: 22px; margin-bottom: 10px; text-align: center; }
+        .start-desc { color: rgba(255,255,255,0.9); font-size: 13px; line-height: 1.6; text-align: center; margin-bottom: 20px; }
+        .btn { background: linear-gradient(135deg, #e94560, #c73659); color: #fff; border: none; padding: 14px 32px; border-radius: 12px; font-size: 17px; font-weight: bold; cursor: pointer; }
+        .version-info { color: rgba(255,255,255,0.6); font-size: 11px; margin-top: 12px; }
+        .version-info.version-title { margin-top: 4px; margin-bottom: 6px; font-size: 13px; color: #e94560; }
+        .go-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 24px; }
         .go-screen.show { display: flex; }
-        .go-title { color: #333; font-size: 26px; margin-bottom: 8px; font-weight: bold; }
-        .go-score { color: #333; font-size: 22px; margin-bottom: 20px; font-weight: bold; }
-        .rank-box { width: 100%; max-width: 320px; background: rgba(255,255,255,0.95); border-radius: 12px; padding: 16px; margin-bottom: 16px; max-height: 200px; overflow-y: auto; color: #333; border: 1px solid rgba(0,0,0,0.1); }
-        .rank-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.1); font-size: 14px; }
+        .go-title { color: #fff; font-size: 24px; margin-bottom: 8px; font-weight: bold; }
+        .go-score { color: #fbbf24; font-size: 20px; margin-bottom: 20px; font-weight: bold; }
+        .rank-box { width: 100%; max-width: 320px; background: rgba(255,255,255,0.95); border-radius: 12px; padding: 14px; margin-bottom: 14px; max-height: 180px; overflow-y: auto; color: #333; border: 1px solid rgba(0,0,0,0.1); font-size: 13px; }
+        .rank-row { padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.08); }
         .rank-row:last-child { border-bottom: none; }
-        .go-inp { width: 100%; max-width: 320px; padding: 12px; margin-bottom: 10px; border: 2px solid rgba(0,0,0,0.2); border-radius: 10px; font-size: 16px; text-align: center; background: #fff; color: #333; }
-        .btn-submit { width: 100%; max-width: 320px; margin-bottom: 10px; }
-        .xp-bar-wrap { position: absolute; top: 0; left: 0; right: 0; height: 12px; background: rgba(0,0,0,0.3); z-index: 6; pointer-events: none; }
-        .xp-bar-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 0%; transition: width 0.2s; }
-        .skill-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 25; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .go-inp { width: 100%; max-width: 320px; padding: 10px; margin-bottom: 8px; border: 2px solid rgba(0,0,0,0.2); border-radius: 8px; font-size: 15px; text-align: center; }
+        .btn-submit { width: 100%; max-width: 320px; margin-bottom: 8px; }
+        .xp-bar-wrap { position: absolute; top: 0; left: 0; right: 0; height: 10px; background: rgba(0,0,0,0.5); z-index: 6; pointer-events: none; }
+        .xp-bar-fill { height: 100%; background: linear-gradient(90deg, #e94560, #ff6b6b); width: 0%; transition: width 0.15s; }
+        .skill-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 25; display: none; align-items: center; justify-content: center; padding: 16px; }
         .skill-overlay.show { display: flex; }
-        .skill-overlay h2 { color: #fff; font-size: 20px; margin-bottom: 20px; position: absolute; top: 24px; left: 50%; transform: translateX(-50%); }
-        .skill-cards { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: 360px; }
-        .skill-card { width: 100px; padding: 16px; background: linear-gradient(145deg, #1e293b, #334155); border: 2px solid #64748b; border-radius: 12px; cursor: pointer; text-align: center; color: #fff; font-size: 28px; line-height: 1.3; transition: transform 0.15s, border-color 0.15s; }
-        .skill-card:hover { transform: scale(1.05); border-color: #38bdf8; }
-        .skill-card span { display: block; font-size: 11px; color: #94a3b8; margin-top: 6px; }
-        .arcade-back { position: absolute; top: 12px; left: 12px; z-index: 30; padding: 8px 14px; background: rgba(0,0,0,0.5); color: #fff; border-radius: 8px; font-size: 13px; font-weight: bold; text-decoration: none; }
+        .skill-overlay h2 { color: #fff; font-size: 18px; margin-bottom: 16px; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); }
+        .skill-cards { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 340px; }
+        .skill-card { width: 95px; padding: 12px; background: linear-gradient(145deg, #1e293b, #334155); border: 2px solid #475569; border-radius: 10px; cursor: pointer; text-align: center; color: #fff; font-size: 26px; line-height: 1.3; transition: transform 0.12s, border-color 0.12s; }
+        .skill-card:hover { transform: scale(1.05); border-color: #e94560; }
+        .skill-card span { display: block; font-size: 10px; color: #94a3b8; margin-top: 4px; }
+        .arcade-back { position: absolute; top: 10px; left: 10px; z-index: 30; padding: 6px 12px; background: rgba(0,0,0,0.5); color: #fff; border-radius: 8px; font-size: 12px; font-weight: bold; text-decoration: none; }
         .arcade-back:hover { background: rgba(0,0,0,0.7); color: #fff; }
     </style>
 </head>
@@ -46,22 +46,22 @@
         <canvas id="c"></canvas>
         <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBarFill"></div></div>
         <div class="hud">
-            <span>Lv.<span id="levelEl">1</span> 점수: <span id="scoreEl">0</span> · 웨이브 <span id="waveEl">1</span></span>
-            <span id="skillIconsEl">주사기: 1</span>
+            <span>Lv.<span id="levelEl">1</span> ❤️<span id="healthEl">3</span> · <span id="scoreEl">0</span>초</span>
+            <span id="skillIconsEl">💉</span>
         </div>
         <div class="skill-overlay" id="skillOverlay">
-            <h2>스킬 선택 (3지 선다)</h2>
+            <h2>레벨업! 스킬 선택 (1개)</h2>
             <div class="skill-cards" id="skillCards"></div>
         </div>
         <div class="start-screen" id="startScreen">
             <div class="start-title">🛡️ 보건 서바이벌: 구팽이의 전설</div>
             <div class="version-info version-title">Ver 1.0 (Survival)</div>
-            <div class="start-desc">적 처치 → 경험치 구슬 수집 → 레벨업 시 스킬 3지 선다!<br>드래그로 좌우 이동 · 초기 주사기 1발</div>
-            <button class="btn" id="btnStart">게임 시작</button>
+            <div class="start-desc"><strong>가상 조이스틱</strong>(왼쪽)으로 이동 · 자동 발사!<br>적 처치 시 <strong>XP 구슬</strong> 획득 → 레벨업 시 <strong>스킬 3지 선다</strong>(안전모, 안전화 등).<br>최대한 오래 살아남으세요.</div>
+            <button type="button" class="btn" id="btnStart">생존 시작</button>
         </div>
         <div class="go-screen" id="goScreen">
-            <div class="go-title">게임 오버</div>
-            <div class="go-score">점수: <span id="finalScore">0</span></div>
+            <div class="go-title">사망</div>
+            <div class="go-score">생존 시간: <span id="finalScore">0</span>초</div>
             <div class="rank-box" id="rankList">로딩 중...</div>
             <input type="text" class="go-inp" id="playerName" placeholder="이름 (최대 10자)" maxlength="10">
             <button class="btn btn-submit" id="btnSubmit">랭킹 등록</button>
@@ -73,48 +73,75 @@
         'use strict';
         var GAS_URL = 'https://script.google.com/macros/s/AKfycbxKQ7DSfpBhiBE3JOSam39bvs8argQaf0s6hQJIMpH5l5knJKVfEfcW3lpCTODjLBMkiw/exec';
         var canvas = document.getElementById('c');
-        var ctx = canvas.getContext('2d');
-        var cw, ch;
-        function resize() { var w = canvas.parentElement.clientWidth; var h = canvas.parentElement.clientHeight; cw = w; ch = h; canvas.width = w; canvas.height = h; }
+        var ctx = canvas ? canvas.getContext('2d') : null;
+        var cw = 0, ch = 0;
+        function resize() {
+            if (!canvas || !canvas.parentElement) return;
+            var w = canvas.parentElement.clientWidth;
+            var h = canvas.parentElement.clientHeight;
+            cw = w; ch = h;
+            canvas.width = w; canvas.height = h;
+        }
         window.addEventListener('resize', resize);
         resize();
+        if (canvas) canvas.style.pointerEvents = 'none';
 
         var FPS = 60;
         var animationId = null;
         var Gupaengi = '🐧';
-        var state = {
-            run: false, paused: false, score: 0, wave: 1, gameTime: 0, difficultyScale: 0.2,
-            px: 0.5, playerW: 52, playerH: 48, fireCount: 1, fireInterval: 10, fireTick: 0,
-            syringes: [], enemies: [], gates: [], particles: [], damageNumbers: [], boxes: [], boss: null,
-            bossBullets: [], bossLastShot: 0, shakeTime: 0, shakeMag: 0, spawnEnemy: 0, spawnGate: 0, spawnBox: 0,
-            xp: 0, xpToLevel: 10, level: 1, xpOrbs: [], shield: 0,
-            skills: { ricochet: false, speed: false, multishot: 0, crit: false, poison: false }
-        };
-
-        var SYR_W = 14, SYR_H = 24, SYR_VY = -11;
-        var GATE_H = 56, GATE_VY = 1.6;
-        var ENEMY_SPAWN_BASE = 16, GATE_SPAWN = 2000, BOX_SPAWN = 400;
-        var SPEED_MULT = 1.3;
-        var PLAYER_BOTTOM_MARGIN = 0.15;
-        var HITBOX_SCALE = 0.6;
-        var BOSS_HP_BASE = 80;
-        var WAVE_BOSS_EVERY = 5;
-        var DIFFICULTY_INTERVAL = 30 * FPS;
-        var XP_PER_KILL = 3;
-        var XP_PICKUP_RADIUS = 70;
-        var XP_MAGNET_SPEED = 9;
-        var BOSS_SHOOT_INTERVAL = 5 * FPS;
-        var BOSS_BULLET_SPEED = 5;
+        var PLAYER_SPEED = 3.2;
+        var PLAYER_R = 18;
+        var SPAWN_DIST = 380;
+        var XP_PER_KILL = 2;
+        var XP_MAGNET_R = 90;
+        var XP_MAGNET_SPEED = 8;
+        var SYR_SPEED = 10;
+        var SYR_R = 8;
+        var FIRE_INTERVAL_BASE = 18;
+        var POISON_R = 55;
+        var POISON_DMG = 0.4;
+        var JOY_RADIUS = 48;
+        var JOY_BASE_X = 70;
         var SKILLS_LIST = [
             { id: 'ricochet', name: '안전모', icon: '⛑️', desc: '총알 1회 튕김' },
-            { id: 'speed', name: '안전화', icon: '🥾', desc: '발사속도 +20%' },
+            { id: 'speed', name: '안전화', icon: '🥾', desc: '발사속도 +25%' },
             { id: 'multishot', name: '절연장갑', icon: '🧤', desc: '총알 +1' },
             { id: 'crit', name: '보안경', icon: '🥽', desc: '치명타 +15%' },
             { id: 'poison', name: '방진마스크', icon: '😷', desc: '주변 독가스' }
         ];
 
-        function addXpOrb(x, y, value) { state.xpOrbs.push({ x: x, y: y, value: value || XP_PER_KILL, vy: 2, landed: false }); }
-        function screenShake(magnitude, duration) { state.shakeMag = Math.max(state.shakeMag, magnitude); state.shakeTime = Math.max(state.shakeTime, duration || 15); }
+        var state = {
+            run: false, paused: false, gameTime: 0,
+            playerX: 0, playerY: 0, playerVx: 0, playerVy: 0,
+            joyActive: false, joyStickX: 0, joyStickY: 0,
+            health: 3, shield: 0, score: 0,
+            xp: 0, xpToLevel: 10, level: 1, xpOrbs: [],
+            enemies: [], syringes: [], particles: [],
+            fireTick: 0, spawnTick: 0,
+            difficultyScale: 0.5,
+            skills: { ricochet: false, speed: false, multishot: 0, crit: false, poison: false },
+            shakeX: 0, shakeY: 0, shakeT: 0
+        };
+
+        function toScreen(wx, wy) {
+            return { x: wx - state.playerX + cw/2 + state.shakeX, y: wy - state.playerY + ch/2 + state.shakeY };
+        }
+
+        function addXpOrb(wx, wy, val) { state.xpOrbs.push({ x: wx, y: wy, value: val || XP_PER_KILL }); }
+        function screenShake(mag) { state.shakeT = 12; state.shakeMag = mag || 4; }
+        function addParticles(wx, wy, color, n) {
+            n = n || 10;
+            for (var i = 0; i < n; i++) {
+                var a = Math.PI*2*i/n + Math.random();
+                var v = 2 + Math.random()*3;
+                state.particles.push({
+                    wx: wx, wy: wy,
+                    vx: Math.cos(a)*v, vy: Math.sin(a)*v,
+                    life: 1, color: color, r: 3 + Math.random()*4
+                });
+            }
+        }
+
         function showLevelUpCards() {
             var pool = SKILLS_LIST.slice();
             var chosen = [];
@@ -125,7 +152,12 @@
                 var btn = document.createElement('button');
                 btn.className = 'skill-card';
                 btn.innerHTML = s.icon + '<span>' + s.name + '<br>' + s.desc + '</span>';
-                btn.onclick = (function(sk) { return function() { applySkill(sk.id); document.getElementById('skillOverlay').classList.remove('show'); state.paused = false; updateSkillIcons(); }; })(s);
+                btn.onclick = (function(sk) { return function() {
+                    applySkill(sk.id);
+                    document.getElementById('skillOverlay').classList.remove('show');
+                    state.paused = false;
+                    updateSkillIcons();
+                }; })(s);
                 el.appendChild(btn);
             });
             document.getElementById('skillOverlay').classList.add('show');
@@ -138,7 +170,7 @@
             if (id === 'poison') state.skills.poison = true;
             state.level++;
             state.xp = 0;
-            state.xpToLevel = 10 + state.level * 6;
+            state.xpToLevel = 8 + state.level * 5;
             document.getElementById('levelEl').textContent = state.level;
             document.getElementById('xpBarFill').style.width = '0%';
         }
@@ -151,516 +183,421 @@
             if (s.multishot) arr.push('🧤×' + s.multishot);
             if (s.crit) arr.push('🥽');
             if (s.poison) arr.push('😷');
-            document.getElementById('skillIconsEl').textContent = arr.length ? arr.join(' ') : '주사기: ' + (state.fireCount + state.skills.multishot);
+            document.getElementById('skillIconsEl').textContent = arr.length ? arr.join(' ') : '💉';
         }
 
-        function addDamageNumber(x, y, value, isCrit) { state.damageNumbers.push({ x: x + (Math.random()-0.5)*20, y: y, val: value, crit: !!isCrit, life: 1, vy: -3 }); }
-        function addParticles(x, y, color, count, scale) {
-            count = count || 14; scale = scale || 1;
-            for (var i = 0; i < count; i++) {
-                var a = (Math.PI*2*i)/count + Math.random();
-                var v = (3 + Math.random()*4) * scale;
-                state.particles.push({ x: x, y: y, vx: Math.cos(a)*v, vy: Math.sin(a)*v - 2*scale, life: 1, color: color, r: (4+Math.random()*4)*scale });
-            }
+        function addEnemy() {
+            var angle = Math.random() * Math.PI * 2;
+            var ex = state.playerX + Math.cos(angle) * SPAWN_DIST;
+            var ey = state.playerY + Math.sin(angle) * SPAWN_DIST;
+            var type = Math.random() > 0.5 ? '🦠' : '😈';
+            var r = 14 + Math.random()*10;
+            var hp = Math.max(1, Math.floor((1 + state.difficultyScale) * 2));
+            state.enemies.push({
+                x: ex, y: ey, r: r, hp: hp, maxHp: hp, type: type
+            });
         }
-        function addBossExplosion(x, y) { addParticles(x, y, '#fbbf24', 28, 1.8); addParticles(x, y, '#f87171', 20, 1.2); screenShake(12, 25); }
 
-        function addSyringe() {
-            var baseX = state.px * cw;
-            var count = Math.max(1, state.fireCount + state.skills.multishot);
-            var py = ch * (1 - PLAYER_BOTTOM_MARGIN) - state.playerH;
+        function addSyringeToward(tx, ty) {
+            var count = 1 + state.skills.multishot;
+            var spread = count > 1 ? 0.15 : 0;
             for (var i = 0; i < count; i++) {
-                var angle = count === 1 ? 0 : (i - (count-1)/2) * 6;
-                var rad = (angle * Math.PI) / 180;
+                var angle = Math.atan2(ty - state.playerY, tx - state.playerX) + (i - (count-1)/2) * spread;
+                var vx = Math.cos(angle) * SYR_SPEED;
+                var vy = Math.sin(angle) * SYR_SPEED;
                 state.syringes.push({
-                    x: baseX - SYR_W/2 + Math.sin(rad)*20,
-                    y: py + state.playerH - 10,
-                    w: SYR_W, h: SYR_H,
-                    vy: SYR_VY * Math.cos(rad),
-                    vx: Math.sin(rad) * 4
+                    x: state.playerX, y: state.playerY,
+                    vx: vx, vy: vy,
+                    ricochetUsed: false
                 });
             }
         }
 
-        function addEnemy() {
-            var type = Math.random() > 0.5 ? '🦠' : '😈';
-            var r = 16 + Math.random() * 10;
-            var baseHp = Math.max(1, Math.floor((1 + r/12) * state.difficultyScale));
-            var hp = Math.max(4, baseHp * 4);
-            var vy = (0.8 + Math.random()*0.6) * state.difficultyScale * SPEED_MULT;
-            var x = cw*0.1 + Math.random()*(cw*0.8);
-            state.enemies.push({ x: x, y: -r*2, r: r, hp: hp, maxHp: hp, vy: vy, type: type });
+        function clampStickToBase(tx, ty, bx, by) {
+            var dx = tx - bx, dy = ty - by;
+            var dist = Math.sqrt(dx*dx + dy*dy) || 1;
+            if (dist <= JOY_RADIUS) return { x: tx, y: ty };
+            return { x: bx + dx/dist*JOY_RADIUS, y: by + dy/dist*JOY_RADIUS };
         }
 
-        function addBoss() {
-            var type = Math.random() > 0.5 ? '☠️' : '👹';
-            var r = 52;
-            var hp = Math.floor(BOSS_HP_BASE * state.difficultyScale);
-            state.boss = { x: cw/2, y: -r-20, r: r, hp: hp, maxHp: hp, vy: 1.2*state.difficultyScale*SPEED_MULT, type: type };
-            state.bossLastShot = state.gameTime;
+        function nearestEnemy() {
+            var best = null, bestD = 1e9;
+            for (var i = 0; i < state.enemies.length; i++) {
+                var e = state.enemies[i];
+                var d = (e.x - state.playerX)**2 + (e.y - state.playerY)**2;
+                if (d < bestD && d < 350*350) { bestD = d; best = e; }
+            }
+            return best;
         }
 
-        function addGates() {
-            var gw = cw * 0.28;
-            var gateVy = GATE_VY * state.difficultyScale * SPEED_MULT;
-            var x = cw*0.1 + Math.random()*(cw*0.8 - gw);
-            var kind = Math.random() < 0.5 ? 'heal' : 'xp';
-            state.gates.push({
-                x: x, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy,
-                type: kind,
-                label: kind === 'heal' ? '❤️ 체력 회복' : '⚡ 경험치 보너스'
-            });
+        var rect = { left: 0, top: 0, width: 1, height: 1 };
+        function updateRect() { var r = canvas.getBoundingClientRect(); rect.left = r.left; rect.top = r.top; rect.width = r.width; rect.height = r.height; }
+        function getCanvasCoords(clientX, clientY) {
+            return {
+                x: (clientX - rect.left) / rect.width * cw,
+                y: (clientY - rect.top) / rect.height * ch
+            };
         }
-
-        function addBox() {
-            var type = Math.random() > 0.5 ? '📦' : '🚧';
-            var w = 48 + Math.random()*20, h = 40 + Math.random()*14;
-            var hp = 12 + Math.floor(Math.random()*12);
-            var x = cw*0.1 + Math.random()*(cw*0.8 - w);
-            state.boxes.push({ x: x, y: -h-20, w: w, h: h, hp: hp, maxHp: hp, vy: 1.4*state.difficultyScale*SPEED_MULT, type: type });
+        function isInJoystickZone(tx, ty) {
+            var joyBaseY = ch - JOY_BASE_X;
+            return tx < JOY_BASE_X + JOY_RADIUS + 40 && ty > joyBaseY - JOY_RADIUS - 40;
         }
-
-        canvas.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
+        if (canvas) {
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (e.touches.length) {
+                updateRect();
+                var p = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+                if (isInJoystickZone(p.x, p.y)) {
+                    state.joyActive = true;
+                    var joyBaseY = ch - JOY_BASE_X;
+                    var c = clampStickToBase(p.x, p.y, JOY_BASE_X, joyBaseY);
+                    state.joyStickX = c.x;
+                    state.joyStickY = c.y;
+                }
+            }
+        }, { passive: false });
         canvas.addEventListener('touchmove', function(e) {
             e.preventDefault();
-            if (!state.run) return;
-            var rect = canvas.getBoundingClientRect();
-            state.px = Math.max(0.08, Math.min(0.92, (e.touches[0].clientX - rect.left) / rect.width));
+            if (e.touches.length && state.joyActive) {
+                var p = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+                var joyBaseY = ch - JOY_BASE_X;
+                var c = clampStickToBase(p.x, p.y, JOY_BASE_X, joyBaseY);
+                state.joyStickX = c.x;
+                state.joyStickY = c.y;
+            }
         }, { passive: false });
-        var md = false;
-        canvas.addEventListener('mousedown', function(e) { if (!state.run) return; md = true; });
-        canvas.addEventListener('mousemove', function(e) {
-            if (!md || !state.run) return;
-            var rect = canvas.getBoundingClientRect();
-            state.px = Math.max(0.08, Math.min(0.92, (e.clientX - rect.left) / rect.width));
+        canvas.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            if (!e.touches.length) state.joyActive = false;
         });
-        canvas.addEventListener('mouseup', function() { md = false; });
-        canvas.addEventListener('mouseleave', function() { md = false; });
-
-        function hitBulletEnemy(b, e) { var bx = b.x+b.w/2, by = b.y+b.h/2; var dx = bx-e.x, dy = by-e.y; return dx*dx+dy*dy < (e.r||20)*(e.r||20); }
-        function hitBulletBox(b, box) { var bx = b.x+b.w/2, by = b.y+b.h/2; return bx>=box.x&&bx<=box.x+box.w&&by>=box.y&&by<=box.y+box.h; }
-        function getPlayerHitbox() {
-            var py = ch*(1-PLAYER_BOTTOM_MARGIN)-state.playerH;
-            var cx = state.px*cw, cy = py+state.playerH/2;
-            var hw = state.playerW*HITBOX_SCALE/2, hh = state.playerH*HITBOX_SCALE/2;
-            return { left: cx-hw, right: cx+hw, top: cy-hh, bottom: cy+hh };
-        }
-        function hitPlayerGate(g) {
-            var h = getPlayerHitbox();
-            if (g.y+g.h < h.top || g.y > h.bottom) return false;
-            if (h.right < g.x || h.left > g.x+g.w) return false;
-            return true;
+        canvas.addEventListener('touchcancel', function() { state.joyActive = false; });
+        canvas.addEventListener('mousedown', function(e) {
+            updateRect();
+            var p = getCanvasCoords(e.clientX, e.clientY);
+            if (isInJoystickZone(p.x, p.y)) {
+                state.joyActive = true;
+                var joyBaseY = ch - JOY_BASE_X;
+                var c = clampStickToBase(p.x, p.y, JOY_BASE_X, joyBaseY);
+                state.joyStickX = c.x;
+                state.joyStickY = c.y;
+            }
+        });
+        canvas.addEventListener('mousemove', function(e) {
+            if (!state.joyActive) return;
+            var p = getCanvasCoords(e.clientX, e.clientY);
+            var joyBaseY = ch - JOY_BASE_X;
+            var c = clampStickToBase(p.x, p.y, JOY_BASE_X, joyBaseY);
+            state.joyStickX = c.x;
+            state.joyStickY = c.y;
+        });
+        canvas.addEventListener('mouseup', function() { state.joyActive = false; });
+        canvas.addEventListener('mouseleave', function() { state.joyActive = false; });
         }
 
         function loop() {
-            if (!state.run) { animationId = requestAnimationFrame(loop); return; }
-            if (state.paused) { animationId = requestAnimationFrame(loop); return; }
+            animationId = requestAnimationFrame(loop);
+            if (!state.run) return;
+            if (state.paused) return;
+            if (!ctx || !canvas) return;
+            if (cw <= 0 || ch <= 0) { resize(); return; }
 
             state.gameTime++;
-            if (state.gameTime > 30*FPS && state.gameTime % DIFFICULTY_INTERVAL === 0)
-                state.difficultyScale = Math.min(3, state.difficultyScale + 0.1);
+            state.score = Math.floor(state.gameTime / 60);
+            document.getElementById('scoreEl').textContent = state.score;
 
-            var shakeX = 0, shakeY = 0;
-            if (state.shakeTime > 0) {
-                state.shakeTime--;
-                shakeX = (Math.random()-0.5)*2*state.shakeMag;
-                shakeY = (Math.random()-0.5)*2*state.shakeMag;
-                if (state.shakeTime <= 0) state.shakeMag = 0;
+            if (state.shakeT > 0) {
+                state.shakeT--;
+                state.shakeX = (Math.random()-0.5)*2*state.shakeMag;
+                state.shakeY = (Math.random()-0.5)*2*state.shakeMag;
+                if (state.shakeT <= 0) state.shakeMag = 0;
+            } else state.shakeX = state.shakeY = 0;
+
+            var joyBaseY = ch - JOY_BASE_X;
+            if (!state.joyActive) {
+                state.joyStickX = JOY_BASE_X;
+                state.joyStickY = joyBaseY;
             }
-            ctx.save();
-            ctx.translate(shakeX, shakeY);
-
-            var bgGrad = ctx.createLinearGradient(0,0,0,ch);
-            bgGrad.addColorStop(0,'#E0F7FA');
-            bgGrad.addColorStop(1,'#80DEEA');
-            ctx.fillStyle = bgGrad;
-            ctx.fillRect(-10,-10,cw+20,ch+20);
-
-            var playerCx = state.px*cw;
-            var playerCy = ch*(1-PLAYER_BOTTOM_MARGIN)-state.playerH+state.playerH/2;
-            for (var oi = state.xpOrbs.length - 1; oi >= 0; oi--) {
-                var orb = state.xpOrbs[oi];
-                if (!orb.landed) {
-                    orb.y += orb.vy;
-                    if (orb.y >= ch-28) { orb.y = ch-28; orb.landed = true; }
-                } else {
-                    var dx = playerCx-orb.x, dy = playerCy-orb.y;
-                    var dist = Math.sqrt(dx*dx+dy*dy);
-                    if (dist < XP_PICKUP_RADIUS) {
-                        if (dist > 5) {
-                            orb.x += (dx/dist)*XP_MAGNET_SPEED;
-                            orb.y += (dy/dist)*XP_MAGNET_SPEED;
-                        } else {
-                            state.xp += orb.value;
-                            state.xpOrbs.splice(oi,1);
-                            if (state.xp >= state.xpToLevel) {
-                                state.paused = true;
-                                showLevelUpCards();
-                            }
-                        }
-                    }
-                }
-                ctx.fillStyle = '#3b82f6';
-                ctx.beginPath();
-                ctx.arc(orb.x, orb.y, 8, 0, Math.PI*2);
-                ctx.fill();
-                ctx.strokeStyle = '#60a5fa';
-                ctx.lineWidth = 2;
-                ctx.stroke();
+            var dx = 0, dy = 0;
+            if (state.joyActive) {
+                dx = (state.joyStickX - JOY_BASE_X) / JOY_RADIUS;
+                dy = (state.joyStickY - joyBaseY) / JOY_RADIUS;
+                var len = Math.sqrt(dx*dx + dy*dy);
+                if (len > 1) { dx /= len; dy /= len; }
             }
-            document.getElementById('xpBarFill').style.width = (state.xp/state.xpToLevel*100)+'%';
+            state.playerVx = dx * PLAYER_SPEED;
+            state.playerVy = dy * PLAYER_SPEED;
+            state.playerX += state.playerVx;
+            state.playerY += state.playerVy;
 
-            var fireInterval = state.fireInterval * (state.skills.speed ? 0.8 : 1);
+            var interval = Math.max(6, FIRE_INTERVAL_BASE - (state.skills.speed ? 4 : 0));
             state.fireTick++;
-            if (state.fireTick >= fireInterval) { state.fireTick = 0; addSyringe(); }
+            if (state.fireTick >= interval) {
+                state.fireTick = 0;
+                var near = nearestEnemy();
+                if (near) addSyringeToward(near.x, near.y);
+            }
 
             for (var i = state.syringes.length - 1; i >= 0; i--) {
                 var s = state.syringes[i];
+                s.x += s.vx;
                 s.y += s.vy;
-                if (s.vx) s.x += s.vx;
-                if (s.y+s.h<0||s.y>ch+50||s.x<-50||s.x>cw+50) { state.syringes.splice(i,1); continue; }
-                ctx.font = '20px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('💉', s.x+s.w/2, s.y+s.h/2);
+                var dist = (s.x - state.playerX)**2 + (s.y - state.playerY)**2;
+                if (dist > 600*600) { state.syringes.splice(i,1); continue; }
 
-                var hitSomething = false;
-                if (state.boss && hitBulletEnemy(s, state.boss)) {
-                    state.boss.hp--;
-                    addDamageNumber(state.boss.x, state.boss.y-state.boss.r-10, 1, state.boss.hp<=state.boss.maxHp*0.2);
-                    state.syringes.splice(i,1);
-                    hitSomething = true;
-                    if (state.boss.hp <= 0) {
-                        addBossExplosion(state.boss.x, state.boss.y);
-                        state.score += 500;
-                        state.xp = Math.min(state.xpToLevel-1, state.xp+state.xpToLevel);
-                        state.boss = null;
-                        state.wave++;
-                        document.getElementById('waveEl').textContent = state.wave;
-                    }
-                    if (hitSomething) continue;
-                }
-
+                var hit = false;
                 for (var j = state.enemies.length - 1; j >= 0; j--) {
-                    if (hitSomething) break;
                     var e = state.enemies[j];
-                    if (hitBulletEnemy(s, e)) {
-                        var dmg = (state.skills.crit && Math.random()<0.15) ? 2 : 1;
+                    var d = (s.x - e.x)**2 + (s.y - e.y)**2;
+                    if (d < (e.r + SYR_R)*(e.r + SYR_R)) {
+                        var dmg = (state.skills.crit && Math.random() < 0.15) ? 2 : 1;
                         e.hp -= dmg;
-                        addDamageNumber(e.x, e.y-e.r, dmg, dmg>1);
-                        state.syringes.splice(i,1);
-                        hitSomething = true;
+                        hit = true;
                         if (e.hp <= 0) {
-                            addParticles(e.x, e.y, '#f87171', 16, 1);
-                            addXpOrb(e.x, e.y, XP_PER_KILL);
-                            state.enemies.splice(j,1);
-                            state.score += 15;
-                            screenShake(2,4);
+                            addXpOrb(e.x, e.y);
+                            addParticles(e.x, e.y, '#f87171', 8);
+                            state.enemies.splice(j, 1);
+                            screenShake(2);
                             if (state.skills.ricochet && !s.ricochetUsed) {
-                                var nearest = null, nd = 1e9;
-                                for (var ei = 0; ei < state.enemies.length; ei++) {
-                                    var en = state.enemies[ei];
-                                    var d = (en.x-e.x)*(en.x-e.x)+(en.y-e.y)*(en.y-e.y);
-                                    if (d<nd && d>1) { nd=d; nearest=en; }
+                                var next = null, nd = 1e9;
+                                for (var k = 0; k < state.enemies.length; k++) {
+                                    var o = state.enemies[k];
+                                    var dd = (o.x - e.x)**2 + (o.y - e.y)**2;
+                                    if (dd < nd && dd > 1) { nd = dd; next = o; }
                                 }
-                                if (nearest) {
-                                    var ax = nearest.x-e.x, ay = nearest.y-e.y;
-                                    var len = Math.sqrt(ax*ax+ay*ay)||1;
-                                    state.syringes.push({ x: e.x-SYR_W/2, y: e.y, w: SYR_W, h: SYR_H, vx: (ax/len)*6, vy: (ay/len)*6, ricochetUsed: true });
+                                if (next) {
+                                    var ax = next.x - e.x, ay = next.y - e.y;
+                                    var L = Math.sqrt(ax*ax+ay*ay)||1;
+                                    state.syringes.push({ x: e.x, y: e.y, vx: (ax/L)*SYR_SPEED, vy: (ay/L)*SYR_SPEED, ricochetUsed: true });
                                 }
                             }
-                            if (state.enemies.length === 0 && !(state.wave%WAVE_BOSS_EVERY===0&&state.wave>0)) { state.wave++; document.getElementById('waveEl').textContent = state.wave; }
                         }
-                        break;
-                    }
-                }
-
-                for (var b = 0; b < state.boxes.length && !hitSomething; b++) {
-                    var box = state.boxes[b];
-                    if (hitBulletBox(s, box)) {
-                        box.hp--;
-                        addDamageNumber(box.x+box.w/2, box.y, 1, false);
                         state.syringes.splice(i,1);
-                        hitSomething = true;
-                        if (box.hp <= 0) {
-                            addParticles(box.x+box.w/2, box.y+box.h/2, '#fbbf24', 22, 1.3);
-                            screenShake(8,18);
-                            state.fireCount = Math.min(99, state.fireCount+3);
-                            state.boxes.splice(b,1);
-                            state.score += 50;
-                        }
                         break;
                     }
                 }
+                if (hit) break;
             }
 
-            var isBossWave = state.wave % WAVE_BOSS_EVERY === 0 && state.wave > 0;
-            if (!state.boss && isBossWave && state.enemies.length === 0) addBoss();
-
-            if (!state.boss) {
-                state.spawnEnemy++;
-                var spawnRate = Math.max(6, ENEMY_SPAWN_BASE - Math.floor(state.wave));
-                if (state.spawnEnemy >= spawnRate) { state.spawnEnemy = 0; if (!isBossWave) { addEnemy(); addEnemy(); } }
+            state.spawnTick++;
+            var spawnRate = Math.max(20, 80 - Math.floor(state.gameTime/120));
+            if (state.spawnTick >= spawnRate) {
+                state.spawnTick = 0;
+                addEnemy();
+                if (state.gameTime % (60*30) < 60) addEnemy();
             }
+            if (state.gameTime > 0 && state.gameTime % (60*60) === 0) state.difficultyScale = Math.min(3, state.difficultyScale + 0.2);
 
-            var h = getPlayerHitbox();
-            var playerCenterY = ch*(1-PLAYER_BOTTOM_MARGIN)-state.playerH+state.playerH/2;
             for (var i = state.enemies.length - 1; i >= 0; i--) {
                 var e = state.enemies[i];
-                e.y += e.vy;
+                var ex = e.x - state.playerX, ey = e.y - state.playerY;
+                var len = Math.sqrt(ex*ex + ey*ey) || 1;
+                var sp = (1.2 + state.difficultyScale*0.3);
+                e.x -= (ex/len) * sp;
+                e.y -= (ey/len) * sp;
+
                 if (state.skills.poison) {
-                    var pdx = state.px*cw-e.x, pdy = playerCenterY-e.y;
-                    if (Math.sqrt(pdx*pdx+pdy*pdy) < 60) {
-                        e.hp -= 0.5;
+                    var pdist = Math.sqrt(ex*ex + ey*ey);
+                    if (pdist < POISON_R) {
+                        e.hp -= POISON_DMG;
                         if (e.hp <= 0) {
-                            addXpOrb(e.x, e.y, XP_PER_KILL);
-                            state.score++;
-                            state.enemies.splice(i,1);
-                            addParticles(e.x, e.y, '#22c55e', 8, 0.8);
-                            continue;
+                            addXpOrb(e.x, e.y);
+                            addParticles(e.x, e.y, '#22c55e', 6);
+                            state.enemies.splice(i, 1);
                         }
                     }
                 }
-                if (e.y - e.r > ch) {
-                    state.run = false;
-                    if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
-                    document.getElementById('finalScore').textContent = state.score;
-                    document.getElementById('goScreen').classList.add('show');
-                    loadRankings();
-                    ctx.restore();
-                    return;
-                }
-                var ex1 = e.x-e.r, ex2 = e.x+e.r, ey1 = e.y-e.r, ey2 = e.y+e.r;
-                if (ex2>=h.left&&ex1<=h.right&&ey2>=h.top&&ey1<=h.bottom) {
-                    if (state.shield > 0) { state.shield--; updateSkillIcons(); state.enemies.splice(i,1); addParticles(e.x,e.y,'#f87171',12,1); screenShake(4,8); }
-                    else {
-                        state.fireCount = Math.max(0, state.fireCount-2);
-                        state.enemies.splice(i,1);
-                        addParticles(e.x,e.y,'#f87171',12,1);
-                        screenShake(4,8);
-                        document.getElementById('fireEl').textContent = state.fireCount;
-                        if (state.fireCount <= 0) {
-                            state.run = false;
-                            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
-                            document.getElementById('finalScore').textContent = state.score;
-                            document.getElementById('goScreen').classList.add('show');
-                            loadRankings();
-                            ctx.restore();
-                            return;
-                        }
-                    }
-                }
-            }
 
-            for (var i = 0; i < state.enemies.length; i++) {
-                var e = state.enemies[i];
-                ctx.font = (e.r*1.6)+'px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(e.type, e.x, e.y);
-            }
-
-            if (state.boss) {
-                var boss = state.boss;
-                boss.y += boss.vy;
-                if (boss.y - boss.r > ch) { state.boss = null; state.wave++; document.getElementById('waveEl').textContent = state.wave; }
-                if (state.boss) {
-                    var barMargin = 20, barW = cw - barMargin*2, barX = barMargin, barY = 10, barH = 14;
-                    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-                    ctx.fillRect(barX-2, barY-2, barW+4, barH+4);
-                    ctx.fillStyle = '#ef4444';
-                    ctx.fillRect(barX, barY, barW, barH);
-                    ctx.fillStyle = '#22c55e';
-                    ctx.fillRect(barX, barY, barW*(boss.hp/boss.maxHp), barH);
-                    ctx.strokeStyle = '#fff';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(barX, barY, barW, barH);
-                    ctx.font = (boss.r*1.4)+'px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(boss.type, boss.x, boss.y);
-                }
-            }
-
-            state.spawnBox++;
-            if (state.spawnBox >= BOX_SPAWN && state.boxes.length < 2 && !state.boss) { state.spawnBox = 0; addBox(); }
-
-            state.spawnGate++;
-            if (state.spawnGate >= GATE_SPAWN && !state.boss) { state.spawnGate = 0; addGates(); }
-
-            for (var k = state.gates.length - 1; k >= 0; k--) {
-                var g = state.gates[k];
-                g.y += g.vy;
-                if (g.y > ch+GATE_H) { state.gates.splice(k,1); continue; }
-                ctx.fillStyle = g.type==='heal' ? 'rgba(34,197,94,0.9)' : 'rgba(251,191,36,0.9)';
-                ctx.strokeStyle = g.type==='heal' ? '#22c55e' : '#fbbf24';
-                ctx.fillRect(g.x, g.y, g.w, g.h);
-                ctx.lineWidth = 3;
-                ctx.strokeRect(g.x, g.y, g.w, g.h);
-                ctx.fillStyle = '#fff';
-                ctx.font = '11px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(g.label||'', g.x+g.w/2, g.y+g.h/2+4);
-                if (hitPlayerGate(g)) {
-                    if (g.type==='heal') { state.shield = Math.min(3, (state.shield||0)+1); updateSkillIcons(); }
-                    if (g.type==='xp') state.xp = Math.min(state.xpToLevel-1, state.xp+15);
-                    state.gates.splice(k,1);
-                }
-            }
-
-            var playerCxForBoss = state.px*cw;
-            var playerCyForBoss = ch*(1-PLAYER_BOTTOM_MARGIN)-state.playerH+state.playerH/2;
-            for (var bi = state.bossBullets.length - 1; bi >= 0; bi--) {
-                var bb = state.bossBullets[bi];
-                bb.x += bb.vx;
-                bb.y += bb.vy;
-                if (bb.x<-20||bb.x>cw+20||bb.y<-20||bb.y>ch+20) { state.bossBullets.splice(bi,1); continue; }
-                var hb = getPlayerHitbox();
-                var br = bb.r||10;
-                if (bb.x+br>=hb.left&&bb.x-br<=hb.right&&bb.y+br>=hb.top&&bb.y-br<=hb.bottom) {
+                var touchDist = (e.x - state.playerX)**2 + (e.y - state.playerY)**2;
+                if (touchDist < (PLAYER_R + e.r)*(PLAYER_R + e.r)) {
                     if (state.shield > 0) { state.shield--; updateSkillIcons(); }
                     else {
-                        state.fireCount = Math.max(0, state.fireCount-1);
-                        document.getElementById('fireEl').textContent = state.fireCount;
-                        if (state.fireCount <= 0) {
+                        state.health--;
+                        document.getElementById('healthEl').textContent = state.health;
+                        if (state.health <= 0) {
                             state.run = false;
-                            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
                             document.getElementById('finalScore').textContent = state.score;
                             document.getElementById('goScreen').classList.add('show');
                             loadRankings();
-                            ctx.restore();
+                            animationId = requestAnimationFrame(loop);
                             return;
                         }
                     }
-                    state.bossBullets.splice(bi,1);
+                    state.enemies.splice(i, 1);
+                    addParticles(e.x, e.y, '#ef4444', 10);
+                    screenShake(8);
                 }
             }
-            state.bossBullets.forEach(function(bb) {
-                ctx.fillStyle = '#dc2626';
+
+            for (var i = state.xpOrbs.length - 1; i >= 0; i--) {
+                var o = state.xpOrbs[i];
+                var dx = state.playerX - o.x, dy = state.playerY - o.y;
+                var dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < XP_MAGNET_R) {
+                    if (dist < 15) {
+                        state.xp += o.value;
+                        state.xpOrbs.splice(i, 1);
+                        if (state.xp >= state.xpToLevel) {
+                            state.paused = true;
+                            showLevelUpCards();
+                        }
+                    } else {
+                        o.x += (dx/dist)*XP_MAGNET_SPEED;
+                        o.y += (dy/dist)*XP_MAGNET_SPEED;
+                    }
+                }
+            }
+            document.getElementById('xpBarFill').style.width = (state.xp/state.xpToLevel*100)+'%';
+
+            for (var i = state.particles.length - 1; i >= 0; i--) {
+                var p = state.particles[i];
+                p.wx += p.vx; p.wy += p.vy;
+                p.life -= 0.04;
+                if (p.life <= 0) state.particles.splice(i, 1);
+            }
+
+            ctx.fillStyle = '#16213e';
+            ctx.fillRect(0, 0, cw, ch);
+            for (var gx = -2; gx <= 2; gx++)
+                for (var gy = -2; gy <= 2; gy++) {
+                    var sx = (state.playerX % 80 + 80) % 80 - 80 + gx*80;
+                    var sy = (state.playerY % 80 + 80) % 80 - 80 + gy*80;
+                    var p = toScreen(state.playerX + sx, state.playerY + sy);
+                    if (p.x >= -40 && p.x <= cw+40 && p.y >= -40 && p.y <= ch+40) {
+                        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(p.x, p.y, 80, 80);
+                    }
+                }
+
+            state.xpOrbs.forEach(function(o) {
+                var p = toScreen(o.x, o.y);
+                if (p.x < -20 || p.x > cw+20 || p.y < -20 || p.y > ch+20) return;
+                ctx.fillStyle = '#3b82f6';
                 ctx.beginPath();
-                ctx.arc(bb.x, bb.y, bb.r||10, 0, Math.PI*2);
+                ctx.arc(p.x, p.y, 6, 0, Math.PI*2);
                 ctx.fill();
-                ctx.strokeStyle = '#991b1b';
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#60a5fa';
+                ctx.lineWidth = 1;
                 ctx.stroke();
             });
-            if (state.boss && state.gameTime - state.bossLastShot >= BOSS_SHOOT_INTERVAL) {
-                state.bossLastShot = state.gameTime;
-                var boss = state.boss;
-                var dx = playerCxForBoss-boss.x, dy = playerCyForBoss-boss.y;
-                var len = Math.sqrt(dx*dx+dy*dy)||1;
-                state.bossBullets.push({ x: boss.x, y: boss.y, vx: (dx/len)*BOSS_BULLET_SPEED, vy: (dy/len)*BOSS_BULLET_SPEED, r: 10 });
-            }
 
-            for (var b = 0; b < state.boxes.length; b++) {
-                var box = state.boxes[b];
-                box.y += box.vy;
-                if (box.y > ch+50) { state.boxes.splice(b,1); b--; continue; }
-                var hurt = 1-box.hp/box.maxHp;
-                ctx.globalAlpha = 0.7+0.3*(1-hurt);
-                ctx.fillStyle = hurt>0.5 ? '#b91c1c' : '#1e293b';
-                ctx.fillRect(box.x, box.y, box.w, box.h);
-                ctx.strokeStyle = hurt>0.5 ? '#f87171' : '#64748b';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(box.x, box.y, box.w, box.h);
-                ctx.globalAlpha = 1;
-                ctx.font = (Math.min(box.w,box.h)*0.7)+'px Arial';
+            state.enemies.forEach(function(e) {
+                var p = toScreen(e.x, e.y);
+                if (p.x < -50 || p.x > cw+50 || p.y < -50 || p.y > ch+50) return;
+                ctx.font = (e.r*1.8)+'px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(box.type, box.x+box.w/2, box.y+box.h/2);
-            }
+                ctx.fillText(e.type, p.x, p.y);
+            });
 
-            for (var d = state.damageNumbers.length - 1; d >= 0; d--) {
-                var dn = state.damageNumbers[d];
-                dn.y += dn.vy;
-                dn.life -= 0.03;
-                if (dn.life <= 0) { state.damageNumbers.splice(d,1); continue; }
-                ctx.globalAlpha = dn.life;
-                ctx.font = dn.crit ? 'bold 22px sans-serif' : '16px sans-serif';
-                ctx.fillStyle = dn.crit ? '#c62828' : '#333';
+            state.syringes.forEach(function(s) {
+                var p = toScreen(s.x, s.y);
+                if (p.x < -20 || p.x > cw+20 || p.y < -20 || p.y > ch+20) return;
+                ctx.font = '18px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText('-'+dn.val, dn.x, dn.y);
-                ctx.globalAlpha = 1;
-            }
+                ctx.textBaseline = 'middle';
+                ctx.fillText('💉', p.x, p.y);
+            });
 
-            for (var p = state.particles.length - 1; p >= 0; p--) {
-                var pt = state.particles[p];
-                pt.x += pt.vx;
-                pt.y += pt.vy;
-                pt.life -= 0.035;
-                if (pt.life <= 0) { state.particles.splice(p,1); continue; }
-                ctx.globalAlpha = pt.life;
-                ctx.fillStyle = pt.color;
+            state.particles.forEach(function(p) {
+                var sp = toScreen(p.wx, p.wy);
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
                 ctx.beginPath();
-                ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI*2);
+                ctx.arc(sp.x, sp.y, p.r, 0, Math.PI*2);
                 ctx.fill();
                 ctx.globalAlpha = 1;
-            }
+            });
 
-            var py = ch*(1-PLAYER_BOTTOM_MARGIN)-state.playerH;
-            var playerCx = state.px*cw;
-            var playerCy = py+state.playerH/2;
-            ctx.font = 'bold 16px sans-serif';
-            ctx.fillStyle = '#fbbf24';
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            ctx.strokeText('Lv.'+state.fireCount, playerCx, py-4);
-            ctx.fillText('Lv.'+state.fireCount, playerCx, py-4);
-            ctx.font = '44px Arial';
+            var pc = toScreen(state.playerX, state.playerY);
+            ctx.font = '36px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#333';
-            ctx.fillText(Gupaengi, playerCx, playerCy);
+            ctx.fillText(Gupaengi, pc.x, pc.y);
 
-            document.getElementById('scoreEl').textContent = state.score;
-            document.getElementById('fireEl').textContent = state.fireCount;
-            ctx.restore();
-            animationId = requestAnimationFrame(loop);
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.beginPath();
+            ctx.arc(JOY_BASE_X, joyBaseY, JOY_RADIUS, 0, Math.PI*2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.beginPath();
+            ctx.arc(state.joyStickX, state.joyStickY, 22, 0, Math.PI*2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
         }
 
+        var startGameInProgress = false;
         function startGame() {
-            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
-            state.run = true;
-            state.score = 0;
-            state.wave = 1;
-            state.gameTime = 0;
-            state.difficultyScale = 0.2;
-            state.px = 0.5;
-            state.fireCount = 1;
-            state.fireInterval = 10;
-            state.fireTick = 0;
-            state.syringes = [];
-            state.enemies = [];
-            state.gates = [];
-            state.particles = [];
-            state.damageNumbers = [];
-            state.boxes = [];
-            state.boss = null;
-            state.bossBullets = [];
-            state.bossLastShot = 0;
-            state.paused = false;
-            state.xp = 0;
-            state.xpToLevel = 10;
-            state.level = 1;
-            state.xpOrbs = [];
-            state.shield = 0;
-            state.skills = { ricochet: false, speed: false, multishot: 0, crit: false, poison: false };
-            state.shakeTime = 0;
-            state.spawnEnemy = 0;
-            state.spawnGate = 0;
-            state.spawnBox = 0;
-            document.getElementById('scoreEl').textContent = '0';
-            document.getElementById('waveEl').textContent = '1';
-            document.getElementById('fireEl').textContent = '1';
-            document.getElementById('levelEl').textContent = '1';
-            document.getElementById('xpBarFill').style.width = '0%';
-            document.getElementById('skillOverlay').classList.remove('show');
-            updateSkillIcons();
-            document.getElementById('startScreen').classList.add('hide');
-            document.getElementById('goScreen').classList.remove('show');
-            animationId = requestAnimationFrame(loop);
+            if (startGameInProgress) return;
+            startGameInProgress = true;
+            try {
+                if (!canvas || !ctx) {
+                    alert('캔버스를 사용할 수 없습니다.');
+                    return;
+                }
+                resize();
+                if (cw <= 0 || ch <= 0) {
+                    setTimeout(startGame, 100);
+                    return;
+                }
+                state.run = true;
+                state.paused = false;
+                state.gameTime = 0;
+                state.playerX = 0; state.playerY = 0;
+                state.playerVx = 0; state.playerVy = 0;
+                state.joyActive = false;
+                state.joyStickX = JOY_BASE_X; state.joyStickY = ch - JOY_BASE_X;
+                state.health = 3;
+                state.shield = 0;
+                state.score = 0;
+                state.xp = 0;
+                state.xpToLevel = 10;
+                state.level = 1;
+                state.xpOrbs = [];
+                state.enemies = [];
+                state.syringes = [];
+                state.particles = [];
+                state.fireTick = 0;
+                state.spawnTick = 0;
+                state.difficultyScale = 0.5;
+                state.skills = { ricochet: false, speed: false, multishot: 0, crit: false, poison: false };
+                state.shakeT = 0;
+                state.shakeMag = 0;
+                var healthEl = document.getElementById('healthEl');
+                var scoreEl = document.getElementById('scoreEl');
+                var levelEl = document.getElementById('levelEl');
+                var xpBarFill = document.getElementById('xpBarFill');
+                var skillOverlay = document.getElementById('skillOverlay');
+                var startScreen = document.getElementById('startScreen');
+                var goScreen = document.getElementById('goScreen');
+                if (healthEl) healthEl.textContent = '3';
+                if (scoreEl) scoreEl.textContent = '0';
+                if (levelEl) levelEl.textContent = '1';
+                if (xpBarFill) xpBarFill.style.width = '0%';
+                if (skillOverlay) skillOverlay.classList.remove('show');
+                updateSkillIcons();
+                if (startScreen) startScreen.classList.add('hide');
+                if (goScreen) goScreen.classList.remove('show');
+                if (canvas) canvas.style.pointerEvents = 'auto';
+                if (animationId != null && animationId !== undefined) {
+                    cancelAnimationFrame(animationId);
+                }
+                animationId = requestAnimationFrame(loop);
+            } catch (err) {
+                state.run = false;
+                var startScreen = document.getElementById('startScreen');
+                if (startScreen) startScreen.classList.remove('hide');
+                if (canvas) canvas.style.pointerEvents = 'none';
+                alert('게임 시작 오류: ' + (err && err.message ? err.message : '알 수 없음'));
+            } finally {
+                startGameInProgress = false;
+            }
         }
 
         function loadRankings() {
@@ -674,7 +611,7 @@
                         var html = '';
                         d.rankings.forEach(function(r, i) {
                             var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'위';
-                            html += '<div class="rank-row">'+medal+' '+(r.name||'익명')+' <strong>'+r.score+'</strong></div>';
+                            html += '<div class="rank-row">'+medal+' '+(r.name||'익명')+' <strong>'+r.score+'</strong>초</div>';
                         });
                         el.innerHTML = html;
                     } else el.innerHTML = '아직 랭킹이 없습니다.';
@@ -707,12 +644,33 @@
                 .then(function() { btn.disabled = false; btn.textContent = '랭킹 등록'; });
         }
 
-        document.getElementById('btnStart').addEventListener('click', function() { startGame(); });
-        document.getElementById('btnRetry').addEventListener('click', function() { startGame(); });
+        var btnStart = document.getElementById('btnStart');
+        var btnRetry = document.getElementById('btnRetry');
+        var startScreenEl = document.getElementById('startScreen');
+        function doStartGame(e) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            requestAnimationFrame(function() { startGame(); });
+        }
+        function doStartGamePointer(e) { if (e) { e.preventDefault(); e.stopPropagation(); } requestAnimationFrame(function() { startGame(); }); }
+        btnStart.addEventListener('click', doStartGame);
+        btnStart.addEventListener('touchstart', doStartGame, { passive: false });
+        btnStart.addEventListener('pointerdown', doStartGamePointer);
+        startScreenEl.addEventListener('click', doStartGame);
+        startScreenEl.addEventListener('touchstart', doStartGame, { passive: false });
+        startScreenEl.addEventListener('pointerdown', doStartGamePointer);
+        btnRetry.addEventListener('click', doStartGame);
+        btnRetry.addEventListener('touchstart', doStartGame, { passive: false });
+        btnRetry.addEventListener('pointerdown', doStartGamePointer);
         document.getElementById('btnSubmit').addEventListener('click', submitRanking);
         document.getElementById('playerName').addEventListener('keypress', function(e) { if (e.key === 'Enter') submitRanking(); });
 
         loadRankings();
+        if (canvas && ctx) {
+            animationId = requestAnimationFrame(loop);
+        } else {
+            var startScreen = document.getElementById('startScreen');
+            if (startScreen) startScreen.innerHTML = '<div class="start-title" style="color:#f87171">캔버스를 사용할 수 없습니다.</div><p class="version-info">이 브라우저에서는 게임을 실행할 수 없습니다.</p>';
+        }
     })();
     </script>
 </body>
