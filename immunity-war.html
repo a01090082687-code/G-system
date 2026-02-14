@@ -173,15 +173,17 @@
         resize();
 
         var FPS = 60;
+        var animationId = null;
+        var Gupaengi = '🐧';
         var state = {
             run: false,
             score: 0,
             wave: 1,
             gameTime: 0,
-            difficultyScale: 0.3,
+            difficultyScale: 0.2,
             px: 0.5,
-            playerW: 44,
-            playerH: 36,
+            playerW: 52,
+            playerH: 48,
             fireCount: 1,
             fireInterval: 10,
             fireTick: 0,
@@ -202,8 +204,9 @@
         };
 
         var SYR_W = 14, SYR_H = 24, SYR_VY = -11;
-        var GATE_W_RATIO = 0.2, GATE_H = 56, GATE_VY = 2.2, GATE_GAP = 0.08;
-        var ENEMY_SPAWN_BASE = 50, GATE_SPAWN = 320, BOX_SPAWN = 400;
+        var GATE_W_RATIO = 0.22, GATE_H = 56, GATE_VY = 1.6, GATE_GAP = 0.06;
+        var ENEMY_SPAWN_BASE = 55, GATE_SPAWN = 320, BOX_SPAWN = 400;
+        var LANE_LEFT = 0.25, LANE_RIGHT = 0.75;
         var BOSS_HP_BASE = 80;
         var WAVE_BOSS_EVERY = 5;
         var DIFFICULTY_INTERVAL = 30 * FPS; // 30초
@@ -283,11 +286,14 @@
 
         function addEnemy() {
             var type = Math.random() > 0.5 ? '🦠' : '😈';
-            var r = 18 + Math.random() * 14;
+            var r = 16 + Math.random() * 10;
             var hp = Math.max(1, Math.floor((1 + r / 12) * state.difficultyScale));
-            var vy = (2 + Math.random() * 1.5) * state.difficultyScale;
+            var vy = (0.8 + Math.random() * 0.6) * state.difficultyScale;
+            var lane = Math.random() < 0.5 ? LANE_LEFT : LANE_RIGHT;
+            var laneX = cw * lane;
+            var jitter = (Math.random() - 0.5) * 24;
             state.enemies.push({
-                x: r + Math.random() * (cw - r * 2),
+                x: Math.max(r, Math.min(cw - r, laneX + jitter)),
                 y: -r * 2,
                 r: r,
                 hp: hp,
@@ -329,31 +335,33 @@
         function addGates() {
             var good = Math.random() > 0.5;
             var gw = cw * GATE_W_RATIO;
-            var gap = cw * GATE_GAP;
-            var total = gw * 2 + gap;
-            var sx = (cw - total) / 2;
+            var gateVy = GATE_VY * state.difficultyScale;
+            var leftX = cw * LANE_LEFT - gw / 2;
+            var rightX = cw * LANE_RIGHT - gw / 2;
             var l1 = good ? goodLabels[Math.floor(Math.random() * goodLabels.length)] : badLabels[Math.floor(Math.random() * badLabels.length)];
             var l2 = good ? badLabels[Math.floor(Math.random() * badLabels.length)] : goodLabels[Math.floor(Math.random() * goodLabels.length)];
-            var gateVy = GATE_VY * state.difficultyScale;
             state.gates.push(
-                { x: sx, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: good, label: l1 },
-                { x: sx + gw + gap, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: !good, label: l2 }
+                { x: leftX, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: good, label: l1 },
+                { x: rightX, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: !good, label: l2 }
             );
         }
 
         function addBox() {
             var type = Math.random() > 0.5 ? '📦' : '🚧';
-            var w = 56 + Math.random() * 24;
-            var h = 44 + Math.random() * 16;
-            var hp = 15 + Math.floor(Math.random() * 15);
+            var w = 48 + Math.random() * 20;
+            var h = 40 + Math.random() * 14;
+            var hp = 12 + Math.floor(Math.random() * 12);
+            var lane = Math.random() < 0.5 ? LANE_LEFT : LANE_RIGHT;
+            var laneX = cw * lane - w / 2;
+            var jitter = (Math.random() - 0.5) * 20;
             state.boxes.push({
-                x: 30 + Math.random() * (cw - 60 - w),
+                x: Math.max(10, Math.min(cw - w - 10, laneX + jitter)),
                 y: -h - 20,
                 w: w,
                 h: h,
                 hp: hp,
                 maxHp: hp,
-                vy: 2 * state.difficultyScale,
+                vy: 1.4 * state.difficultyScale,
                 type: type
             });
         }
@@ -367,34 +375,25 @@
             screenShake(6, 12);
         }
 
-        var touchStartX = 0, dragPx = 0;
-        canvas.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            if (!state.run) return;
-            touchStartX = e.touches[0].clientX;
-            dragPx = state.px;
-        }, { passive: false });
+        canvas.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
         canvas.addEventListener('touchmove', function(e) {
             e.preventDefault();
             if (!state.run) return;
-            var dx = (e.touches[0].clientX - touchStartX) / cw * 0.55;
-            state.px = Math.max(0.06, Math.min(0.94, dragPx + dx));
-            touchStartX = e.touches[0].clientX;
-            dragPx = state.px;
+            var rect = canvas.getBoundingClientRect();
+            var tx = (e.touches[0].clientX - rect.left) / rect.width;
+            state.px = Math.max(0.08, Math.min(0.92, tx));
         }, { passive: false });
 
-        var md = false, mx0 = 0, px0 = 0;
+        var md = false;
         canvas.addEventListener('mousedown', function(e) {
             if (!state.run) return;
             md = true;
-            mx0 = e.clientX;
-            px0 = state.px;
         });
         canvas.addEventListener('mousemove', function(e) {
             if (!md || !state.run) return;
-            state.px = Math.max(0.06, Math.min(0.94, px0 + (e.clientX - mx0) / cw * 0.55));
-            mx0 = e.clientX;
-            px0 = state.px;
+            var rect = canvas.getBoundingClientRect();
+            var mx = (e.clientX - rect.left) / rect.width;
+            state.px = Math.max(0.08, Math.min(0.92, mx));
         });
         canvas.addEventListener('mouseup', function() { md = false; });
         canvas.addEventListener('mouseleave', function() { md = false; });
@@ -422,7 +421,7 @@
 
         function loop() {
             if (!state.run) {
-                requestAnimationFrame(loop);
+                animationId = requestAnimationFrame(loop);
                 return;
             }
 
@@ -558,11 +557,11 @@
                 e.y += e.vy;
                 if (e.y - e.r > ch) {
                     state.run = false;
+                    if (animationId != null) { cancelAnimationFrame(animationId); animationId = null; }
                     document.getElementById('finalScore').textContent = state.score;
                     document.getElementById('goScreen').classList.add('show');
                     loadRankings();
                     ctx.restore();
-                    requestAnimationFrame(loop);
                     return;
                 }
                 ctx.font = (e.r * 1.6) + 'px Arial';
@@ -720,22 +719,23 @@
             }
 
             var py = ch - state.playerH - 12;
-            ctx.font = '32px Arial';
+            ctx.font = '44px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('👨‍⚕️', state.px * cw, py + state.playerH / 2);
+            ctx.fillText(Gupaengi, state.px * cw, py + state.playerH / 2);
 
             document.getElementById('scoreEl').textContent = state.score;
             ctx.restore();
-            requestAnimationFrame(loop);
+            animationId = requestAnimationFrame(loop);
         }
 
         function start() {
+            if (animationId != null) { cancelAnimationFrame(animationId); animationId = null; }
             state.run = true;
             state.score = 0;
             state.wave = 1;
             state.gameTime = 0;
-            state.difficultyScale = 0.3;
+            state.difficultyScale = 0.2;
             state.px = 0.5;
             state.fireCount = 1;
             state.fireInterval = 10;
@@ -758,7 +758,7 @@
             document.getElementById('fireEl').textContent = '1';
             document.getElementById('startScreen').classList.add('hide');
             document.getElementById('goScreen').classList.remove('show');
-            requestAnimationFrame(loop);
+            animationId = requestAnimationFrame(loop);
         }
 
         function loadRankings() {
@@ -843,7 +843,7 @@
             if (e.key === 'Enter') submitRanking();
         });
 
-        requestAnimationFrame(loop);
+        animationId = requestAnimationFrame(loop);
     })();
     </script>
 </body>
