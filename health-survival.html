@@ -121,7 +121,7 @@
         var state = {
             run: false, paused: false, gameTime: 0,
             px: 0, py: 0,
-            joyActive: false, joyStickX: 0, joyStickY: 0,
+            joyActive: false, joyBaseX: 0, joyBaseY: 0, joyStickX: 0, joyStickY: 0,
             health: 3, shield: 0, score: 0,
             xp: 0, xpToLevel: 22, level: 1, xpOrbs: [],
             enemies: [], syringes: [], particles: [],
@@ -210,6 +210,7 @@
             } else {
                 hp = Math.max(1, Math.floor((1.2 + state.difficultyScale * 0.5) * 2));
             }
+            hp = Math.max(1, Math.floor(hp * 2 / 3));
             var ex, ey, angle;
             for (var attempt = 0; attempt < 18; attempt++) {
                 if (Math.random() < 0.5) {
@@ -298,28 +299,25 @@
                 y: (clientY - rect.top) / rect.height * ch
             };
         }
-        function isInJoystickZone(tx, ty) {
-            var joyBaseY = ch - JOY_BASE_X;
-            return tx < JOY_BASE_X + JOY_RADIUS + 50 && ty > joyBaseY - JOY_RADIUS - 50;
-        }
         function onJoystickInput(canvasX, canvasY) {
-            var joyBaseY = ch - JOY_BASE_X;
-            var c = clampStickToBase(canvasX, canvasY, JOY_BASE_X, joyBaseY);
+            var c = clampStickToBase(canvasX, canvasY, state.joyBaseX, state.joyBaseY);
             state.joyStickX = c.x;
             state.joyStickY = c.y;
         }
         function clearJoystick() {
             state.joyActive = false;
-            state.joyStickX = JOY_BASE_X;
-            state.joyStickY = ch - JOY_BASE_X;
         }
         if (canvas) {
         canvas.addEventListener('touchstart', function(e) {
             e.preventDefault();
-            if (e.touches.length) {
+            if (e.touches.length && state.run) {
                 updateRect();
                 var p = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
-                if (isInJoystickZone(p.x, p.y)) { state.joyActive = true; onJoystickInput(p.x, p.y); }
+                state.joyActive = true;
+                state.joyBaseX = p.x;
+                state.joyBaseY = p.y;
+                state.joyStickX = p.x;
+                state.joyStickY = p.y;
             }
         }, { passive: false });
         canvas.addEventListener('touchmove', function(e) {
@@ -336,9 +334,14 @@
         });
         canvas.addEventListener('touchcancel', function() { clearJoystick(); });
         canvas.addEventListener('mousedown', function(e) {
+            if (!state.run) return;
             updateRect();
             var p = getCanvasCoords(e.clientX, e.clientY);
-            if (isInJoystickZone(p.x, p.y)) { state.joyActive = true; onJoystickInput(p.x, p.y); }
+            state.joyActive = true;
+            state.joyBaseX = p.x;
+            state.joyBaseY = p.y;
+            state.joyStickX = p.x;
+            state.joyStickY = p.y;
         });
         canvas.addEventListener('mousemove', function(e) {
             if (state.joyActive && e.buttons === 1) {
@@ -369,18 +372,14 @@
                 if (state.shakeT <= 0) state.shakeMag = 0;
             } else state.shakeX = state.shakeY = 0;
 
-            var joyBaseY = ch - JOY_BASE_X;
             if (state.joyActive) {
-                var dx = state.joyStickX - JOY_BASE_X;
-                var dy = state.joyStickY - joyBaseY;
+                var dx = state.joyStickX - state.joyBaseX;
+                var dy = state.joyStickY - state.joyBaseY;
                 var len = Math.sqrt(dx*dx + dy*dy) || 1;
                 state.px += (dx / len) * PLAYER_SPEED;
                 state.py += (dy / len) * PLAYER_SPEED;
                 state.px = Math.max(PLAYER_R, Math.min(cw - PLAYER_R, state.px));
                 state.py = Math.max(PLAYER_R, Math.min(ch - PLAYER_R, state.py));
-            } else {
-                state.joyStickX = JOY_BASE_X;
-                state.joyStickY = joyBaseY;
             }
 
             var fireInterval = Math.max(6, FIRE_INTERVAL_BASE - (state.skills.speed ? 4 : 0));
@@ -671,8 +670,8 @@
             ctx.fillText(Gupaengi, pcx, pcy);
             ctx.restore();
 
-            (function drawVirtualJoystick() {
-                var bx = JOY_BASE_X, by = joyBaseY;
+            if (state.joyActive) {
+                var bx = state.joyBaseX, by = state.joyBaseY;
                 ctx.fillStyle = 'rgba(15,118,110,0.18)';
                 ctx.beginPath();
                 ctx.arc(bx, by, JOY_RADIUS, 0, Math.PI*2);
@@ -687,7 +686,7 @@
                 ctx.strokeStyle = 'rgba(15,118,110,0.9)';
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
-            })();
+            }
         }
 
         var startGameInProgress = false;
@@ -709,8 +708,6 @@
                 state.gameTime = 0;
                 state.px = cw/2; state.py = ch/2;
                 state.joyActive = false;
-                state.joyStickX = JOY_BASE_X;
-                state.joyStickY = ch - JOY_BASE_X;
                 state.health = 3;
                 state.shield = 0;
                 state.score = 0;

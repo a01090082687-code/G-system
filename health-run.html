@@ -70,8 +70,8 @@
         var GRAVITY_DOWN = -0.56;
         var JUMP_VY = 14.5;
         var DOUBLE_JUMP_VY = 12;
-        var RUN_SPEED_BASE = 7;
-        var SPEED_INCREASE_PER_DIST = 0.0007;
+        var RUN_SPEED_BASE = 10.5;
+        var SPEED_INCREASE_PER_DIST = 0.0014;
         var FLOOR_Y_RATIO = 0.82;
         var GROUND_H = 24;
         var OBSTACLE_W = 34, OBSTACLE_H = 34;
@@ -247,9 +247,11 @@
             if (state.py <= 0) {
                 state.vy = JUMP_VY;
                 state.canDoubleJump = true;
+                state.scrollX += state.speed * 0.45;
             } else if (state.canDoubleJump) {
                 state.vy = DOUBLE_JUMP_VY;
                 state.canDoubleJump = false;
+                state.scrollX += state.speed * 0.28;
             }
         }
 
