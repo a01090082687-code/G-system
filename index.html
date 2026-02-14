@@ -224,6 +224,15 @@
                         <p class="text-xs font-bold text-white/80 mt-1">NEW! 잠시 쉬어가세요</p>
                     </button>
                 </div>
+                <!-- 면역 전쟁 게임 카드 -->
+                <div class="col-span-2 md:col-span-1">
+                    <button type="button" onclick="goToImmunityWar()"
+                        class="w-full h-full gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white hover:from-violet-600 hover:to-purple-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
+                        <span class="text-5xl mb-3" aria-hidden="true">💉</span>
+                        <h3 class="font-black text-lg text-center">면역 전쟁: 라스트 백신</h3>
+                        <p class="text-xs font-bold text-white/80 mt-1">바이러스 군단을 막아내고 보스를 처치하세요!</p>
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -773,6 +782,9 @@
 
         function goToGame() {
             window.location.href = 'health-catch-game.html';
+        }
+        function goToImmunityWar() {
+            window.location.href = 'immunity-war.html';
         }
 
         // ========== 1. 데이터 초기화 (기본값, 시트에서 덮어씀) ==========
