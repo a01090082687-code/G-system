@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Immunity War | G-SYSTEM</title>
+    <title>보건 서바이벌: 구팽이의 전설 | G-SYSTEM</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -128,6 +128,15 @@
         .go-inp { width: 100%; max-width: 320px; padding: 12px; margin-bottom: 10px; border: 2px solid rgba(0,0,0,0.2); border-radius: 10px; font-size: 16px; text-align: center; background: #fff; color: #333333; }
         .go-inp:focus { outline: none; border-color: #0ea5e9; }
         .btn-submit { width: 100%; max-width: 320px; margin-bottom: 10px; }
+        .xp-bar-wrap { position: absolute; top: 0; left: 0; right: 0; height: 12px; background: rgba(0,0,0,0.3); z-index: 6; pointer-events: none; }
+        .xp-bar-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 0%; transition: width 0.2s; }
+        .skill-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 25; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .skill-overlay.show { display: flex; }
+        .skill-overlay h2 { color: #fff; font-size: 20px; margin-bottom: 20px; position: absolute; top: 24px; left: 50%; transform: translateX(-50%); }
+        .skill-cards { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: 360px; }
+        .skill-card { width: 100px; padding: 16px; background: linear-gradient(145deg, #1e293b, #334155); border: 2px solid #64748b; border-radius: 12px; cursor: pointer; text-align: center; color: #fff; font-size: 28px; line-height: 1.3; transition: transform 0.15s, border-color 0.15s; }
+        .skill-card:hover { transform: scale(1.05); border-color: #38bdf8; }
+        .skill-card span { display: block; font-size: 11px; color: #94a3b8; margin-top: 6px; }
     </style>
 </head>
 <body>
@@ -135,14 +144,19 @@
         <canvas id="c"></canvas>
         <div class="flash" id="flash"></div>
         <div class="power-up-msg" id="powerUpMsg">Power UP!</div>
+        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBarFill"></div></div>
         <div class="hud">
-            <span>점수: <span id="scoreEl">0</span> · 웨이브 <span id="waveEl">1</span></span>
-            <span>주사기: <span id="fireEl">1</span></span>
+            <span>Lv.<span id="levelEl">1</span> 점수: <span id="scoreEl">0</span> · 웨이브 <span id="waveEl">1</span></span>
+            <span id="skillIconsEl"></span>
+        </div>
+        <div class="skill-overlay" id="skillOverlay">
+            <h2>스킬 선택 (3지 선다)</h2>
+            <div class="skill-cards" id="skillCards"></div>
         </div>
         <div class="start-screen" id="startScreen">
-            <div class="start-title">🛡️ Immunity War</div>
-            <div class="version-info version-title">Ver 4.0 (Final Polished)</div>
-            <div class="start-desc">좌우 드래그로 이동. 🟦 좋은 문=총알 영구 증가 · 🟥 나쁜 문/적 접촉=총알 감소<br>📦 보급상자=총알+3 · 👹 보스 처치 후 👑 황금 게이트!</div>
+            <div class="start-title">🛡️ 보건 서바이벌: 구팽이의 전설</div>
+            <div class="version-info version-title">Ver 5.0 (Roguelike)</div>
+            <div class="start-desc">적 처치 → 경험치 구슬 수집 → 레벨업 시 스킬 3지 선다!<br>❤️/⚡ 게이트는 드물게 · 👹 보스는 빨간 탄을 쏨!</div>
             <button class="btn" id="btnStart">게임 시작</button>
         </div>
         <div class="go-screen" id="goScreen">
@@ -180,6 +194,7 @@
         var Gupaengi = '🐧';
         var state = {
             run: false,
+            paused: false,
             score: 0,
             wave: 1,
             gameTime: 0,
@@ -197,30 +212,90 @@
             damageNumbers: [],
             boxes: [],
             boss: null,
+            bossBullets: [],
+            bossLastShot: 0,
             shakeTime: 0,
             shakeMag: 0,
             spawnEnemy: 0,
             spawnGate: 0,
-            spawnBox: 0
+            spawnBox: 0,
+            xp: 0,
+            xpToLevel: 12,
+            level: 1,
+            xpOrbs: [],
+            shield: 0,
+            skills: { ricochet: false, speed: false, multishot: 0, crit: false, poison: false }
         };
 
         var SYR_W = 14, SYR_H = 24, SYR_VY = -11;
         var GATE_W_RATIO = 0.22, GATE_H = 56, GATE_VY = 1.6, GATE_GAP = 0.06;
-        var ENEMY_SPAWN_BASE = 16, GATE_SPAWN = 1280, BOX_SPAWN = 400;
+        var ENEMY_SPAWN_BASE = 16, GATE_SPAWN = 2000, BOX_SPAWN = 400;
         var SPEED_MULT = 1.3;
         var PLAYER_BOTTOM_MARGIN = 0.15;
         var HITBOX_SCALE = 0.6;
         var BOSS_HP_BASE = 80;
         var WAVE_BOSS_EVERY = 5;
-        var DIFFICULTY_INTERVAL = 30 * FPS; // 30초
+        var DIFFICULTY_INTERVAL = 30 * FPS;
+        var XP_PER_KILL = 3;
+        var XP_PICKUP_RADIUS = 70;
+        var XP_MAGNET_SPEED = 9;
+        var BOSS_SHOOT_INTERVAL = 5 * FPS;
+        var BOSS_BULLET_SPEED = 5;
+        var SKILLS_LIST = [
+            { id: 'ricochet', name: '안전모', icon: '⛑️', desc: '총알 1회 튕김' },
+            { id: 'speed', name: '안전화', icon: '🥾', desc: '발사속도 +20%' },
+            { id: 'multishot', name: '절연장갑', icon: '🧤', desc: '총알 +1' },
+            { id: 'crit', name: '보안경', icon: '🥽', desc: '치명타 +15%' },
+            { id: 'poison', name: '방진마스크', icon: '😷', desc: '주변 독가스' }
+        ];
 
-        var goodLabelsAdd = [{ label: '운동 +1', add: 1 }, { label: '수면 +2', add: 2 }, { label: '물 섭취 +1', add: 1 }, { label: '비타민 +2', add: 2 }, { label: '휴식 +1', add: 1 }];
-        var goodLabelsMult = [{ label: '비타민 섭취 x2', mult: 2 }, { label: '수면 x3', mult: 3 }];
-        var badLabels = ['음주 ÷2', '흡연 -10', '과로 ÷2'];
-
+        function addXpOrb(x, y, value) {
+            state.xpOrbs.push({ x: x, y: y, value: value || XP_PER_KILL, vy: 2, landed: false });
+        }
         function screenShake(magnitude, duration) {
             state.shakeMag = Math.max(state.shakeMag, magnitude);
             state.shakeTime = Math.max(state.shakeTime, duration || 15);
+        }
+        function showLevelUpCards() {
+            var pool = SKILLS_LIST.slice();
+            var chosen = [];
+            for (var i = 0; i < 3 && pool.length; i++) {
+                var idx = Math.floor(Math.random() * pool.length);
+                chosen.push(pool.splice(idx, 1)[0]);
+            }
+            var el = document.getElementById('skillCards');
+            el.innerHTML = '';
+            chosen.forEach(function(s) {
+                var btn = document.createElement('button');
+                btn.className = 'skill-card';
+                btn.innerHTML = s.icon + '<span>' + s.name + '<br>' + s.desc + '</span>';
+                btn.onclick = (function(sk) { return function() { applySkill(sk.id); document.getElementById('skillOverlay').classList.remove('show'); state.paused = false; updateSkillIcons(); }; })(s);
+                el.appendChild(btn);
+            });
+            document.getElementById('skillOverlay').classList.add('show');
+        }
+        function applySkill(id) {
+            if (id === 'ricochet') state.skills.ricochet = true;
+            if (id === 'speed') state.skills.speed = true;
+            if (id === 'multishot') state.skills.multishot++;
+            if (id === 'crit') state.skills.crit = true;
+            if (id === 'poison') state.skills.poison = true;
+            state.level++;
+            state.xp = 0;
+            state.xpToLevel = 10 + state.level * 6;
+            document.getElementById('levelEl').textContent = state.level;
+            document.getElementById('xpBarFill').style.width = '0%';
+        }
+        function updateSkillIcons() {
+            var s = state.skills;
+            var arr = [];
+            if (state.shield > 0) arr.push('🛡️×' + state.shield);
+            if (s.ricochet) arr.push('⛑️');
+            if (s.speed) arr.push('🥾');
+            if (s.multishot) arr.push('🧤×' + s.multishot);
+            if (s.crit) arr.push('🥽');
+            if (s.poison) arr.push('😷');
+            document.getElementById('skillIconsEl').textContent = arr.length ? arr.join(' ') : '주사기: ' + (state.fireCount + state.skills.multishot);
         }
 
         function addDamageNumber(x, y, value, isCrit) {
@@ -259,7 +334,7 @@
 
         function addSyringe() {
             var baseX = state.px * cw;
-            var count = state.fireCount;
+            var count = Math.max(1, state.fireCount + state.skills.multishot);
             var py = ch * (1 - PLAYER_BOTTOM_MARGIN) - state.playerH;
             var spread = (count * 8) / 2;
             for (var i = 0; i < count; i++) {
@@ -282,7 +357,7 @@
             var type = Math.random() > 0.5 ? '🦠' : '😈';
             var r = 16 + Math.random() * 10;
             var baseHp = Math.max(1, Math.floor((1 + r / 12) * state.difficultyScale));
-            var hp = Math.max(2, baseHp * 2);
+            var hp = Math.max(4, baseHp * 4);
             var vy = (0.8 + Math.random() * 0.6) * state.difficultyScale * SPEED_MULT;
             var x = cw * 0.1 + Math.random() * (cw * 0.8);
             state.enemies.push({
@@ -309,6 +384,7 @@
                 vy: 1.2 * state.difficultyScale * SPEED_MULT,
                 type: type
             };
+            state.bossLastShot = state.gameTime;
         }
 
         function addGoldenGate() {
@@ -326,29 +402,16 @@
             });
         }
 
-        function pickGoodGate() {
-            if (Math.random() < 0.1) {
-                var o = goodLabelsMult[Math.floor(Math.random() * goodLabelsMult.length)];
-                return { label: o.label, addBonus: 0, multBonus: o.mult };
-            }
-            var o = goodLabelsAdd[Math.floor(Math.random() * goodLabelsAdd.length)];
-            return { label: o.label, addBonus: o.add, multBonus: 0 };
-        }
         function addGates() {
-            var good = Math.random() > 0.5;
-            var gw = cw * GATE_W_RATIO;
+            var gw = cw * 0.28;
             var gateVy = GATE_VY * state.difficultyScale * SPEED_MULT;
-            var zoneW = cw * 0.8 - gw;
-            var x1 = cw * 0.1 + Math.random() * zoneW;
-            var x2 = cw * 0.1 + Math.random() * zoneW;
-            if (Math.abs(x1 - x2) < gw) x2 = x1 + gw + Math.random() * (zoneW - gw);
-            if (x2 > cw * 0.9 - gw) x2 = cw * 0.9 - gw;
-            var g1 = good ? pickGoodGate() : { label: badLabels[Math.floor(Math.random() * badLabels.length)], addBonus: 0, multBonus: 0 };
-            var g2 = good ? { label: badLabels[Math.floor(Math.random() * badLabels.length)], addBonus: 0, multBonus: 0 } : pickGoodGate();
-            state.gates.push(
-                { x: x1, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: good, label: g1.label, addBonus: g1.addBonus, multBonus: g1.multBonus },
-                { x: x2, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: !good, label: g2.label, addBonus: g2.addBonus, multBonus: g2.multBonus }
-            );
+            var x = cw * 0.1 + Math.random() * (cw * 0.8 - gw);
+            var kind = Math.random() < 0.5 ? 'heal' : 'xp';
+            state.gates.push({
+                x: x, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy,
+                good: true, type: kind,
+                label: kind === 'heal' ? '❤️ 체력 회복' : '⚡ 경험치 보너스'
+            });
         }
 
         function addBox() {
@@ -433,6 +496,10 @@
                 animationId = requestAnimationFrame(loop);
                 return;
             }
+            if (state.paused) {
+                animationId = requestAnimationFrame(loop);
+                return;
+            }
 
             state.gameTime++;
             if (state.gameTime > 30 * FPS && state.gameTime % DIFFICULTY_INTERVAL === 0)
@@ -455,8 +522,43 @@
             ctx.fillStyle = bgGrad;
             ctx.fillRect(-10, -10, cw + 20, ch + 20);
 
+            var playerCx = state.px * cw;
+            var playerCy = ch * (1 - PLAYER_BOTTOM_MARGIN) - state.playerH + state.playerH / 2;
+            for (var oi = state.xpOrbs.length - 1; oi >= 0; oi--) {
+                var orb = state.xpOrbs[oi];
+                if (!orb.landed) {
+                    orb.y += orb.vy;
+                    if (orb.y >= ch - 28) { orb.y = ch - 28; orb.landed = true; }
+                } else {
+                    var dx = playerCx - orb.x, dy = playerCy - orb.y;
+                    var dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < XP_PICKUP_RADIUS) {
+                        if (dist > 5) {
+                            orb.x += (dx / dist) * XP_MAGNET_SPEED;
+                            orb.y += (dy / dist) * XP_MAGNET_SPEED;
+                        } else {
+                            state.xp += orb.value;
+                            state.xpOrbs.splice(oi, 1);
+                            if (state.xp >= state.xpToLevel) {
+                                state.paused = true;
+                                showLevelUpCards();
+                            }
+                        }
+                    }
+                }
+                ctx.fillStyle = '#3b82f6';
+                ctx.beginPath();
+                ctx.arc(orb.x, orb.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#60a5fa';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            document.getElementById('xpBarFill').style.width = (state.xp / state.xpToLevel * 100) + '%';
+
+            var fireInterval = state.fireInterval * (state.skills.speed ? 0.8 : 1);
             state.fireTick++;
-            if (state.fireTick >= state.fireInterval) {
+            if (state.fireTick >= fireInterval) {
                 state.fireTick = 0;
                 addSyringe();
             }
@@ -465,7 +567,7 @@
                 var s = state.syringes[i];
                 s.y += s.vy;
                 if (s.vx) s.x += s.vx;
-                if (s.y + s.h < 0 || s.x < -50 || s.x > cw + 50) {
+                if (s.y + s.h < 0 || s.y > ch + 50 || s.x < -50 || s.x > cw + 50) {
                     state.syringes.splice(i, 1);
                     continue;
                 }
@@ -484,12 +586,10 @@
                     if (state.boss.hp <= 0) {
                         addBossExplosion(state.boss.x, state.boss.y);
                         state.score += 500;
-                        addGoldenGate();
+                        state.xp = Math.min(state.xpToLevel - 1, state.xp + state.xpToLevel);
                         state.boss = null;
                         state.wave++;
-                        state.fireCount = Math.min(99, state.fireCount + 2);
                         document.getElementById('waveEl').textContent = state.wave;
-                        document.getElementById('fireEl').textContent = state.fireCount;
                     }
                     if (hitSomething) break;
                 }
@@ -498,16 +598,30 @@
                     if (hitSomething) break;
                     var e = state.enemies[j];
                     if (hitBulletEnemy(s, e)) {
-                        var dmg = 1;
+                        var dmg = (state.skills.crit && Math.random() < 0.15) ? 2 : 1;
                         e.hp -= dmg;
-                        addDamageNumber(e.x, e.y - e.r, dmg, false);
+                        addDamageNumber(e.x, e.y - e.r, dmg, dmg > 1);
                         state.syringes.splice(i, 1);
                         hitSomething = true;
                         if (e.hp <= 0) {
                             addParticles(e.x, e.y, '#f87171', 16, 1);
+                            addXpOrb(e.x, e.y, XP_PER_KILL);
                             state.enemies.splice(j, 1);
                             state.score += 15;
                             screenShake(2, 4);
+                            if (state.skills.ricochet && !s.ricochetUsed) {
+                                var nearest = null, nd = 1e9;
+                                for (var ei = 0; ei < state.enemies.length; ei++) {
+                                    var en = state.enemies[ei];
+                                    var d = (en.x - e.x)*(en.x - e.x) + (en.y - e.y)*(en.y - e.y);
+                                    if (d < nd && d > 1) { nd = d; nearest = en; }
+                                }
+                                if (nearest) {
+                                    var ax = nearest.x - e.x, ay = nearest.y - e.y;
+                                    var len = Math.sqrt(ax*ax + ay*ay) || 1;
+                                    state.syringes.push({ x: e.x - SYR_W/2, y: e.y, w: SYR_W, h: SYR_H, vx: (ax/len)*6, vy: (ay/len)*6, ricochetUsed: true });
+                                }
+                            }
                             if (state.enemies.length === 0 && !(state.wave % WAVE_BOSS_EVERY === 0 && state.wave > 0)) {
                                 state.wave++;
                                 document.getElementById('waveEl').textContent = state.wave;
@@ -554,9 +668,25 @@
             }
 
             var h = getPlayerHitbox();
+            var poisonRadius = 60;
+            var playerCenterY = ch * (1 - PLAYER_BOTTOM_MARGIN) - state.playerH + state.playerH / 2;
             for (var i = state.enemies.length - 1; i >= 0; i--) {
                 var e = state.enemies[i];
                 e.y += e.vy;
+                if (state.skills.poison) {
+                    var pdx = state.px * cw - e.x;
+                    var pdy = playerCenterY - e.y;
+                    if (Math.sqrt(pdx*pdx + pdy*pdy) < poisonRadius) {
+                        e.hp -= 0.5;
+                        if (e.hp <= 0) {
+                            addXpOrb(e.x, e.y, XP_PER_KILL);
+                            state.score++;
+                            state.enemies.splice(i, 1);
+                            addParticles(e.x, e.y, '#22c55e', 8, 0.8);
+                            continue;
+                        }
+                    }
+                }
                 if (e.y - e.r > ch) {
                     state.run = false;
                     if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
@@ -568,19 +698,27 @@
                 }
                 var ex1 = e.x - e.r, ex2 = e.x + e.r, ey1 = e.y - e.r, ey2 = e.y + e.r;
                 if (ex2 >= h.left && ex1 <= h.right && ey2 >= h.top && ey1 <= h.bottom) {
-                    state.fireCount = Math.max(0, state.fireCount - 2);
-                    state.enemies.splice(i, 1);
-                    addParticles(e.x, e.y, '#f87171', 12, 1);
-                    screenShake(4, 8);
-                    document.getElementById('fireEl').textContent = state.fireCount;
-                    if (state.fireCount <= 0) {
-                        state.run = false;
-                        if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
-                        document.getElementById('finalScore').textContent = state.score;
-                        document.getElementById('goScreen').classList.add('show');
-                        loadRankings();
-                        ctx.restore();
-                        return;
+                    if (state.shield > 0) {
+                        state.shield--;
+                        updateSkillIcons();
+                        state.enemies.splice(i, 1);
+                        addParticles(e.x, e.y, '#f87171', 12, 1);
+                        screenShake(4, 8);
+                    } else {
+                        state.fireCount = Math.max(0, state.fireCount - 2);
+                        state.enemies.splice(i, 1);
+                        addParticles(e.x, e.y, '#f87171', 12, 1);
+                        screenShake(4, 8);
+                        document.getElementById('fireEl').textContent = state.fireCount;
+                        if (state.fireCount <= 0) {
+                            state.run = false;
+                            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+                            document.getElementById('finalScore').textContent = state.score;
+                            document.getElementById('goScreen').classList.add('show');
+                            loadRankings();
+                            ctx.restore();
+                            return;
+                        }
                     }
                 }
             }
@@ -601,18 +739,20 @@
                     document.getElementById('waveEl').textContent = state.wave;
                 }
                 if (state.boss) {
-                    var barW = 80;
-                    var barX = boss.x - barW / 2;
-                    var barY = boss.y - boss.r - 18;
+                    var barMargin = 20;
+                    var barW = cw - barMargin * 2;
+                    var barX = barMargin;
+                    var barY = 10;
+                    var barH = 14;
                     ctx.fillStyle = 'rgba(0,0,0,0.6)';
-                    ctx.fillRect(barX - 2, barY - 2, barW + 4, 10 + 4);
+                    ctx.fillRect(barX - 2, barY - 2, barW + 4, barH + 4);
                     ctx.fillStyle = '#ef4444';
-                    ctx.fillRect(barX, barY, barW, 10);
+                    ctx.fillRect(barX, barY, barW, barH);
                     ctx.fillStyle = '#22c55e';
-                    ctx.fillRect(barX, barY, barW * (boss.hp / boss.maxHp), 10);
+                    ctx.fillRect(barX, barY, barW * (boss.hp / boss.maxHp), barH);
                     ctx.strokeStyle = '#fff';
                     ctx.lineWidth = 1;
-                    ctx.strokeRect(barX, barY, barW, 10);
+                    ctx.strokeRect(barX, barY, barW, barH);
                     ctx.font = (boss.r * 1.4) + 'px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -661,53 +801,83 @@
                     state.gates.splice(k, 1);
                     continue;
                 }
-                if (g.gold) {
-                    ctx.fillStyle = 'rgba(251, 191, 36, 0.95)';
-                    ctx.strokeStyle = '#fcd34d';
-                } else {
-                    ctx.fillStyle = g.good ? 'rgba(59, 130, 246, 0.9)' : 'rgba(239, 68, 68, 0.9)';
-                    ctx.strokeStyle = g.good ? '#60a5fa' : '#f87171';
-                }
+                ctx.fillStyle = g.type === 'heal' ? 'rgba(34, 197, 94, 0.9)' : 'rgba(251, 191, 36, 0.9)';
+                ctx.strokeStyle = g.type === 'heal' ? '#22c55e' : '#fbbf24';
                 ctx.fillRect(g.x, g.y, g.w, g.h);
                 ctx.lineWidth = 3;
                 ctx.strokeRect(g.x, g.y, g.w, g.h);
                 ctx.fillStyle = '#fff';
-                ctx.font = g.gold ? '14px sans-serif' : '11px sans-serif';
+                ctx.font = '11px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(g.label, g.x + g.w / 2, g.y + g.h / 2 + 4);
+                ctx.fillText(g.label || '', g.x + g.w / 2, g.y + g.h / 2 + 4);
 
                 if (hitPlayerGate(g)) {
-                    if (g.good) {
-                        if (g.gold) {
-                            state.fireCount = Math.min(99, state.fireCount * 5);
-                            state.fireInterval = Math.max(3, state.fireInterval - 2);
-                            document.getElementById('powerUpMsg').textContent = '👑 슈퍼 면역!';
-                            document.getElementById('powerUpMsg').classList.add('gold');
-                            document.getElementById('flash').classList.add('gold');
-                        } else {
-                            if (g.multBonus) {
-                                state.fireCount = Math.min(99, state.fireCount * g.multBonus);
-                            } else {
-                                state.fireCount = Math.min(99, state.fireCount + (g.addBonus || 1));
-                            }
-                            state.fireInterval = Math.max(4, state.fireInterval - 1);
-                            document.getElementById('powerUpMsg').textContent = 'Power UP!';
-                            document.getElementById('powerUpMsg').classList.remove('gold');
-                            document.getElementById('flash').classList.remove('gold');
-                        }
-                        document.getElementById('powerUpMsg').classList.add('show');
-                        document.getElementById('flash').classList.add('on');
-                        setTimeout(function() {
-                            document.getElementById('powerUpMsg').classList.remove('show');
-                            document.getElementById('flash').classList.remove('on');
-                            document.getElementById('flash').classList.remove('gold');
-                        }, 1200);
-                    } else {
-                        state.fireCount = Math.max(1, Math.floor(state.fireCount / 2));
-                        state.fireInterval = Math.min(20, state.fireInterval + 1);
+                    if (g.type === 'heal') {
+                        state.shield = Math.min(3, (state.shield || 0) + 1);
+                        updateSkillIcons();
                     }
-                    document.getElementById('fireEl').textContent = state.fireCount;
+                    if (g.type === 'xp') {
+                        state.xp = Math.min(state.xpToLevel - 1, state.xp + 15);
+                    }
                     state.gates.splice(k, 1);
+                }
+            }
+
+            var playerCxForBoss = state.px * cw;
+            var playerCyForBoss = ch * (1 - PLAYER_BOTTOM_MARGIN) - state.playerH + state.playerH / 2;
+            for (var bi = state.bossBullets.length - 1; bi >= 0; bi--) {
+                var bb = state.bossBullets[bi];
+                bb.x += bb.vx;
+                bb.y += bb.vy;
+                if (bb.x < -20 || bb.x > cw + 20 || bb.y < -20 || bb.y > ch + 20) {
+                    state.bossBullets.splice(bi, 1);
+                    continue;
+                }
+                var hb = getPlayerHitbox();
+                var br = bb.r || 10;
+                if (bb.x + br >= hb.left && bb.x - br <= hb.right && bb.y + br >= hb.top && bb.y - br <= hb.bottom) {
+                    if (state.shield > 0) {
+                        state.shield--;
+                        updateSkillIcons();
+                    } else {
+                        state.fireCount = Math.max(0, state.fireCount - 1);
+                        document.getElementById('fireEl').textContent = state.fireCount;
+                        if (state.fireCount <= 0) {
+                            state.run = false;
+                            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+                            document.getElementById('finalScore').textContent = state.score;
+                            document.getElementById('goScreen').classList.add('show');
+                            loadRankings();
+                            ctx.restore();
+                            return;
+                        }
+                    }
+                    state.bossBullets.splice(bi, 1);
+                }
+            }
+            state.bossBullets.forEach(function(bb) {
+                ctx.fillStyle = '#dc2626';
+                ctx.beginPath();
+                ctx.arc(bb.x, bb.y, bb.r || 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#991b1b';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+
+            if (state.boss) {
+                if (state.gameTime - state.bossLastShot >= BOSS_SHOOT_INTERVAL) {
+                    state.bossLastShot = state.gameTime;
+                    var boss = state.boss;
+                    var dx = playerCxForBoss - boss.x;
+                    var dy = playerCyForBoss - boss.y;
+                    var len = Math.sqrt(dx*dx + dy*dy) || 1;
+                    state.bossBullets.push({
+                        x: boss.x, y: boss.y,
+                        vx: (dx / len) * BOSS_BULLET_SPEED,
+                        vy: (dy / len) * BOSS_BULLET_SPEED,
+                        r: 10
+                    });
                 }
             }
 
@@ -784,6 +954,15 @@
             state.damageNumbers = [];
             state.boxes = [];
             state.boss = null;
+            state.bossBullets = [];
+            state.bossLastShot = 0;
+            state.paused = false;
+            state.xp = 0;
+            state.xpToLevel = 10;
+            state.level = 1;
+            state.xpOrbs = [];
+            state.shield = 0;
+            state.skills = { ricochet: false, speed: false, multishot: 0, crit: false, poison: false };
             state.shakeTime = 0;
             state.spawnEnemy = 0;
             state.spawnGate = 0;
@@ -791,6 +970,10 @@
             document.getElementById('scoreEl').textContent = '0';
             document.getElementById('waveEl').textContent = '1';
             document.getElementById('fireEl').textContent = '1';
+            document.getElementById('levelEl').textContent = '1';
+            document.getElementById('xpBarFill').style.width = '0%';
+            document.getElementById('skillOverlay').classList.remove('show');
+            updateSkillIcons();
             document.getElementById('startScreen').classList.add('hide');
             document.getElementById('goScreen').classList.remove('show');
             animationId = requestAnimationFrame(loop);
