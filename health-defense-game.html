@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>건강 디펜스 - 면역 서바이벌 | G-SYSTEM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0e17;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .game-wrap {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 780px;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #1a2332 0%, #0d1321 100%);
+        }
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .score-text { color: #7dd3fc; font-size: 18px; font-weight: bold; font-family: sans-serif; }
+        .fire-rate-text { color: #86efac; font-size: 14px; font-family: sans-serif; }
+        .start-panel {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 14, 23, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 24px;
+        }
+        .start-panel.hide { display: none; }
+        .start-title { color: #7dd3fc; font-size: 22px; margin-bottom: 16px; text-align: center; font-family: sans-serif; }
+        .start-desc { color: #94a3b8; font-size: 14px; margin-bottom: 24px; text-align: center; line-height: 1.5; }
+        .btn-start {
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            color: #fff;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .game-over-panel {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 14, 23, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+        }
+        .game-over-panel.show { display: flex; }
+        .go-title { color: #f87171; font-size: 26px; margin-bottom: 12px; font-family: sans-serif; }
+        .go-score { color: #7dd3fc; font-size: 20px; margin-bottom: 24px; }
+        .btn-retry {
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-wrap">
+        <canvas id="gameCanvas"></canvas>
+        <div class="ui-overlay">
+            <span class="score-text">점수: <span id="scoreEl">0</span></span>
+            <span class="fire-rate-text">발사: <span id="fireRateEl">1</span></span>
+        </div>
+        <div class="start-panel" id="startPanel">
+            <div class="start-title">🛡️ 건강 디펜스</div>
+            <div class="start-desc">좌우로 드래그해 이동하세요.<br>항체(총알)로 바이러스를 막고,<br>파란 문은 통과·빨간 문은 피하세요!</div>
+            <button class="btn-start" id="btnStart">시작</button>
+        </div>
+        <div class="game-over-panel" id="gameOverPanel">
+            <div class="go-title">게임 오버</div>
+            <div class="go-score">점수: <span id="finalScoreEl">0</span></div>
+            <button class="btn-retry" id="btnRetry">다시 하기</button>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        var canvas = document.getElementById('gameCanvas');
+        var ctx = canvas.getContext('2d');
+        var scoreEl = document.getElementById('scoreEl');
+        var fireRateEl = document.getElementById('fireRateEl');
+        var startPanel = document.getElementById('startPanel');
+        var gameOverPanel = document.getElementById('gameOverPanel');
+        var finalScoreEl = document.getElementById('finalScoreEl');
+
+        var cw, ch;
+        function resize() {
+            var wrap = canvas.parentElement;
+            cw = wrap.clientWidth;
+            ch = wrap.clientHeight;
+            canvas.width = cw;
+            canvas.height = ch;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        var state = {
+            running: false,
+            score: 0,
+            playerX: 0.5,
+            playerW: 36,
+            playerH: 28,
+            bulletCount: 1,
+            fireInterval: 12,
+            fireTick: 0,
+            bullets: [],
+            enemies: [],
+            gates: [],
+            enemySpawnTick: 0,
+            gateSpawnTick: 0
+        };
+
+        var BULLET_SPEED = -9;
+        var BULLET_W = 4;
+        var BULLET_H = 12;
+        var ENEMY_BASE_SPEED = 2.2;
+        var ENEMY_SPAWN_INTERVAL = 45;
+        var GATE_SPAWN_INTERVAL = 360;
+        var GATE_SPEED = 1.8;
+        var GATE_W = 0.22;
+        var GATE_H = 48;
+        var GATE_GAP = 0.12;
+
+        function createBullet() {
+            var px = state.playerX * cw;
+            var py = ch - state.playerH - 10;
+            var bw = state.bulletCount * 6;
+            var step = state.bulletCount > 1 ? (bw - BULLET_W) / (state.bulletCount - 1) : 0;
+            for (var i = 0; i < state.bulletCount; i++) {
+                state.bullets.push({
+                    x: px - state.playerW / 2 + (state.bulletCount === 1 ? (state.playerW - BULLET_W) / 2 : step * i),
+                    y: py,
+                    w: BULLET_W,
+                    h: BULLET_H,
+                    vy: BULLET_SPEED
+                });
+            }
+        }
+
+        function createEnemy() {
+            var r = 14 + Math.random() * 12;
+            state.enemies.push({
+                x: r + Math.random() * (cw - r * 2),
+                y: -r * 2,
+                r: r,
+                hp: 1 + Math.floor(r / 10),
+                maxHp: 1 + Math.floor(r / 10),
+                vy: ENEMY_BASE_SPEED + Math.random() * 1.2
+            });
+        }
+
+        function createGates() {
+            var leftType = Math.random() > 0.5 ? 'good' : 'bad';
+            var rightType = leftType === 'good' ? 'bad' : 'good';
+            var goodLabel = ['면역력 강화 x2', '비타민 +3', '운동 효과 x2'][Math.floor(Math.random() * 3)];
+            var badLabel = ['수면부족 /2', '스트레스 -2', '과로 -1'][Math.floor(Math.random() * 3)];
+            var leftLabel = leftType === 'good' ? goodLabel : badLabel;
+            var rightLabel = rightType === 'good' ? goodLabel : badLabel;
+            var gw = cw * GATE_W;
+            var gap = cw * GATE_GAP;
+            var totalW = gw * 2 + gap;
+            var startX = (cw - totalW) / 2;
+            state.gates.push(
+                { x: startX, y: -GATE_H, w: gw, h: GATE_H, vy: GATE_SPEED, type: leftType, label: leftLabel },
+                { x: startX + gw + gap, y: -GATE_H, w: gw, h: GATE_H, vy: GATE_SPEED, type: rightType, label: rightLabel }
+            );
+        }
+
+        var touchStartX = 0, dragStartPlayerX = 0;
+
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (!state.running) return;
+            touchStartX = e.touches[0].clientX;
+            dragStartPlayerX = state.playerX;
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            if (!state.running) return;
+            var dx = (e.touches[0].clientX - touchStartX) / cw;
+            state.playerX = Math.max(0.08, Math.min(0.92, dragStartPlayerX + dx));
+            touchStartX = e.touches[0].clientX;
+            dragStartPlayerX = state.playerX;
+        }, { passive: false });
+
+        var mouseDown = false, mouseStartX = 0, mouseStartPx = 0;
+        canvas.addEventListener('mousedown', function(e) {
+            if (!state.running) return;
+            mouseDown = true;
+            mouseStartX = e.clientX;
+            mouseStartPx = state.playerX;
+        });
+        canvas.addEventListener('mousemove', function(e) {
+            if (!mouseDown || !state.running) return;
+            var dx = (e.clientX - mouseStartX) / cw;
+            state.playerX = Math.max(0.08, Math.min(0.92, mouseStartPx + dx));
+            mouseStartX = e.clientX;
+            mouseStartPx = state.playerX;
+        });
+        canvas.addEventListener('mouseup', function() { mouseDown = false; });
+        canvas.addEventListener('mouseleave', function() { mouseDown = false; });
+
+        function hitTestBulletEnemy(b, e) {
+            var bx = b.x + b.w / 2, by = b.y + b.h / 2;
+            var dx = bx - e.x, dy = by - e.y;
+            return dx * dx + dy * dy < e.r * e.r;
+        }
+
+        function hitTestPlayerGate(g) {
+            var px = state.playerX * cw;
+            var py = ch - state.playerH - 5;
+            var playerTop = py;
+            var gateBottom = g.y + g.h;
+            var gateTop = g.y;
+            if (playerTop <= gateBottom && playerTop + state.playerH >= gateTop) {
+                if (px >= g.x && px <= g.x + g.w) return true;
+            }
+            return false;
+        }
+
+        function applyGateEffect(type) {
+            if (type === 'good') {
+                if (Math.random() > 0.5) {
+                    state.bulletCount = Math.min(8, state.bulletCount + 1);
+                } else {
+                    state.bulletCount = Math.min(8, state.bulletCount + 2);
+                }
+                state.fireInterval = Math.max(6, state.fireInterval - 1);
+            } else {
+                state.bulletCount = Math.max(1, Math.floor(state.bulletCount / 2));
+                state.fireInterval = Math.min(20, state.fireInterval + 2);
+            }
+            fireRateEl.textContent = state.bulletCount + '발';
+        }
+
+        function gameLoop() {
+            if (!state.running) return requestAnimationFrame(gameLoop);
+
+            ctx.fillStyle = '#0d1321';
+            ctx.fillRect(0, 0, cw, ch);
+
+            var px = state.playerX * cw;
+            var py = ch - state.playerH - 10;
+
+            state.fireTick++;
+            if (state.fireTick >= state.fireInterval) {
+                state.fireTick = 0;
+                createBullet();
+            }
+
+            for (var i = state.bullets.length - 1; i >= 0; i--) {
+                var b = state.bullets[i];
+                b.y += b.vy;
+                if (b.y + b.h < 0) {
+                    state.bullets.splice(i, 1);
+                    continue;
+                }
+                ctx.fillStyle = '#7dd3fc';
+                ctx.fillRect(b.x, b.y, b.w, b.h);
+
+                for (var j = state.enemies.length - 1; j >= 0; j--) {
+                    var e = state.enemies[j];
+                    if (hitTestBulletEnemy(b, e)) {
+                        e.hp--;
+                        state.bullets.splice(i, 1);
+                        if (e.hp <= 0) {
+                            state.enemies.splice(j, 1);
+                            state.score += 10;
+                            scoreEl.textContent = state.score;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            state.enemySpawnTick++;
+            if (state.enemySpawnTick >= ENEMY_SPAWN_INTERVAL) {
+                state.enemySpawnTick = 0;
+                createEnemy();
+            }
+
+            for (var i = 0; i < state.enemies.length; i++) {
+                var e = state.enemies[i];
+                e.y += e.vy;
+                if (e.y - e.r > ch) {
+                    state.enemies.splice(i, 1);
+                    i--;
+                    state.running = false;
+                    gameOverPanel.classList.add('show');
+                    finalScoreEl.textContent = state.score;
+                    return requestAnimationFrame(gameLoop);
+                }
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fca5a5';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            state.gateSpawnTick++;
+            if (state.gateSpawnTick >= GATE_SPAWN_INTERVAL) {
+                state.gateSpawnTick = 0;
+                createGates();
+            }
+
+            for (var i = state.gates.length - 1; i >= 0; i--) {
+                var g = state.gates[i];
+                g.y += g.vy;
+                if (g.y > ch + GATE_H) {
+                    state.gates.splice(i, 1);
+                    continue;
+                }
+                if (g.type === 'good') {
+                    ctx.fillStyle = 'rgba(34, 197, 94, 0.85)';
+                    ctx.strokeStyle = '#86efac';
+                } else {
+                    ctx.fillStyle = 'rgba(239, 68, 68, 0.85)';
+                    ctx.strokeStyle = '#fca5a5';
+                }
+                ctx.fillRect(g.x, g.y, g.w, g.h);
+                ctx.lineWidth = 3;
+                ctx.strokeRect(g.x, g.y, g.w, g.h);
+                ctx.fillStyle = '#fff';
+                ctx.font = '11px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(g.label, g.x + g.w / 2, g.y + g.h / 2 + 4);
+
+                if (hitTestPlayerGate(g)) {
+                    applyGateEffect(g.type);
+                    state.gates.splice(i, 1);
+                }
+            }
+
+            ctx.fillStyle = '#0ea5e9';
+            ctx.fillRect(px - state.playerW / 2, py, state.playerW, state.playerH);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(px - state.playerW / 2, py, state.playerW, state.playerH);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            state.running = true;
+            state.score = 0;
+            state.playerX = 0.5;
+            state.bulletCount = 1;
+            state.fireInterval = 12;
+            state.fireTick = 0;
+            state.bullets = [];
+            state.enemies = [];
+            state.gates = [];
+            state.enemySpawnTick = 0;
+            state.gateSpawnTick = 0;
+            scoreEl.textContent = '0';
+            fireRateEl.textContent = '1발';
+            startPanel.classList.add('hide');
+            gameOverPanel.classList.remove('show');
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.getElementById('btnStart').addEventListener('click', startGame);
+        document.getElementById('btnRetry').addEventListener('click', startGame);
+
+        requestAnimationFrame(gameLoop);
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Immunity War | G-SYSTEM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0f172a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .wrap {
+            width: 100%;
+            max-width: 430px;
+            height: 100vh;
+            max-height: 820px;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(0,0,0,0.6);
+        }
+        #c {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 50%, #020617 100%);
+        }
+        .hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .hud span { color: #e2e8f0; font-size: 16px; font-weight: bold; font-family: sans-serif; }
+        .power-up-msg {
+            position: absolute;
+            left: 50%;
+            top: 35%;
+            transform: translate(-50%, -50%);
+            font-size: 28px;
+            font-weight: bold;
+            color: #38bdf8;
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.8);
+            pointer-events: none;
+            z-index: 15;
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+        .power-up-msg.show {
+            animation: powerUpFade 1.2s ease-out forwards;
+        }
+        .power-up-msg.gold {
+            color: #fbbf24;
+            text-shadow: 0 0 24px rgba(251, 191, 36, 0.9);
+            font-size: 32px;
+        }
+        @keyframes powerUpFade {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            80% { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -60%) scale(1); }
+        }
+        .flash {
+            position: absolute;
+            inset: 0;
+            background: rgba(56, 189, 248, 0.25);
+            pointer-events: none;
+            z-index: 12;
+            opacity: 0;
+        }
+        .flash.on {
+            animation: flashFade 0.35s ease-out forwards;
+        }
+        .flash.gold {
+            background: rgba(251, 191, 36, 0.35);
+        }
+        @keyframes flashFade {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        .start-screen {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.96);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 24px;
+        }
+        .start-screen.hide { display: none; }
+        .start-title { color: #38bdf8; font-size: 24px; margin-bottom: 12px; text-align: center; }
+        .start-desc { color: #94a3b8; font-size: 14px; line-height: 1.6; text-align: center; margin-bottom: 24px; }
+        .btn { background: linear-gradient(135deg, #0ea5e9, #06b6d4); color: #fff; border: none; padding: 14px 36px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .go-screen {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 24px;
+        }
+        .go-screen.show { display: flex; }
+        .go-title { color: #f87171; font-size: 26px; margin-bottom: 8px; }
+        .go-score { color: #38bdf8; font-size: 22px; margin-bottom: 20px; }
+        .rank-box { width: 100%; max-width: 320px; background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 16px; max-height: 200px; overflow-y: auto; }
+        .rank-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #334155; font-size: 14px; color: #e2e8f0; }
+        .rank-row:last-child { border-bottom: none; }
+        .go-inp { width: 100%; max-width: 320px; padding: 12px; margin-bottom: 10px; border: 2px solid #334155; border-radius: 10px; font-size: 16px; text-align: center; background: #1e293b; color: #e2e8f0; }
+        .go-inp:focus { outline: none; border-color: #38bdf8; }
+        .btn-submit { width: 100%; max-width: 320px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <canvas id="c"></canvas>
+        <div class="flash" id="flash"></div>
+        <div class="power-up-msg" id="powerUpMsg">Power UP!</div>
+        <div class="hud">
+            <span>점수: <span id="scoreEl">0</span> · 웨이브 <span id="waveEl">1</span></span>
+            <span>주사기: <span id="fireEl">1</span></span>
+        </div>
+        <div class="start-screen" id="startScreen">
+            <div class="start-title">🛡️ Immunity War</div>
+            <div class="start-desc">좌우 드래그로 이동. 🟦 파란 문=화력UP 🟥 빨간 문=화력DOWN<br>📦 보급상자 파괴 시 무기 업그레이드! 👹 보스 처치 후 👑 황금 게이트!</div>
+            <button class="btn" id="btnStart">시작</button>
+        </div>
+        <div class="go-screen" id="goScreen">
+            <div class="go-title">게임 오버</div>
+            <div class="go-score">점수: <span id="finalScore">0</span></div>
+            <div class="rank-box" id="rankList">로딩 중...</div>
+            <input type="text" class="go-inp" id="playerName" placeholder="이름 (최대 10자)" maxlength="10">
+            <button class="btn btn-submit" id="btnSubmit">랭킹 등록</button>
+            <button class="btn" id="btnRetry">다시 하기</button>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        var GAS_URL = 'https://script.google.com/macros/s/AKfycbxKQ7DSfpBhiBE3JOSam39bvs8argQaf0s6hQJIMpH5l5knJKVfEfcW3lpCTODjLBMkiw/exec';
+
+        var canvas = document.getElementById('c');
+        var ctx = canvas.getContext('2d');
+        var cw, ch;
+        function resize() {
+            var w = canvas.parentElement.clientWidth;
+            var h = canvas.parentElement.clientHeight;
+            cw = w;
+            ch = h;
+            canvas.width = w;
+            canvas.height = h;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        var FPS = 60;
+        var state = {
+            run: false,
+            score: 0,
+            wave: 1,
+            gameTime: 0,
+            difficultyScale: 1,
+            px: 0.5,
+            playerW: 44,
+            playerH: 36,
+            fireCount: 1,
+            fireInterval: 10,
+            fireTick: 0,
+            syringes: [],
+            enemies: [],
+            gates: [],
+            particles: [],
+            damageNumbers: [],
+            boxes: [],
+            boss: null,
+            shakeTime: 0,
+            shakeMag: 0,
+            spawnEnemy: 0,
+            spawnGate: 0,
+            spawnBox: 0,
+            weaponOverride: null,
+            weaponUntil: 0
+        };
+
+        var SYR_W = 14, SYR_H = 24, SYR_VY = -11;
+        var GATE_W_RATIO = 0.2, GATE_H = 56, GATE_VY = 2.2, GATE_GAP = 0.08;
+        var ENEMY_SPAWN_BASE = 50, GATE_SPAWN = 320, BOX_SPAWN = 400;
+        var BOSS_HP_BASE = 80;
+        var WAVE_BOSS_EVERY = 5;
+        var DIFFICULTY_INTERVAL = 30 * FPS; // 30초
+
+        var goodLabels = ['비타민 섭취 x2', '운동 +10', '수면 x3', '물 섭취 +20'];
+        var badLabels = ['음주 ÷2', '흡연 -10', '과로 ÷2'];
+
+        function screenShake(magnitude, duration) {
+            state.shakeMag = Math.max(state.shakeMag, magnitude);
+            state.shakeTime = Math.max(state.shakeTime, duration || 15);
+        }
+
+        function addDamageNumber(x, y, value, isCrit) {
+            state.damageNumbers.push({
+                x: x + (Math.random() - 0.5) * 20,
+                y: y,
+                val: value,
+                crit: !!isCrit,
+                life: 1,
+                vy: -3
+            });
+        }
+
+        function addParticles(x, y, color, count, scale) {
+            count = count || 14;
+            scale = scale || 1;
+            for (var i = 0; i < count; i++) {
+                var a = (Math.PI * 2 * i) / count + Math.random();
+                var v = (3 + Math.random() * 4) * scale;
+                state.particles.push({
+                    x: x, y: y,
+                    vx: Math.cos(a) * v,
+                    vy: Math.sin(a) * v - 2 * scale,
+                    life: 1,
+                    color: color,
+                    r: (4 + Math.random() * 4) * scale
+                });
+            }
+        }
+
+        function addBossExplosion(x, y) {
+            addParticles(x, y, '#fbbf24', 28, 1.8);
+            addParticles(x, y, '#f87171', 20, 1.2);
+            screenShake(12, 25);
+        }
+
+        function addSyringe(angleOffset, isGiant) {
+            var baseX = state.px * cw;
+            var count = isGiant ? 1 : (state.weaponOverride === 'shotgun' ? 5 : state.fireCount);
+            var angles = [];
+            if (state.weaponOverride === 'shotgun') {
+                for (var i = 0; i < 5; i++) angles.push(-30 + 15 * i + (angleOffset || 0));
+            } else if (isGiant) {
+                angles = [0];
+            } else {
+                var spread = (state.fireCount * 8) / 2;
+                for (var i = 0; i < count; i++)
+                    angles.push(count === 1 ? 0 : (i - (count - 1) / 2) * 6);
+            }
+            var gw = isGiant ? 32 : SYR_W;
+            var gh = isGiant ? 48 : SYR_H;
+            var vy = isGiant ? -14 : SYR_VY;
+            for (var j = 0; j < angles.length; j++) {
+                var rad = (angles[j] * Math.PI) / 180;
+                state.syringes.push({
+                    x: baseX - gw / 2 + Math.sin(rad) * 20,
+                    y: ch - state.playerH - 20,
+                    w: gw,
+                    h: gh,
+                    vy: vy * Math.cos(rad),
+                    vx: Math.sin(rad) * 4,
+                    giant: !!isGiant,
+                    piercing: !!isGiant
+                });
+            }
+        }
+
+        function addEnemy() {
+            var type = Math.random() > 0.5 ? '🦠' : '😈';
+            var r = 18 + Math.random() * 14;
+            var hp = Math.max(1, Math.floor((1 + r / 12) * state.difficultyScale));
+            var vy = (2 + Math.random() * 1.5) * state.difficultyScale;
+            state.enemies.push({
+                x: r + Math.random() * (cw - r * 2),
+                y: -r * 2,
+                r: r,
+                hp: hp,
+                maxHp: hp,
+                vy: vy,
+                type: type
+            });
+        }
+
+        function addBoss() {
+            var type = Math.random() > 0.5 ? '☠️' : '👹';
+            var r = 52;
+            var hp = Math.floor(BOSS_HP_BASE * state.difficultyScale);
+            state.boss = {
+                x: cw / 2,
+                y: -r - 20,
+                r: r,
+                hp: hp,
+                maxHp: hp,
+                vy: 1.2,
+                type: type
+            };
+        }
+
+        function addGoldenGate(x) {
+            var gw = cw * 0.35;
+            state.gates.push({
+                x: Math.max(10, Math.min(cw - gw - 10, x - gw / 2)),
+                y: -GATE_H,
+                w: gw,
+                h: GATE_H,
+                vy: GATE_VY,
+                good: true,
+                gold: true,
+                label: '👑 슈퍼 면역 x5'
+            });
+        }
+
+        function addGates() {
+            var good = Math.random() > 0.5;
+            var gw = cw * GATE_W_RATIO;
+            var gap = cw * GATE_GAP;
+            var total = gw * 2 + gap;
+            var sx = (cw - total) / 2;
+            var l1 = good ? goodLabels[Math.floor(Math.random() * goodLabels.length)] : badLabels[Math.floor(Math.random() * badLabels.length)];
+            var l2 = good ? badLabels[Math.floor(Math.random() * badLabels.length)] : goodLabels[Math.floor(Math.random() * goodLabels.length)];
+            state.gates.push(
+                { x: sx, y: -GATE_H, w: gw, h: GATE_H, vy: GATE_VY, good: good, label: l1 },
+                { x: sx + gw + gap, y: -GATE_H, w: gw, h: GATE_H, vy: GATE_VY, good: !good, label: l2 }
+            );
+        }
+
+        function addBox() {
+            var type = Math.random() > 0.5 ? '📦' : '🚧';
+            var w = 56 + Math.random() * 24;
+            var h = 44 + Math.random() * 16;
+            var hp = 15 + Math.floor(Math.random() * 15);
+            state.boxes.push({
+                x: 30 + Math.random() * (cw - 60 - w),
+                y: -h - 20,
+                w: w,
+                h: h,
+                hp: hp,
+                maxHp: hp,
+                vy: 2,
+                type: type
+            });
+        }
+
+        function dropWeaponUpgrade(x, y) {
+            var kinds = ['shotgun', 'gatling', 'giant'];
+            var kind = kinds[Math.floor(Math.random() * kinds.length)];
+            state.weaponOverride = kind;
+            state.weaponUntil = FPS * 15; // 15초
+            addParticles(x, y, '#38bdf8', 16, 1.2);
+            screenShake(6, 12);
+        }
+
+        var touchStartX = 0, dragPx = 0;
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (!state.run) return;
+            touchStartX = e.touches[0].clientX;
+            dragPx = state.px;
+        }, { passive: false });
+        canvas.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            if (!state.run) return;
+            var dx = (e.touches[0].clientX - touchStartX) / cw;
+            state.px = Math.max(0.06, Math.min(0.94, dragPx + dx));
+            touchStartX = e.touches[0].clientX;
+            dragPx = state.px;
+        }, { passive: false });
+
+        var md = false, mx0 = 0, px0 = 0;
+        canvas.addEventListener('mousedown', function(e) {
+            if (!state.run) return;
+            md = true;
+            mx0 = e.clientX;
+            px0 = state.px;
+        });
+        canvas.addEventListener('mousemove', function(e) {
+            if (!md || !state.run) return;
+            state.px = Math.max(0.06, Math.min(0.94, px0 + (e.clientX - mx0) / cw));
+            mx0 = e.clientX;
+            px0 = state.px;
+        });
+        canvas.addEventListener('mouseup', function() { md = false; });
+        canvas.addEventListener('mouseleave', function() { md = false; });
+
+        function hitBulletEnemy(b, e) {
+            var bx = b.x + b.w / 2, by = b.y + b.h / 2;
+            var dx = bx - e.x, dy = by - e.y;
+            var r = (e.r || 20) + (b.giant ? 8 : 0);
+            return dx * dx + dy * dy < r * r;
+        }
+
+        function hitBulletBox(b, box) {
+            var bx = b.x + b.w / 2, by = b.y + b.h / 2;
+            return bx >= box.x && bx <= box.x + box.w && by >= box.y && by <= box.y + box.h;
+        }
+
+        function hitPlayerGate(g) {
+            var px = state.px * cw;
+            var py = ch - state.playerH - 8;
+            var pt = py, pb = py + state.playerH;
+            var gt = g.y, gb = g.y + g.h;
+            if (pb >= gt && pt <= gb && px >= g.x && px <= g.x + g.w) return true;
+            return false;
+        }
+
+        function loop() {
+            if (!state.run) {
+                requestAnimationFrame(loop);
+                return;
+            }
+
+            state.gameTime++;
+            if (state.gameTime % DIFFICULTY_INTERVAL === 0 && state.gameTime > 0)
+                state.difficultyScale = Math.min(3, state.difficultyScale + 0.1);
+
+            if (state.weaponUntil > 0) {
+                state.weaponUntil--;
+                if (state.weaponUntil <= 0) state.weaponOverride = null;
+            }
+
+            var shakeX = 0, shakeY = 0;
+            if (state.shakeTime > 0) {
+                state.shakeTime--;
+                shakeX = (Math.random() - 0.5) * 2 * state.shakeMag;
+                shakeY = (Math.random() - 0.5) * 2 * state.shakeMag;
+                if (state.shakeTime <= 0) state.shakeMag = 0;
+            }
+
+            ctx.save();
+            ctx.translate(shakeX, shakeY);
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(-10, -10, cw + 20, ch + 20);
+
+            var fireInterval = state.fireInterval;
+            if (state.weaponOverride === 'gatling') fireInterval = Math.max(3, Math.floor(state.fireInterval / 3));
+            state.fireTick++;
+            if (state.fireTick >= fireInterval) {
+                state.fireTick = 0;
+                if (state.weaponOverride === 'giant') {
+                    addSyringe(0, true);
+                } else {
+                    addSyringe();
+                }
+            }
+
+            for (var i = state.syringes.length - 1; i >= 0; i--) {
+                var s = state.syringes[i];
+                s.y += s.vy;
+                if (s.vx) s.x += s.vx;
+                if (s.y + s.h < 0 || s.x < -50 || s.x > cw + 50) {
+                    state.syringes.splice(i, 1);
+                    continue;
+                }
+                var fontSize = s.giant ? 36 : 20;
+                ctx.font = fontSize + 'px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('💉', s.x + s.w / 2, s.y + s.h / 2);
+
+                var hitSomething = false;
+                if (state.boss && hitBulletEnemy(s, state.boss)) {
+                    var bossDmg = s.giant ? 5 : 1;
+                    state.boss.hp -= bossDmg;
+                    addDamageNumber(state.boss.x, state.boss.y - state.boss.r - 10, bossDmg, state.boss.hp <= state.boss.maxHp * 0.2);
+                    state.syringes.splice(i, 1);
+                    hitSomething = true;
+                    if (state.boss.hp <= 0) {
+                        addBossExplosion(state.boss.x, state.boss.y);
+                        state.score += 500;
+                        addGoldenGate(state.boss.x);
+                        state.boss = null;
+                        state.wave++;
+                        state.fireCount = Math.min(20, state.fireCount + 2);
+                        document.getElementById('waveEl').textContent = state.wave;
+                        document.getElementById('fireEl').textContent = state.fireCount;
+                    }
+                    if (hitSomething) break;
+                }
+
+                for (var j = state.enemies.length - 1; j >= 0; j--) {
+                    if (hitSomething && !s.piercing) break;
+                    var e = state.enemies[j];
+                    if (hitBulletEnemy(s, e)) {
+                        var dmg = s.giant ? 5 : 1;
+                        e.hp -= dmg;
+                        addDamageNumber(e.x, e.y - e.r, dmg, dmg > 1);
+                        if (!s.piercing) { state.syringes.splice(i, 1); hitSomething = true; }
+                        if (e.hp <= 0) {
+                            addParticles(e.x, e.y, '#f87171', 16, 1);
+                            state.enemies.splice(j, 1);
+                            state.score += 15;
+                            screenShake(2, 4);
+                            if (state.enemies.length === 0 && !(state.wave % WAVE_BOSS_EVERY === 0 && state.wave > 0)) {
+                                state.wave++;
+                                document.getElementById('waveEl').textContent = state.wave;
+                            }
+                        }
+                        if (!s.piercing) break;
+                    }
+                }
+
+                for (var b = 0; b < state.boxes.length && !hitSomething; b++) {
+                    var box = state.boxes[b];
+                    if (hitBulletBox(s, box)) {
+                        box.hp--;
+                        addDamageNumber(box.x + box.w / 2, box.y, 1, false);
+                        if (!s.piercing) state.syringes.splice(i, 1);
+                        hitSomething = true;
+                        if (box.hp <= 0) {
+                            addParticles(box.x + box.w / 2, box.y + box.h / 2, '#fbbf24', 22, 1.3);
+                            screenShake(8, 18);
+                            dropWeaponUpgrade(box.x + box.w / 2, box.y + box.h / 2);
+                            state.boxes.splice(b, 1);
+                            state.score += 50;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            var isBossWave = state.wave % WAVE_BOSS_EVERY === 0 && state.wave > 0;
+            if (!state.boss && isBossWave && state.enemies.length === 0) {
+                addBoss();
+            }
+
+            if (!state.boss) {
+                state.spawnEnemy++;
+                var spawnRate = Math.max(25, ENEMY_SPAWN_BASE - Math.floor(state.wave * 2));
+                if (state.spawnEnemy >= spawnRate) {
+                    state.spawnEnemy = 0;
+                    if (!isBossWave) addEnemy();
+                }
+            }
+
+            for (var i = 0; i < state.enemies.length; i++) {
+                var e = state.enemies[i];
+                e.y += e.vy;
+                if (e.y - e.r > ch) {
+                    state.run = false;
+                    document.getElementById('finalScore').textContent = state.score;
+                    document.getElementById('goScreen').classList.add('show');
+                    loadRankings();
+                    ctx.restore();
+                    requestAnimationFrame(loop);
+                    return;
+                }
+                ctx.font = (e.r * 1.6) + 'px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(e.type, e.x, e.y);
+            }
+
+            if (state.boss) {
+                var boss = state.boss;
+                boss.y += boss.vy;
+                if (boss.y - boss.r > ch) {
+                    state.boss = null;
+                    state.wave++;
+                    document.getElementById('waveEl').textContent = state.wave;
+                }
+                if (state.boss) {
+                    var barW = 80;
+                    var barX = boss.x - barW / 2;
+                    var barY = boss.y - boss.r - 18;
+                    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                    ctx.fillRect(barX - 2, barY - 2, barW + 4, 10 + 4);
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fillRect(barX, barY, barW, 10);
+                    ctx.fillStyle = '#22c55e';
+                    ctx.fillRect(barX, barY, barW * (boss.hp / boss.maxHp), 10);
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(barX, barY, barW, 10);
+                    ctx.font = (boss.r * 1.4) + 'px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(boss.type, boss.x, boss.y);
+                }
+            }
+
+            state.spawnBox++;
+            if (state.spawnBox >= BOX_SPAWN && state.boxes.length < 2 && !state.boss) {
+                state.spawnBox = 0;
+                addBox();
+            }
+
+            for (var b = 0; b < state.boxes.length; b++) {
+                var box = state.boxes[b];
+                box.y += box.vy;
+                if (box.y > ch + 50) {
+                    state.boxes.splice(b, 1);
+                    b--;
+                    continue;
+                }
+                var hurt = 1 - box.hp / box.maxHp;
+                ctx.globalAlpha = 0.7 + 0.3 * (1 - hurt);
+                ctx.fillStyle = hurt > 0.5 ? '#b91c1c' : '#1e293b';
+                ctx.fillRect(box.x, box.y, box.w, box.h);
+                ctx.strokeStyle = hurt > 0.5 ? '#f87171' : '#64748b';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(box.x, box.y, box.w, box.h);
+                ctx.globalAlpha = 1;
+                ctx.font = (Math.min(box.w, box.h) * 0.7) + 'px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(box.type, box.x + box.w / 2, box.y + box.h / 2);
+            }
+
+            state.spawnGate++;
+            if (state.spawnGate >= GATE_SPAWN && !state.boss) {
+                state.spawnGate = 0;
+                addGates();
+            }
+
+            for (var k = state.gates.length - 1; k >= 0; k--) {
+                var g = state.gates[k];
+                g.y += g.vy;
+                if (g.y > ch + GATE_H) {
+                    state.gates.splice(k, 1);
+                    continue;
+                }
+                if (g.gold) {
+                    ctx.fillStyle = 'rgba(251, 191, 36, 0.95)';
+                    ctx.strokeStyle = '#fcd34d';
+                } else {
+                    ctx.fillStyle = g.good ? 'rgba(59, 130, 246, 0.9)' : 'rgba(239, 68, 68, 0.9)';
+                    ctx.strokeStyle = g.good ? '#60a5fa' : '#f87171';
+                }
+                ctx.fillRect(g.x, g.y, g.w, g.h);
+                ctx.lineWidth = 3;
+                ctx.strokeRect(g.x, g.y, g.w, g.h);
+                ctx.fillStyle = '#fff';
+                ctx.font = g.gold ? '14px sans-serif' : '11px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(g.label, g.x + g.w / 2, g.y + g.h / 2 + 4);
+
+                if (hitPlayerGate(g)) {
+                    if (g.good) {
+                        if (g.gold) {
+                            state.fireCount = Math.min(20, state.fireCount * 5);
+                            state.fireInterval = Math.max(3, state.fireInterval - 2);
+                            document.getElementById('powerUpMsg').textContent = '👑 슈퍼 면역!';
+                            document.getElementById('powerUpMsg').classList.add('gold');
+                            document.getElementById('flash').classList.add('gold');
+                        } else {
+                            state.fireCount = Math.min(12, state.fireCount + (Math.random() > 0.5 ? 2 : 1));
+                            state.fireInterval = Math.max(5, state.fireInterval - 1);
+                            document.getElementById('powerUpMsg').textContent = 'Power UP!';
+                            document.getElementById('powerUpMsg').classList.remove('gold');
+                            document.getElementById('flash').classList.remove('gold');
+                        }
+                        document.getElementById('powerUpMsg').classList.add('show');
+                        document.getElementById('flash').classList.add('on');
+                        setTimeout(function() {
+                            document.getElementById('powerUpMsg').classList.remove('show');
+                            document.getElementById('flash').classList.remove('on');
+                            document.getElementById('flash').classList.remove('gold');
+                        }, 1200);
+                    } else {
+                        state.fireCount = Math.max(1, Math.floor(state.fireCount / 2));
+                        state.fireInterval = Math.min(18, state.fireInterval + 2);
+                    }
+                    document.getElementById('fireEl').textContent = state.fireCount;
+                    state.gates.splice(k, 1);
+                }
+            }
+
+            for (var d = state.damageNumbers.length - 1; d >= 0; d--) {
+                var dn = state.damageNumbers[d];
+                dn.y += dn.vy;
+                dn.life -= 0.03;
+                if (dn.life <= 0) {
+                    state.damageNumbers.splice(d, 1);
+                    continue;
+                }
+                ctx.globalAlpha = dn.life;
+                ctx.font = dn.crit ? 'bold 22px sans-serif' : '16px sans-serif';
+                ctx.fillStyle = dn.crit ? '#ef4444' : '#fff';
+                ctx.textAlign = 'center';
+                ctx.fillText('-' + dn.val, dn.x, dn.y);
+                ctx.globalAlpha = 1;
+            }
+
+            for (var p = state.particles.length - 1; p >= 0; p--) {
+                var pt = state.particles[p];
+                pt.x += pt.vx;
+                pt.y += pt.vy;
+                pt.life -= 0.035;
+                if (pt.life <= 0) {
+                    state.particles.splice(p, 1);
+                    continue;
+                }
+                ctx.globalAlpha = pt.life;
+                ctx.fillStyle = pt.color;
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+
+            var py = ch - state.playerH - 12;
+            ctx.font = '32px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('👨‍⚕️', state.px * cw, py + state.playerH / 2);
+
+            document.getElementById('scoreEl').textContent = state.score;
+            ctx.restore();
+            requestAnimationFrame(loop);
+        }
+
+        function start() {
+            state.run = true;
+            state.score = 0;
+            state.wave = 1;
+            state.gameTime = 0;
+            state.difficultyScale = 1;
+            state.px = 0.5;
+            state.fireCount = 1;
+            state.fireInterval = 10;
+            state.fireTick = 0;
+            state.syringes = [];
+            state.enemies = [];
+            state.gates = [];
+            state.particles = [];
+            state.damageNumbers = [];
+            state.boxes = [];
+            state.boss = null;
+            state.shakeTime = 0;
+            state.weaponOverride = null;
+            state.weaponUntil = 0;
+            state.spawnEnemy = 0;
+            state.spawnGate = 0;
+            state.spawnBox = 0;
+            document.getElementById('scoreEl').textContent = '0';
+            document.getElementById('waveEl').textContent = '1';
+            document.getElementById('fireEl').textContent = '1';
+            document.getElementById('startScreen').classList.add('hide');
+            document.getElementById('goScreen').classList.remove('show');
+            requestAnimationFrame(loop);
+        }
+
+        function loadRankings() {
+            var el = document.getElementById('rankList');
+            el.textContent = '로딩 중...';
+            if (!GAS_URL || !GAS_URL.trim()) {
+                el.innerHTML = '랭킹 서버 URL 없음';
+                return;
+            }
+            fetch(GAS_URL + '?action=getRankings&t=' + Date.now(), { method: 'GET' })
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    if (d.ok && d.rankings && d.rankings.length) {
+                        var html = '';
+                        d.rankings.forEach(function(r, i) {
+                            var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) + '위';
+                            html += '<div class="rank-row">' + medal + ' ' + (r.name || '익명') + ' <strong>' + r.score + '</strong></div>';
+                        });
+                        el.innerHTML = html;
+                    } else {
+                        el.innerHTML = '아직 랭킹이 없습니다.';
+                    }
+                })
+                .catch(function() {
+                    el.textContent = '랭킹 불러오기 실패';
+                });
+        }
+
+        function submitRanking() {
+            var name = (document.getElementById('playerName').value || '').trim();
+            if (!name) {
+                alert('이름을 입력해 주세요.');
+                return;
+            }
+            if (name.length > 10) name = name.substring(0, 10);
+            if (!GAS_URL || !GAS_URL.trim()) {
+                alert('서버 연결 실패');
+                return;
+            }
+
+            var btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.textContent = '등록 중...';
+
+            var body = JSON.stringify({
+                action: 'saveRanking',
+                payload: { name: name, score: state.score }
+            });
+
+            fetch(GAS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: body,
+                keepalive: true
+            })
+                .then(function(res) { return res.text(); })
+                .then(function(text) {
+                    var data;
+                    try { data = JSON.parse(text); } catch (e) { data = { ok: false }; }
+                    if (data.ok) {
+                        alert('랭킹 등록 완료!');
+                        loadRankings();
+                        document.getElementById('playerName').value = '';
+                    } else {
+                        alert('등록 실패: ' + (data.message || '오류'));
+                    }
+                })
+                .catch(function(err) {
+                    console.error(err);
+                    alert('등록 중 오류가 발생했습니다.');
+                })
+                .then(function() {
+                    btn.disabled = false;
+                    btn.textContent = '랭킹 등록';
+                });
+        }
+
+        document.getElementById('btnStart').addEventListener('click', start);
+        document.getElementById('btnRetry').addEventListener('click', start);
+        document.getElementById('btnSubmit').addEventListener('click', submitRanking);
+        document.getElementById('playerName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') submitRanking();
+        });
+
+        requestAnimationFrame(loop);
+    })();
+    </script>
+</body>
+</html>
