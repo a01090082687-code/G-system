@@ -15,7 +15,9 @@
         .start-screen.hide { display: none; }
         .start-title { color: #fff; font-size: 26px; margin-bottom: 12px; text-align: center; }
         .start-desc { color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.7; text-align: center; margin-bottom: 24px; }
-        .btn { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; border: none; padding: 16px 40px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .btn { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; border: none; padding: 16px 40px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; transition: transform 0.08s ease; }
+        .btn:hover { filter: brightness(1.05); }
+        .btn:active { transform: scale(0.97); }
         .version-info { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 14px; }
         .version-info.version-title { margin-top: 6px; margin-bottom: 6px; font-size: 13px; color: rgba(255,255,255,0.95); }
         .go-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 24px; }
@@ -52,19 +54,21 @@
         var canvas = document.getElementById('c');
         var ctx = canvas ? canvas.getContext('2d') : null;
         var cw = 0, ch = 0;
+        var playerScreenX = 48;
         function resize() {
             if (!canvas || !canvas.parentElement) return;
             cw = canvas.parentElement.clientWidth;
             ch = canvas.parentElement.clientHeight;
             canvas.width = cw;
             canvas.height = ch;
+            playerScreenX = cw > 0 ? Math.round(cw * 0.15) : 48;
+            if (state.run) state.px = playerScreenX;
         }
         window.addEventListener('resize', resize);
         resize();
 
         var animationId = null;
         var Gupaengi = '🐧';
-        var PLAYER_SCREEN_X = 100;
         var PLAYER_W = 44, PLAYER_H = 40;
         var GRAVITY_UP = -0.36;
         var GRAVITY_DOWN = -0.56;
@@ -84,12 +88,18 @@
 
         var state = {
             run: false, score: 0, health: 3, shield: 0,
-            px: PLAYER_SCREEN_X, py: 0, vy: 0,
+            px: 48, py: 0, vy: 0,
             speed: RUN_SPEED_BASE, scrollX: 0, gameTime: 0,
             canDoubleJump: true,
             obstacles: [], items: [],
             nextSpawn: SPAWN_INTERVAL_BASE, floorY: 0
         };
+        var lastHudScore = -1;
+        var scoreElRef = null;
+        function updateHudScore() {
+            if (!scoreElRef) scoreElRef = document.getElementById('scoreEl');
+            if (scoreElRef && state.score !== lastHudScore) { scoreElRef.textContent = state.score; lastHudScore = state.score; }
+        }
 
         function getFloorY() { return ch * FLOOR_Y_RATIO - GROUND_H; }
 
@@ -189,8 +199,7 @@
             }
 
             state.score += Math.max(0, Math.floor(state.speed * 0.25));
-            var sel = document.getElementById('scoreEl');
-            if (sel) sel.textContent = state.score;
+            updateHudScore();
 
             ctx.fillStyle = '#334155';
             ctx.fillRect(0, 0, cw, ch);
@@ -278,7 +287,7 @@
             state.score = 0;
             state.health = 3;
             state.shield = 0;
-            state.px = PLAYER_SCREEN_X;
+            state.px = playerScreenX;
             state.py = 0;
             state.vy = 0;
             state.speed = RUN_SPEED_BASE;
@@ -291,10 +300,10 @@
             state.floorY = getFloorY();
             var hel = document.getElementById('healthEl');
             var sel = document.getElementById('shieldEl');
-            var scoreEl = document.getElementById('scoreEl');
             if (hel) hel.textContent = '3';
             if (sel) sel.textContent = '0';
-            if (scoreEl) scoreEl.textContent = '0';
+            lastHudScore = 0;
+            updateHudScore();
             document.getElementById('startScreen').classList.add('hide');
             document.getElementById('goScreen').classList.remove('show');
             animationId = requestAnimationFrame(loop);
@@ -304,6 +313,12 @@
         var btnRetry = document.getElementById('btnRetry');
         if (btnStart) btnStart.addEventListener('click', startGame);
         if (btnRetry) btnRetry.addEventListener('click', startGame);
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && animationId) { cancelAnimationFrame(animationId); animationId = null; }
+            else if (!document.hidden && state.run && !animationId) animationId = requestAnimationFrame(loop);
+        });
+
         animationId = requestAnimationFrame(loop);
     })();
     </script>

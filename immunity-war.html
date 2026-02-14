@@ -23,7 +23,9 @@
         .start-screen.hide { display: none; }
         .start-title { color: #fff; font-size: 24px; margin-bottom: 12px; text-align: center; }
         .start-desc { color: rgba(255,255,255,0.95); font-size: 14px; line-height: 1.6; text-align: center; margin-bottom: 24px; }
-        .btn { background: linear-gradient(135deg, #0ea5e9, #06b6d4); color: #fff; border: none; padding: 14px 36px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .btn { background: linear-gradient(135deg, #0ea5e9, #06b6d4); color: #fff; border: none; padding: 14px 36px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; transition: transform 0.08s ease; }
+        .btn:hover { filter: brightness(1.05); }
+        .btn:active { transform: scale(0.97); }
         .version-info { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 14px; }
         .version-info.version-title { margin-top: 6px; margin-bottom: 8px; font-size: 14px; color: rgba(255,255,255,0.95); }
         .go-screen { position: absolute; inset: 0; background: rgba(255,255,255,0.96); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 24px; }
@@ -92,8 +94,9 @@
         var SYR_W = 14, SYR_H = 24, SYR_VY = -11;
         var GATE_H = 56, GATE_VY = 1.6;
         var GATE_SPAWN_TICKS = 4800;
-        var ENEMY_SPAWN_TICKS = 18;
-        var ENEMY_COUNT_PER_SPAWN = 8;
+        var ENEMY_SPAWN_TICKS = 147;
+        var ENEMY_COUNT_PER_SPAWN = 3;
+        var MAX_ENEMY_ON_SCREEN = 14;
         var DIFFICULTY_TICKS = 60 * 30;
 
         var state = {
@@ -104,13 +107,30 @@
             syringes: [], enemies: [], gates: [], particles: [], damageNumbers: [],
             shakeTime: 0, shakeMag: 0, spawnEnemyTick: 0, spawnGateTick: 0
         };
+        var lastHudScore = -1;
+        var lastHudFire = -1;
+        var scoreEl = null;
+        var fireEl = null;
+        function getHudEls() {
+            if (!scoreEl) scoreEl = document.getElementById('scoreEl');
+            if (!fireEl) fireEl = document.getElementById('fireEl');
+        }
+        function updateHud() {
+            getHudEls();
+            if (scoreEl && state.score !== lastHudScore) { scoreEl.textContent = state.score; lastHudScore = state.score; }
+            if (fireEl && state.fireCount !== lastHudFire) { fireEl.textContent = state.fireCount; lastHudFire = state.fireCount; }
+        }
 
         function spawnX() { return cw * SAFE_ZONE + Math.random() * (cw * SPAWN_ZONE); }
 
         function screenShake(mag, dur) { state.shakeMag = Math.max(state.shakeMag, mag || 4); state.shakeTime = Math.max(state.shakeTime, dur || 12); }
-        function addDamageNum(x, y, val) { state.damageNumbers.push({ x: x + (Math.random()-0.5)*16, y: y, val: val, life: 1, vy: -2.5 }); }
+        function addDamageNum(x, y, val) {
+            if (state.damageNumbers.length > 12) state.damageNumbers.splice(0, 4);
+            state.damageNumbers.push({ x: x + (Math.random()-0.5)*16, y: y, val: val, life: 1, vy: -2.5 });
+        }
         function addParticles(x, y, color, n) {
-            n = n || 12;
+            n = n || 6;
+            if (state.particles.length > 50) state.particles.splice(0, 15);
             for (var i = 0; i < n; i++) {
                 var a = (Math.PI*2*i)/n + Math.random();
                 var v = 2.5 + Math.random()*3;
@@ -137,7 +157,7 @@
         function addEnemy() {
             var type = Math.random() > 0.5 ? '🦠' : '😈';
             var r = 14 + Math.random() * 12;
-            var hp = Math.max(1, Math.floor((1 + r/14) * state.difficultyScale * 1.2));
+            var hp = Math.max(1, Math.floor((1 + r/14) * state.difficultyScale * 1.2 * 2.5));
             var vy = (0.7 + Math.random()*0.5) * state.difficultyScale * 1.25 * 1.5;
             state.enemies.push({
                 x: spawnX(),
@@ -233,7 +253,7 @@
                     state.syringes.splice(i,1);
                     hit = true;
                     if (e.hp <= 0) {
-                        addParticles(e.x, e.y, '#f87171', 14);
+                        addParticles(e.x, e.y, '#f87171', 6);
                         state.enemies.splice(j,1);
                         state.score += 12;
                         screenShake(2, 5);
@@ -243,9 +263,12 @@
             }
 
             state.spawnEnemyTick++;
-            if (state.spawnEnemyTick >= ENEMY_SPAWN_TICKS) {
+            if (state.spawnEnemyTick >= ENEMY_SPAWN_TICKS && state.enemies.length < MAX_ENEMY_ON_SCREEN) {
                 state.spawnEnemyTick = 0;
-                for (var n = 0; n < ENEMY_COUNT_PER_SPAWN; n++) addEnemy();
+                for (var n = 0; n < ENEMY_COUNT_PER_SPAWN; n++) {
+                    if (state.enemies.length >= MAX_ENEMY_ON_SCREEN) break;
+                    addEnemy();
+                }
             }
 
             state.spawnGateTick++;
@@ -271,10 +294,9 @@
                 if (ex2 >= h.left && ex1 <= h.right && ey2 >= h.top && ey1 <= h.bottom) {
                     state.fireCount = Math.max(0, state.fireCount - 2);
                     state.enemies.splice(i,1);
-                    addParticles(e.x, e.y, '#f87171', 10);
+                    addParticles(e.x, e.y, '#f87171', 5);
                     screenShake(4, 10);
-                    var fel = document.getElementById('fireEl');
-                    if (fel) fel.textContent = state.fireCount;
+                    updateHud();
                     if (state.fireCount <= 0) {
                         state.run = false;
                         if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
@@ -308,8 +330,7 @@
                         state.fireCount = Math.max(1, Math.floor(state.fireCount/2));
                         state.fireInterval = Math.min(18, state.fireInterval + 1);
                     }
-                    var fel = document.getElementById('fireEl');
-                    if (fel) fel.textContent = state.fireCount;
+                    updateHud();
                     state.gates.splice(k,1);
                 }
             }
@@ -381,8 +402,7 @@
             ctx.fillStyle = '#333';
             ctx.fillText(Gupaengi, cx, cy);
 
-            var se = document.getElementById('scoreEl');
-            if (se) se.textContent = state.score;
+            updateHud();
             ctx.restore();
         }
 
@@ -407,10 +427,9 @@
             state.shakeTime = 0;
             state.spawnEnemyTick = 0;
             state.spawnGateTick = 0;
-            var sel = document.getElementById('scoreEl');
-            var fel = document.getElementById('fireEl');
-            if (sel) sel.textContent = '0';
-            if (fel) fel.textContent = '3';
+            lastHudScore = 0;
+            lastHudFire = 3;
+            updateHud();
             document.getElementById('startScreen').classList.add('hide');
             document.getElementById('goScreen').classList.remove('show');
             animationId = requestAnimationFrame(loop);
@@ -464,6 +483,11 @@
         document.getElementById('btnRetry').addEventListener('click', function() { startGame(); });
         document.getElementById('btnSubmit').addEventListener('click', submitRanking);
         document.getElementById('playerName').addEventListener('keypress', function(e) { if (e.key === 'Enter') submitRanking(); });
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && animationId) { cancelAnimationFrame(animationId); animationId = null; }
+            else if (!document.hidden && state.run && !animationId) animationId = requestAnimationFrame(loop);
+        });
 
         animationId = requestAnimationFrame(loop);
     })();
