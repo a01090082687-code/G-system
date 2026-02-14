@@ -107,6 +107,7 @@
         .start-desc { color: rgba(255, 255, 255, 0.95); font-size: 14px; line-height: 1.6; text-align: center; margin-bottom: 24px; }
         .btn { background: linear-gradient(135deg, #0ea5e9, #06b6d4); color: #fff; border: none; padding: 14px 36px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; }
         .version-info { color: rgba(255, 255, 255, 0.7); font-size: 12px; margin-top: 14px; }
+        .version-info.version-title { margin-top: 6px; margin-bottom: 8px; font-size: 14px; color: rgba(255, 255, 255, 0.95); }
         .go-screen {
             position: absolute;
             inset: 0;
@@ -140,9 +141,9 @@
         </div>
         <div class="start-screen" id="startScreen">
             <div class="start-title">🛡️ Immunity War</div>
+            <div class="version-info version-title">Ver 3.0 (2026.02.14 13:30 Update)</div>
             <div class="start-desc">좌우 드래그로 이동. 🟦 파란 문=화력UP 🟥 빨간 문=화력DOWN<br>📦 보급상자 파괴 시 무기 업그레이드! 👹 보스 처치 후 👑 황금 게이트!</div>
             <button class="btn" id="btnStart">게임 시작</button>
-            <div class="version-info">Ver 2.0 (Updated: 2026.02.14 13:10)</div>
         </div>
         <div class="go-screen" id="goScreen">
             <div class="go-title">게임 오버</div>
@@ -207,7 +208,7 @@
 
         var SYR_W = 14, SYR_H = 24, SYR_VY = -11;
         var GATE_W_RATIO = 0.22, GATE_H = 56, GATE_VY = 1.6, GATE_GAP = 0.06;
-        var ENEMY_SPAWN_BASE = 55, GATE_SPAWN = 320, BOX_SPAWN = 400;
+        var ENEMY_SPAWN_BASE = 28, GATE_SPAWN = 640, BOX_SPAWN = 400;
         var BOSS_HP_BASE = 80;
         var WAVE_BOSS_EVERY = 5;
         var DIFFICULTY_INTERVAL = 30 * FPS; // 30초
@@ -543,7 +544,7 @@
 
             if (!state.boss) {
                 state.spawnEnemy++;
-                var spawnRate = Math.max(25, ENEMY_SPAWN_BASE - Math.floor(state.wave * 2));
+                var spawnRate = Math.max(14, ENEMY_SPAWN_BASE - Math.floor(state.wave * 1));
                 if (state.spawnEnemy >= spawnRate) {
                     state.spawnEnemy = 0;
                     if (!isBossWave) addEnemy();
