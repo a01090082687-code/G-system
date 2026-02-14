@@ -36,7 +36,7 @@
         </div>
         <div class="start-screen" id="startScreen">
             <div class="start-title">🐧 헬스 런</div>
-            <div class="version-info version-title">Ver 1.0 (Run)</div>
+            <div class="version-info version-title">Ver 1.1 (Run)</div>
             <div class="start-desc"><strong>장르:</strong> 왼쪽에서 오른쪽으로 달리는 횡스크롤 런닝 액션.<br><strong>조작:</strong> 화면 터치 시 점프, 공중 터치 시 2단 점프.<br><strong>장애물:</strong> 바닥의 🦠 바이러스(점프해서 피하기), 공중의 💨 매연(숙이거나 그냥 피하기).<br><strong>아이템:</strong> 마스크(쉴드), 비타민(점수).</div>
             <button class="btn" id="btnStart">달리기 시작</button>
         </div>
@@ -66,10 +66,10 @@
 
         var animationId = null;
         var Gupaengi = '🐧';
-        var GRAVITY_UP = 0.32;
-        var GRAVITY_DOWN = 0.48;
-        var JUMP_POWER = -13.2;
-        var DOUBLE_JUMP_POWER = -11;
+        var GRAVITY_UP = -0.32;
+        var GRAVITY_DOWN = -0.48;
+        var JUMP_POWER = 13.2;
+        var DOUBLE_JUMP_POWER = 11;
         var RUN_SPEED_BASE = 8;
         var SPEED_INCREASE = 0.0008;
         var FLOOR_Y_RATIO = 0.82;
@@ -159,11 +159,11 @@
                 if (Math.random() < 0.5) spawnItem();
             }
 
-            var gravity = state.vy < 0 ? GRAVITY_UP : GRAVITY_DOWN;
+            var gravity = state.vy > 0 ? GRAVITY_UP : GRAVITY_DOWN;
             state.vy += gravity;
             state.py += state.vy;
             state.floorY = getFloorY();
-            if (state.py > 0) {
+            if (state.py < 0) {
                 state.py = 0;
                 state.vy = 0;
                 state.canDoubleJump = true;
@@ -283,7 +283,7 @@
         function jump() {
             if (!state.run) return;
             if (state.ducking) return;
-            if (state.py >= 0) {
+            if (state.py <= 0) {
                 state.vy = JUMP_POWER;
                 state.canDoubleJump = true;
             } else if (state.canDoubleJump) {
@@ -295,14 +295,14 @@
         function onTouchStart(e) {
             e.preventDefault();
             if (!state.run) return;
-            if (state.py < 0) {
+            if (state.py > 0) {
                 jump();
                 return;
             }
             state.touchDown = true;
             state.groundTouch = true;
             state.duckTimeout = setTimeout(function() {
-                if (state.touchDown && state.run && state.py >= 0) state.ducking = true;
+                if (state.touchDown && state.run && state.py <= 0) state.ducking = true;
             }, DUCK_PRESS_MS);
         }
         function onTouchEnd(e) {
@@ -310,7 +310,7 @@
             state.touchDown = false;
             if (state.duckTimeout) { clearTimeout(state.duckTimeout); state.duckTimeout = null; }
             if (state.ducking) state.ducking = false;
-            else if (state.groundTouch && state.run && state.py >= 0) jump();
+            else if (state.groundTouch && state.run && state.py <= 0) jump();
             state.groundTouch = false;
         }
         canvas.addEventListener('touchstart', onTouchStart, { passive: false });
