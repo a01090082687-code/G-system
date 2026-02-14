@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>면역 전쟁 | G-SYSTEM</title>
+    <title>보건 서바이벌: 구팽이의 전설 | G-SYSTEM</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: linear-gradient(180deg, #E0F7FA 0%, #80DEEA 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: none; -webkit-tap-highlight-color: transparent; }
@@ -11,14 +11,6 @@
         #c { display: block; width: 100%; height: 100%; background: linear-gradient(180deg, #E0F7FA 0%, #80DEEA 100%); }
         .hud { position: absolute; top: 0; left: 0; right: 0; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 5; }
         .hud span { color: #333; font-size: 16px; font-weight: bold; font-family: sans-serif; text-shadow: 0 0 2px rgba(255,255,255,0.8); }
-        .power-up-msg { position: absolute; left: 50%; top: 35%; transform: translate(-50%, -50%); font-size: 28px; font-weight: bold; color: #38bdf8; text-shadow: 0 0 20px rgba(56,189,248,0.8); pointer-events: none; z-index: 15; opacity: 0; transition: opacity 0.1s; }
-        .power-up-msg.show { animation: powerUpFade 1.2s ease-out forwards; }
-        .power-up-msg.gold { color: #fbbf24; text-shadow: 0 0 24px rgba(251,191,36,0.9); font-size: 32px; }
-        @keyframes powerUpFade { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -60%) scale(1); } }
-        .flash { position: absolute; inset: 0; background: rgba(56,189,248,0.25); pointer-events: none; z-index: 12; opacity: 0; }
-        .flash.on { animation: flashFade 0.35s ease-out forwards; }
-        .flash.gold { background: rgba(251,191,36,0.35); }
-        @keyframes flashFade { 0% { opacity: 1; } 100% { opacity: 0; } }
         .start-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.75); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 24px; }
         .start-screen.hide { display: none; }
         .start-title { color: #fff; font-size: 24px; margin-bottom: 12px; text-align: center; }
@@ -34,22 +26,34 @@
         .rank-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.1); font-size: 14px; }
         .rank-row:last-child { border-bottom: none; }
         .go-inp { width: 100%; max-width: 320px; padding: 12px; margin-bottom: 10px; border: 2px solid rgba(0,0,0,0.2); border-radius: 10px; font-size: 16px; text-align: center; background: #fff; color: #333; }
-        .go-inp:focus { outline: none; border-color: #0ea5e9; }
         .btn-submit { width: 100%; max-width: 320px; margin-bottom: 10px; }
+        .xp-bar-wrap { position: absolute; top: 0; left: 0; right: 0; height: 12px; background: rgba(0,0,0,0.3); z-index: 6; pointer-events: none; }
+        .xp-bar-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 0%; transition: width 0.2s; }
+        .skill-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 25; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .skill-overlay.show { display: flex; }
+        .skill-overlay h2 { color: #fff; font-size: 20px; margin-bottom: 20px; position: absolute; top: 24px; left: 50%; transform: translateX(-50%); }
+        .skill-cards { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: 360px; }
+        .skill-card { width: 100px; padding: 16px; background: linear-gradient(145deg, #1e293b, #334155); border: 2px solid #64748b; border-radius: 12px; cursor: pointer; text-align: center; color: #fff; font-size: 28px; line-height: 1.3; transition: transform 0.15s, border-color 0.15s; }
+        .skill-card:hover { transform: scale(1.05); border-color: #38bdf8; }
+        .skill-card span { display: block; font-size: 11px; color: #94a3b8; margin-top: 6px; }
     </style>
 </head>
 <body>
     <div class="wrap">
         <canvas id="c"></canvas>
-        <div class="flash" id="flash"></div>
-        <div class="power-up-msg" id="powerUpMsg">Power UP!</div>
+        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBarFill"></div></div>
         <div class="hud">
-            <span>점수: <span id="scoreEl">0</span> · 웨이브 <span id="waveEl">1</span> · 💉<span id="fireEl">3</span></span>
+            <span>Lv.<span id="levelEl">1</span> 점수: <span id="scoreEl">0</span> · 웨이브 <span id="waveEl">1</span></span>
+            <span id="skillIconsEl">주사기: 1</span>
+        </div>
+        <div class="skill-overlay" id="skillOverlay">
+            <h2>스킬 선택 (3지 선다)</h2>
+            <div class="skill-cards" id="skillCards"></div>
         </div>
         <div class="start-screen" id="startScreen">
-            <div class="start-title">🐧 면역 전쟁</div>
-            <div class="version-info version-title">Ver 4.1 (Shooter)</div>
-            <div class="start-desc">구팽이가 화면 아래에서 위로 주사기를 발사합니다.<br>좌우로 움직이며 문을 통과해 파워업!</div>
+            <div class="start-title">🛡️ 보건 서바이벌: 구팽이의 전설</div>
+            <div class="version-info version-title">Ver 1.0 (Survival)</div>
+            <div class="start-desc">적 처치 → 경험치 구슬 수집 → 레벨업 시 스킬 3지 선다!<br>드래그로 좌우 이동 · 초기 주사기 1발</div>
             <button class="btn" id="btnStart">게임 시작</button>
         </div>
         <div class="go-screen" id="goScreen">
@@ -76,26 +80,78 @@
         var animationId = null;
         var Gupaengi = '🐧';
         var state = {
-            run: false, score: 0, wave: 1, gameTime: 0, difficultyScale: 0.2,
-            px: 0.5, playerW: 52, playerH: 48, fireCount: 3, fireInterval: 10, fireTick: 0,
+            run: false, paused: false, score: 0, wave: 1, gameTime: 0, difficultyScale: 0.2,
+            px: 0.5, playerW: 52, playerH: 48, fireCount: 1, fireInterval: 10, fireTick: 0,
             syringes: [], enemies: [], gates: [], particles: [], damageNumbers: [], boxes: [], boss: null,
-            shakeTime: 0, shakeMag: 0, spawnEnemy: 0, spawnGate: 0, spawnBox: 0
+            bossBullets: [], bossLastShot: 0, shakeTime: 0, shakeMag: 0, spawnEnemy: 0, spawnGate: 0, spawnBox: 0,
+            xp: 0, xpToLevel: 10, level: 1, xpOrbs: [], shield: 0,
+            skills: { ricochet: false, speed: false, multishot: 0, crit: false, poison: false }
         };
 
         var SYR_W = 14, SYR_H = 24, SYR_VY = -11;
         var GATE_H = 56, GATE_VY = 1.6;
-        var ENEMY_SPAWN_BASE = 18, GATE_SPAWN = 1280, BOX_SPAWN = 400;
+        var ENEMY_SPAWN_BASE = 16, GATE_SPAWN = 2000, BOX_SPAWN = 400;
         var SPEED_MULT = 1.3;
         var PLAYER_BOTTOM_MARGIN = 0.15;
         var HITBOX_SCALE = 0.6;
-        var BOSS_HP_BASE = 60;
+        var BOSS_HP_BASE = 80;
         var WAVE_BOSS_EVERY = 5;
         var DIFFICULTY_INTERVAL = 30 * FPS;
+        var XP_PER_KILL = 3;
+        var XP_PICKUP_RADIUS = 70;
+        var XP_MAGNET_SPEED = 9;
+        var BOSS_SHOOT_INTERVAL = 5 * FPS;
+        var BOSS_BULLET_SPEED = 5;
+        var SKILLS_LIST = [
+            { id: 'ricochet', name: '안전모', icon: '⛑️', desc: '총알 1회 튕김' },
+            { id: 'speed', name: '안전화', icon: '🥾', desc: '발사속도 +20%' },
+            { id: 'multishot', name: '절연장갑', icon: '🧤', desc: '총알 +1' },
+            { id: 'crit', name: '보안경', icon: '🥽', desc: '치명타 +15%' },
+            { id: 'poison', name: '방진마스크', icon: '😷', desc: '주변 독가스' }
+        ];
 
+        function addXpOrb(x, y, value) { state.xpOrbs.push({ x: x, y: y, value: value || XP_PER_KILL, vy: 2, landed: false }); }
         function screenShake(magnitude, duration) { state.shakeMag = Math.max(state.shakeMag, magnitude); state.shakeTime = Math.max(state.shakeTime, duration || 15); }
-        function addDamageNumber(x, y, value, isCrit) {
-            state.damageNumbers.push({ x: x + (Math.random()-0.5)*20, y: y, val: value, crit: !!isCrit, life: 1, vy: -3 });
+        function showLevelUpCards() {
+            var pool = SKILLS_LIST.slice();
+            var chosen = [];
+            for (var i = 0; i < 3 && pool.length; i++) { var idx = Math.floor(Math.random() * pool.length); chosen.push(pool.splice(idx, 1)[0]); }
+            var el = document.getElementById('skillCards');
+            el.innerHTML = '';
+            chosen.forEach(function(s) {
+                var btn = document.createElement('button');
+                btn.className = 'skill-card';
+                btn.innerHTML = s.icon + '<span>' + s.name + '<br>' + s.desc + '</span>';
+                btn.onclick = (function(sk) { return function() { applySkill(sk.id); document.getElementById('skillOverlay').classList.remove('show'); state.paused = false; updateSkillIcons(); }; })(s);
+                el.appendChild(btn);
+            });
+            document.getElementById('skillOverlay').classList.add('show');
         }
+        function applySkill(id) {
+            if (id === 'ricochet') state.skills.ricochet = true;
+            if (id === 'speed') state.skills.speed = true;
+            if (id === 'multishot') state.skills.multishot++;
+            if (id === 'crit') state.skills.crit = true;
+            if (id === 'poison') state.skills.poison = true;
+            state.level++;
+            state.xp = 0;
+            state.xpToLevel = 10 + state.level * 6;
+            document.getElementById('levelEl').textContent = state.level;
+            document.getElementById('xpBarFill').style.width = '0%';
+        }
+        function updateSkillIcons() {
+            var s = state.skills;
+            var arr = [];
+            if (state.shield > 0) arr.push('🛡️×' + state.shield);
+            if (s.ricochet) arr.push('⛑️');
+            if (s.speed) arr.push('🥾');
+            if (s.multishot) arr.push('🧤×' + s.multishot);
+            if (s.crit) arr.push('🥽');
+            if (s.poison) arr.push('😷');
+            document.getElementById('skillIconsEl').textContent = arr.length ? arr.join(' ') : '주사기: ' + (state.fireCount + state.skills.multishot);
+        }
+
+        function addDamageNumber(x, y, value, isCrit) { state.damageNumbers.push({ x: x + (Math.random()-0.5)*20, y: y, val: value, crit: !!isCrit, life: 1, vy: -3 }); }
         function addParticles(x, y, color, count, scale) {
             count = count || 14; scale = scale || 1;
             for (var i = 0; i < count; i++) {
@@ -108,7 +164,7 @@
 
         function addSyringe() {
             var baseX = state.px * cw;
-            var count = Math.max(1, state.fireCount);
+            var count = Math.max(1, state.fireCount + state.skills.multishot);
             var py = ch * (1 - PLAYER_BOTTOM_MARGIN) - state.playerH;
             for (var i = 0; i < count; i++) {
                 var angle = count === 1 ? 0 : (i - (count-1)/2) * 6;
@@ -126,7 +182,8 @@
         function addEnemy() {
             var type = Math.random() > 0.5 ? '🦠' : '😈';
             var r = 16 + Math.random() * 10;
-            var hp = Math.max(1, Math.floor((1 + r/12) * state.difficultyScale));
+            var baseHp = Math.max(1, Math.floor((1 + r/12) * state.difficultyScale));
+            var hp = Math.max(4, baseHp * 4);
             var vy = (0.8 + Math.random()*0.6) * state.difficultyScale * SPEED_MULT;
             var x = cw*0.1 + Math.random()*(cw*0.8);
             state.enemies.push({ x: x, y: -r*2, r: r, hp: hp, maxHp: hp, vy: vy, type: type });
@@ -137,31 +194,19 @@
             var r = 52;
             var hp = Math.floor(BOSS_HP_BASE * state.difficultyScale);
             state.boss = { x: cw/2, y: -r-20, r: r, hp: hp, maxHp: hp, vy: 1.2*state.difficultyScale*SPEED_MULT, type: type };
-        }
-
-        function addGoldenGate() {
-            var gw = cw * 0.35;
-            var x = cw*0.1 + Math.random()*(cw*0.8 - gw);
-            state.gates.push({
-                x: x, y: -GATE_H, w: gw, h: GATE_H,
-                vy: GATE_VY * state.difficultyScale * SPEED_MULT,
-                good: true, gold: true, label: '👑 슈퍼 면역 x5'
-            });
+            state.bossLastShot = state.gameTime;
         }
 
         function addGates() {
             var gw = cw * 0.28;
             var gateVy = GATE_VY * state.difficultyScale * SPEED_MULT;
-            var roll = Math.random();
-            if (roll < 0.5) {
-                var x1 = cw*0.1 + Math.random()*(cw*0.8 - gw*2 - 20);
-                state.gates.push({ x: x1, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: true, gold: false, multBonus: 2, label: '💉 x2' });
-                state.gates.push({ x: x1 + gw + 20, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: false, label: '⚠️ 약화' });
-            } else {
-                var x2 = cw*0.1 + Math.random()*(cw*0.8 - gw*2 - 20);
-                state.gates.push({ x: x2, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: true, gold: false, addBonus: 10, label: '💉 +10' });
-                state.gates.push({ x: x2 + gw + 20, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: false, label: '⚠️ 약화' });
-            }
+            var x = cw*0.1 + Math.random()*(cw*0.8 - gw);
+            var kind = Math.random() < 0.5 ? 'heal' : 'xp';
+            state.gates.push({
+                x: x, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy,
+                type: kind,
+                label: kind === 'heal' ? '❤️ 체력 회복' : '⚡ 경험치 보너스'
+            });
         }
 
         function addBox() {
@@ -170,12 +215,6 @@
             var hp = 12 + Math.floor(Math.random()*12);
             var x = cw*0.1 + Math.random()*(cw*0.8 - w);
             state.boxes.push({ x: x, y: -h-20, w: w, h: h, hp: hp, maxHp: hp, vy: 1.4*state.difficultyScale*SPEED_MULT, type: type });
-        }
-
-        function dropWeaponUpgrade(x, y) {
-            state.fireCount = Math.min(99, state.fireCount + 3);
-            addParticles(x, y, '#38bdf8', 16, 1.2);
-            screenShake(6, 12);
         }
 
         canvas.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
@@ -195,30 +234,24 @@
         canvas.addEventListener('mouseup', function() { md = false; });
         canvas.addEventListener('mouseleave', function() { md = false; });
 
-        function hitBulletEnemy(b, e) {
-            var bx = b.x + b.w/2, by = b.y + b.h/2;
-            var dx = bx - e.x, dy = by - e.y, r = e.r || 20;
-            return dx*dx + dy*dy < r*r;
-        }
-        function hitBulletBox(b, box) {
-            var bx = b.x + b.w/2, by = b.y + b.h/2;
-            return bx >= box.x && bx <= box.x+box.w && by >= box.y && by <= box.y+box.h;
-        }
+        function hitBulletEnemy(b, e) { var bx = b.x+b.w/2, by = b.y+b.h/2; var dx = bx-e.x, dy = by-e.y; return dx*dx+dy*dy < (e.r||20)*(e.r||20); }
+        function hitBulletBox(b, box) { var bx = b.x+b.w/2, by = b.y+b.h/2; return bx>=box.x&&bx<=box.x+box.w&&by>=box.y&&by<=box.y+box.h; }
         function getPlayerHitbox() {
             var py = ch*(1-PLAYER_BOTTOM_MARGIN)-state.playerH;
-            var cx = state.px*cw, cy = py + state.playerH/2;
+            var cx = state.px*cw, cy = py+state.playerH/2;
             var hw = state.playerW*HITBOX_SCALE/2, hh = state.playerH*HITBOX_SCALE/2;
             return { left: cx-hw, right: cx+hw, top: cy-hh, bottom: cy+hh };
         }
         function hitPlayerGate(g) {
             var h = getPlayerHitbox();
-            if (g.y + g.h < h.top || g.y > h.bottom) return false;
-            if (h.right < g.x || h.left > g.x + g.w) return false;
+            if (g.y+g.h < h.top || g.y > h.bottom) return false;
+            if (h.right < g.x || h.left > g.x+g.w) return false;
             return true;
         }
 
         function loop() {
             if (!state.run) { animationId = requestAnimationFrame(loop); return; }
+            if (state.paused) { animationId = requestAnimationFrame(loop); return; }
 
             state.gameTime++;
             if (state.gameTime > 30*FPS && state.gameTime % DIFFICULTY_INTERVAL === 0)
@@ -240,32 +273,64 @@
             ctx.fillStyle = bgGrad;
             ctx.fillRect(-10,-10,cw+20,ch+20);
 
-            state.fireTick++;
-            if (state.fireTick >= state.fireInterval) {
-                state.fireTick = 0;
-                addSyringe();
+            var playerCx = state.px*cw;
+            var playerCy = ch*(1-PLAYER_BOTTOM_MARGIN)-state.playerH+state.playerH/2;
+            for (var oi = state.xpOrbs.length - 1; oi >= 0; oi--) {
+                var orb = state.xpOrbs[oi];
+                if (!orb.landed) {
+                    orb.y += orb.vy;
+                    if (orb.y >= ch-28) { orb.y = ch-28; orb.landed = true; }
+                } else {
+                    var dx = playerCx-orb.x, dy = playerCy-orb.y;
+                    var dist = Math.sqrt(dx*dx+dy*dy);
+                    if (dist < XP_PICKUP_RADIUS) {
+                        if (dist > 5) {
+                            orb.x += (dx/dist)*XP_MAGNET_SPEED;
+                            orb.y += (dy/dist)*XP_MAGNET_SPEED;
+                        } else {
+                            state.xp += orb.value;
+                            state.xpOrbs.splice(oi,1);
+                            if (state.xp >= state.xpToLevel) {
+                                state.paused = true;
+                                showLevelUpCards();
+                            }
+                        }
+                    }
+                }
+                ctx.fillStyle = '#3b82f6';
+                ctx.beginPath();
+                ctx.arc(orb.x, orb.y, 8, 0, Math.PI*2);
+                ctx.fill();
+                ctx.strokeStyle = '#60a5fa';
+                ctx.lineWidth = 2;
+                ctx.stroke();
             }
+            document.getElementById('xpBarFill').style.width = (state.xp/state.xpToLevel*100)+'%';
+
+            var fireInterval = state.fireInterval * (state.skills.speed ? 0.8 : 1);
+            state.fireTick++;
+            if (state.fireTick >= fireInterval) { state.fireTick = 0; addSyringe(); }
 
             for (var i = state.syringes.length - 1; i >= 0; i--) {
                 var s = state.syringes[i];
                 s.y += s.vy;
                 if (s.vx) s.x += s.vx;
-                if (s.y + s.h < 0 || s.y > ch+50 || s.x < -50 || s.x > cw+50) { state.syringes.splice(i,1); continue; }
+                if (s.y+s.h<0||s.y>ch+50||s.x<-50||s.x>cw+50) { state.syringes.splice(i,1); continue; }
                 ctx.font = '20px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('💉', s.x + s.w/2, s.y + s.h/2);
+                ctx.fillText('💉', s.x+s.w/2, s.y+s.h/2);
 
                 var hitSomething = false;
                 if (state.boss && hitBulletEnemy(s, state.boss)) {
                     state.boss.hp--;
-                    addDamageNumber(state.boss.x, state.boss.y - state.boss.r - 10, 1, state.boss.hp <= state.boss.maxHp*0.2);
+                    addDamageNumber(state.boss.x, state.boss.y-state.boss.r-10, 1, state.boss.hp<=state.boss.maxHp*0.2);
                     state.syringes.splice(i,1);
                     hitSomething = true;
                     if (state.boss.hp <= 0) {
                         addBossExplosion(state.boss.x, state.boss.y);
                         state.score += 500;
-                        addGoldenGate();
+                        state.xp = Math.min(state.xpToLevel-1, state.xp+state.xpToLevel);
                         state.boss = null;
                         state.wave++;
                         document.getElementById('waveEl').textContent = state.wave;
@@ -277,19 +342,31 @@
                     if (hitSomething) break;
                     var e = state.enemies[j];
                     if (hitBulletEnemy(s, e)) {
-                        e.hp--;
-                        addDamageNumber(e.x, e.y - e.r, 1, false);
+                        var dmg = (state.skills.crit && Math.random()<0.15) ? 2 : 1;
+                        e.hp -= dmg;
+                        addDamageNumber(e.x, e.y-e.r, dmg, dmg>1);
                         state.syringes.splice(i,1);
                         hitSomething = true;
                         if (e.hp <= 0) {
                             addParticles(e.x, e.y, '#f87171', 16, 1);
+                            addXpOrb(e.x, e.y, XP_PER_KILL);
                             state.enemies.splice(j,1);
                             state.score += 15;
                             screenShake(2,4);
-                            if (state.enemies.length === 0 && !(state.wave % WAVE_BOSS_EVERY === 0 && state.wave > 0)) {
-                                state.wave++;
-                                document.getElementById('waveEl').textContent = state.wave;
+                            if (state.skills.ricochet && !s.ricochetUsed) {
+                                var nearest = null, nd = 1e9;
+                                for (var ei = 0; ei < state.enemies.length; ei++) {
+                                    var en = state.enemies[ei];
+                                    var d = (en.x-e.x)*(en.x-e.x)+(en.y-e.y)*(en.y-e.y);
+                                    if (d<nd && d>1) { nd=d; nearest=en; }
+                                }
+                                if (nearest) {
+                                    var ax = nearest.x-e.x, ay = nearest.y-e.y;
+                                    var len = Math.sqrt(ax*ax+ay*ay)||1;
+                                    state.syringes.push({ x: e.x-SYR_W/2, y: e.y, w: SYR_W, h: SYR_H, vx: (ax/len)*6, vy: (ay/len)*6, ricochetUsed: true });
+                                }
                             }
+                            if (state.enemies.length === 0 && !(state.wave%WAVE_BOSS_EVERY===0&&state.wave>0)) { state.wave++; document.getElementById('waveEl').textContent = state.wave; }
                         }
                         break;
                     }
@@ -305,7 +382,7 @@
                         if (box.hp <= 0) {
                             addParticles(box.x+box.w/2, box.y+box.h/2, '#fbbf24', 22, 1.3);
                             screenShake(8,18);
-                            dropWeaponUpgrade(box.x+box.w/2, box.y+box.h/2);
+                            state.fireCount = Math.min(99, state.fireCount+3);
                             state.boxes.splice(b,1);
                             state.score += 50;
                         }
@@ -320,16 +397,27 @@
             if (!state.boss) {
                 state.spawnEnemy++;
                 var spawnRate = Math.max(6, ENEMY_SPAWN_BASE - Math.floor(state.wave));
-                if (state.spawnEnemy >= spawnRate) {
-                    state.spawnEnemy = 0;
-                    if (!isBossWave) { addEnemy(); addEnemy(); }
-                }
+                if (state.spawnEnemy >= spawnRate) { state.spawnEnemy = 0; if (!isBossWave) { addEnemy(); addEnemy(); } }
             }
 
             var h = getPlayerHitbox();
+            var playerCenterY = ch*(1-PLAYER_BOTTOM_MARGIN)-state.playerH+state.playerH/2;
             for (var i = state.enemies.length - 1; i >= 0; i--) {
                 var e = state.enemies[i];
                 e.y += e.vy;
+                if (state.skills.poison) {
+                    var pdx = state.px*cw-e.x, pdy = playerCenterY-e.y;
+                    if (Math.sqrt(pdx*pdx+pdy*pdy) < 60) {
+                        e.hp -= 0.5;
+                        if (e.hp <= 0) {
+                            addXpOrb(e.x, e.y, XP_PER_KILL);
+                            state.score++;
+                            state.enemies.splice(i,1);
+                            addParticles(e.x, e.y, '#22c55e', 8, 0.8);
+                            continue;
+                        }
+                    }
+                }
                 if (e.y - e.r > ch) {
                     state.run = false;
                     if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
@@ -340,20 +428,23 @@
                     return;
                 }
                 var ex1 = e.x-e.r, ex2 = e.x+e.r, ey1 = e.y-e.r, ey2 = e.y+e.r;
-                if (ex2 >= h.left && ex1 <= h.right && ey2 >= h.top && ey1 <= h.bottom) {
-                    state.fireCount = Math.max(0, state.fireCount - 2);
-                    state.enemies.splice(i,1);
-                    addParticles(e.x, e.y, '#f87171', 12, 1);
-                    screenShake(4,8);
-                    document.getElementById('fireEl').textContent = state.fireCount;
-                    if (state.fireCount <= 0) {
-                        state.run = false;
-                        if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
-                        document.getElementById('finalScore').textContent = state.score;
-                        document.getElementById('goScreen').classList.add('show');
-                        loadRankings();
-                        ctx.restore();
-                        return;
+                if (ex2>=h.left&&ex1<=h.right&&ey2>=h.top&&ey1<=h.bottom) {
+                    if (state.shield > 0) { state.shield--; updateSkillIcons(); state.enemies.splice(i,1); addParticles(e.x,e.y,'#f87171',12,1); screenShake(4,8); }
+                    else {
+                        state.fireCount = Math.max(0, state.fireCount-2);
+                        state.enemies.splice(i,1);
+                        addParticles(e.x,e.y,'#f87171',12,1);
+                        screenShake(4,8);
+                        document.getElementById('fireEl').textContent = state.fireCount;
+                        if (state.fireCount <= 0) {
+                            state.run = false;
+                            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+                            document.getElementById('finalScore').textContent = state.score;
+                            document.getElementById('goScreen').classList.add('show');
+                            loadRankings();
+                            ctx.restore();
+                            return;
+                        }
                     }
                 }
             }
@@ -371,16 +462,16 @@
                 boss.y += boss.vy;
                 if (boss.y - boss.r > ch) { state.boss = null; state.wave++; document.getElementById('waveEl').textContent = state.wave; }
                 if (state.boss) {
-                    var barW = 80, barX = boss.x - barW/2, barY = boss.y - boss.r - 18;
+                    var barMargin = 20, barW = cw - barMargin*2, barX = barMargin, barY = 10, barH = 14;
                     ctx.fillStyle = 'rgba(0,0,0,0.6)';
-                    ctx.fillRect(barX-2, barY-2, barW+4, 14);
+                    ctx.fillRect(barX-2, barY-2, barW+4, barH+4);
                     ctx.fillStyle = '#ef4444';
-                    ctx.fillRect(barX, barY, barW, 10);
+                    ctx.fillRect(barX, barY, barW, barH);
                     ctx.fillStyle = '#22c55e';
-                    ctx.fillRect(barX, barY, barW*(boss.hp/boss.maxHp), 10);
+                    ctx.fillRect(barX, barY, barW*(boss.hp/boss.maxHp), barH);
                     ctx.strokeStyle = '#fff';
                     ctx.lineWidth = 1;
-                    ctx.strokeRect(barX, barY, barW, 10);
+                    ctx.strokeRect(barX, barY, barW, barH);
                     ctx.font = (boss.r*1.4)+'px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -391,15 +482,82 @@
             state.spawnBox++;
             if (state.spawnBox >= BOX_SPAWN && state.boxes.length < 2 && !state.boss) { state.spawnBox = 0; addBox(); }
 
+            state.spawnGate++;
+            if (state.spawnGate >= GATE_SPAWN && !state.boss) { state.spawnGate = 0; addGates(); }
+
+            for (var k = state.gates.length - 1; k >= 0; k--) {
+                var g = state.gates[k];
+                g.y += g.vy;
+                if (g.y > ch+GATE_H) { state.gates.splice(k,1); continue; }
+                ctx.fillStyle = g.type==='heal' ? 'rgba(34,197,94,0.9)' : 'rgba(251,191,36,0.9)';
+                ctx.strokeStyle = g.type==='heal' ? '#22c55e' : '#fbbf24';
+                ctx.fillRect(g.x, g.y, g.w, g.h);
+                ctx.lineWidth = 3;
+                ctx.strokeRect(g.x, g.y, g.w, g.h);
+                ctx.fillStyle = '#fff';
+                ctx.font = '11px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(g.label||'', g.x+g.w/2, g.y+g.h/2+4);
+                if (hitPlayerGate(g)) {
+                    if (g.type==='heal') { state.shield = Math.min(3, (state.shield||0)+1); updateSkillIcons(); }
+                    if (g.type==='xp') state.xp = Math.min(state.xpToLevel-1, state.xp+15);
+                    state.gates.splice(k,1);
+                }
+            }
+
+            var playerCxForBoss = state.px*cw;
+            var playerCyForBoss = ch*(1-PLAYER_BOTTOM_MARGIN)-state.playerH+state.playerH/2;
+            for (var bi = state.bossBullets.length - 1; bi >= 0; bi--) {
+                var bb = state.bossBullets[bi];
+                bb.x += bb.vx;
+                bb.y += bb.vy;
+                if (bb.x<-20||bb.x>cw+20||bb.y<-20||bb.y>ch+20) { state.bossBullets.splice(bi,1); continue; }
+                var hb = getPlayerHitbox();
+                var br = bb.r||10;
+                if (bb.x+br>=hb.left&&bb.x-br<=hb.right&&bb.y+br>=hb.top&&bb.y-br<=hb.bottom) {
+                    if (state.shield > 0) { state.shield--; updateSkillIcons(); }
+                    else {
+                        state.fireCount = Math.max(0, state.fireCount-1);
+                        document.getElementById('fireEl').textContent = state.fireCount;
+                        if (state.fireCount <= 0) {
+                            state.run = false;
+                            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+                            document.getElementById('finalScore').textContent = state.score;
+                            document.getElementById('goScreen').classList.add('show');
+                            loadRankings();
+                            ctx.restore();
+                            return;
+                        }
+                    }
+                    state.bossBullets.splice(bi,1);
+                }
+            }
+            state.bossBullets.forEach(function(bb) {
+                ctx.fillStyle = '#dc2626';
+                ctx.beginPath();
+                ctx.arc(bb.x, bb.y, bb.r||10, 0, Math.PI*2);
+                ctx.fill();
+                ctx.strokeStyle = '#991b1b';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+            if (state.boss && state.gameTime - state.bossLastShot >= BOSS_SHOOT_INTERVAL) {
+                state.bossLastShot = state.gameTime;
+                var boss = state.boss;
+                var dx = playerCxForBoss-boss.x, dy = playerCyForBoss-boss.y;
+                var len = Math.sqrt(dx*dx+dy*dy)||1;
+                state.bossBullets.push({ x: boss.x, y: boss.y, vx: (dx/len)*BOSS_BULLET_SPEED, vy: (dy/len)*BOSS_BULLET_SPEED, r: 10 });
+            }
+
             for (var b = 0; b < state.boxes.length; b++) {
                 var box = state.boxes[b];
                 box.y += box.vy;
                 if (box.y > ch+50) { state.boxes.splice(b,1); b--; continue; }
-                var hurt = 1 - box.hp/box.maxHp;
-                ctx.globalAlpha = 0.7 + 0.3*(1-hurt);
-                ctx.fillStyle = hurt > 0.5 ? '#b91c1c' : '#1e293b';
+                var hurt = 1-box.hp/box.maxHp;
+                ctx.globalAlpha = 0.7+0.3*(1-hurt);
+                ctx.fillStyle = hurt>0.5 ? '#b91c1c' : '#1e293b';
                 ctx.fillRect(box.x, box.y, box.w, box.h);
-                ctx.strokeStyle = hurt > 0.5 ? '#f87171' : '#64748b';
+                ctx.strokeStyle = hurt>0.5 ? '#f87171' : '#64748b';
                 ctx.lineWidth = 2;
                 ctx.strokeRect(box.x, box.y, box.w, box.h);
                 ctx.globalAlpha = 1;
@@ -407,55 +565,6 @@
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(box.type, box.x+box.w/2, box.y+box.h/2);
-            }
-
-            state.spawnGate++;
-            if (state.spawnGate >= GATE_SPAWN && !state.boss) { state.spawnGate = 0; addGates(); }
-
-            for (var k = state.gates.length - 1; k >= 0; k--) {
-                var g = state.gates[k];
-                g.y += g.vy;
-                if (g.y > ch + GATE_H) { state.gates.splice(k,1); continue; }
-                if (g.gold) { ctx.fillStyle = 'rgba(251,191,36,0.95)'; ctx.strokeStyle = '#fcd34d'; }
-                else { ctx.fillStyle = g.good ? 'rgba(59,130,246,0.9)' : 'rgba(239,68,68,0.9)'; ctx.strokeStyle = g.good ? '#60a5fa' : '#f87171'; }
-                ctx.fillRect(g.x, g.y, g.w, g.h);
-                ctx.lineWidth = 3;
-                ctx.strokeRect(g.x, g.y, g.w, g.h);
-                ctx.fillStyle = '#fff';
-                ctx.font = g.gold ? '14px sans-serif' : '11px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(g.label, g.x+g.w/2, g.y+g.h/2+4);
-
-                if (hitPlayerGate(g)) {
-                    if (g.good) {
-                        if (g.gold) {
-                            state.fireCount = Math.min(99, state.fireCount * 5);
-                            state.fireInterval = Math.max(3, state.fireInterval - 2);
-                            document.getElementById('powerUpMsg').textContent = '👑 슈퍼 면역!';
-                            document.getElementById('powerUpMsg').classList.add('gold');
-                            document.getElementById('flash').classList.add('gold');
-                        } else {
-                            if (g.multBonus) state.fireCount = Math.min(99, state.fireCount * g.multBonus);
-                            else state.fireCount = Math.min(99, state.fireCount + (g.addBonus || 1));
-                            state.fireInterval = Math.max(4, state.fireInterval - 1);
-                            document.getElementById('powerUpMsg').textContent = 'Power UP!';
-                            document.getElementById('powerUpMsg').classList.remove('gold');
-                            document.getElementById('flash').classList.remove('gold');
-                        }
-                        document.getElementById('powerUpMsg').classList.add('show');
-                        document.getElementById('flash').classList.add('on');
-                        setTimeout(function() {
-                            document.getElementById('powerUpMsg').classList.remove('show');
-                            document.getElementById('flash').classList.remove('on');
-                            document.getElementById('flash').classList.remove('gold');
-                        }, 1200);
-                    } else {
-                        state.fireCount = Math.max(1, Math.floor(state.fireCount/2));
-                        state.fireInterval = Math.min(20, state.fireInterval + 1);
-                    }
-                    document.getElementById('fireEl').textContent = state.fireCount;
-                    state.gates.splice(k,1);
-                }
             }
 
             for (var d = state.damageNumbers.length - 1; d >= 0; d--) {
@@ -487,7 +596,7 @@
 
             var py = ch*(1-PLAYER_BOTTOM_MARGIN)-state.playerH;
             var playerCx = state.px*cw;
-            var playerCy = py + state.playerH/2;
+            var playerCy = py+state.playerH/2;
             ctx.font = 'bold 16px sans-serif';
             ctx.fillStyle = '#fbbf24';
             ctx.strokeStyle = '#333';
@@ -503,6 +612,7 @@
             ctx.fillText(Gupaengi, playerCx, playerCy);
 
             document.getElementById('scoreEl').textContent = state.score;
+            document.getElementById('fireEl').textContent = state.fireCount;
             ctx.restore();
             animationId = requestAnimationFrame(loop);
         }
@@ -515,7 +625,7 @@
             state.gameTime = 0;
             state.difficultyScale = 0.2;
             state.px = 0.5;
-            state.fireCount = 3;
+            state.fireCount = 1;
             state.fireInterval = 10;
             state.fireTick = 0;
             state.syringes = [];
@@ -525,13 +635,26 @@
             state.damageNumbers = [];
             state.boxes = [];
             state.boss = null;
+            state.bossBullets = [];
+            state.bossLastShot = 0;
+            state.paused = false;
+            state.xp = 0;
+            state.xpToLevel = 10;
+            state.level = 1;
+            state.xpOrbs = [];
+            state.shield = 0;
+            state.skills = { ricochet: false, speed: false, multishot: 0, crit: false, poison: false };
             state.shakeTime = 0;
             state.spawnEnemy = 0;
             state.spawnGate = 0;
             state.spawnBox = 0;
             document.getElementById('scoreEl').textContent = '0';
             document.getElementById('waveEl').textContent = '1';
-            document.getElementById('fireEl').textContent = '3';
+            document.getElementById('fireEl').textContent = '1';
+            document.getElementById('levelEl').textContent = '1';
+            document.getElementById('xpBarFill').style.width = '0%';
+            document.getElementById('skillOverlay').classList.remove('show');
+            updateSkillIcons();
             document.getElementById('startScreen').classList.add('hide');
             document.getElementById('goScreen').classList.remove('show');
             animationId = requestAnimationFrame(loop);
@@ -547,7 +670,7 @@
                     if (d.ok && d.rankings && d.rankings.length) {
                         var html = '';
                         d.rankings.forEach(function(r, i) {
-                            var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)+'위';
+                            var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'위';
                             html += '<div class="rank-row">'+medal+' '+(r.name||'익명')+' <strong>'+r.score+'</strong></div>';
                         });
                         el.innerHTML = html;
@@ -586,7 +709,7 @@
         document.getElementById('btnSubmit').addEventListener('click', submitRanking);
         document.getElementById('playerName').addEventListener('keypress', function(e) { if (e.key === 'Enter') submitRanking(); });
 
-        animationId = requestAnimationFrame(loop);
+        loadRankings();
     })();
     </script>
 </body>

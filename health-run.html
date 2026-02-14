@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>헬스 런 | G-SYSTEM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #1e293b; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        .wrap { width: 100%; max-width: 430px; height: 100vh; max-height: 820px; position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+        #c { display: block; width: 100%; height: 100%; background: #334155; }
+        .hud { position: absolute; top: 0; left: 0; right: 0; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 5; }
+        .hud span { color: #fff; font-size: 18px; font-weight: bold; font-family: sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+        .start-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 24px; }
+        .start-screen.hide { display: none; }
+        .start-title { color: #fff; font-size: 26px; margin-bottom: 12px; text-align: center; }
+        .start-desc { color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.7; text-align: center; margin-bottom: 24px; }
+        .btn { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; border: none; padding: 16px 40px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .version-info { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 14px; }
+        .go-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 24px; }
+        .go-screen.show { display: flex; }
+        .go-title { color: #fff; font-size: 28px; margin-bottom: 8px; font-weight: bold; }
+        .go-score { color: #fbbf24; font-size: 24px; margin-bottom: 24px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <canvas id="c"></canvas>
+        <div class="hud">
+            <span>❤️ <span id="healthEl">3</span> · 😷 <span id="shieldEl">0</span></span>
+            <span>점수: <span id="scoreEl">0</span></span>
+        </div>
+        <div class="start-screen" id="startScreen">
+            <div class="start-title">🐧 헬스 런</div>
+            <div class="version-info">Ver 1.0 (Run)</div>
+            <div class="start-desc">터치하면 점프! 공중에서 한 번 더 터치하면 2단 점프.<br>🦠 바이러스·💨 매연 피하고, 💊 비타민·😷 마스크 먹자!</div>
+            <button class="btn" id="btnStart">달리기 시작</button>
+        </div>
+        <div class="go-screen" id="goScreen">
+            <div class="go-title">게임 오버</div>
+            <div class="go-score">점수: <span id="finalScore">0</span></div>
+            <button class="btn" id="btnRetry">다시 하기</button>
+        </div>
+    </div>
+    <script>
+    (function() {
+        'use strict';
+        var canvas = document.getElementById('c');
+        var ctx = canvas.getContext('2d');
+        var cw, ch;
+
+        function resize() {
+            var w = canvas.parentElement.clientWidth;
+            var h = canvas.parentElement.clientHeight;
+            cw = w;
+            ch = h;
+            canvas.width = w;
+            canvas.height = h;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        var animationId = null;
+        var Gupaengi = '🐧';
+        var GRAVITY = 0.55;
+        var JUMP_POWER = -14;
+        var DOUBLE_JUMP_POWER = -12;
+        var RUN_SPEED_BASE = 8;
+        var SPEED_INCREASE = 0.0008;
+        var FLOOR_Y_RATIO = 0.82;
+        var PLAYER_W = 44;
+        var PLAYER_H = 40;
+        var OBSTACLE_W = 36;
+        var OBSTACLE_H = 36;
+        var ITEM_SIZE = 32;
+        var SPAWN_DISTANCE = 320;
+        var GROUND_HEIGHT = 28;
+
+        var state = {
+            run: false,
+            score: 0,
+            health: 3,
+            shield: 0,
+            px: 120,
+            py: 0,
+            vy: 0,
+            speed: RUN_SPEED_BASE,
+            scrollX: 0,
+            canDoubleJump: false,
+            obstacles: [],
+            items: [],
+            nextSpawn: SPAWN_DISTANCE,
+            floorY: 0
+        };
+
+        function getFloorY() { return ch * FLOOR_Y_RATIO - GROUND_HEIGHT; }
+
+        function hitTest(a, b, aw, ah, bw, bh) {
+            return a < b + bw && a + aw > b && (state.floorY - a - ah) < (state.floorY - b - bh) + bh && (state.floorY - a) > (state.floorY - b - bh);
+        }
+
+        function hitTestRect(px, py, pw, ph, ox, oy, ow, oh) {
+            var ax = px, ay = py;
+            var bx = ox, by = state.floorY - oy - oh;
+            return ax < bx + ow && ax + pw > bx && ay < by + oh && ay + ph > by;
+        }
+
+        function spawnObstacle() {
+            var isVirus = Math.random() < 0.55;
+            var x = state.scrollX + cw + OBSTACLE_W;
+            var y = isVirus ? 0 : (ch * 0.3 + Math.random() * ch * 0.35);
+            state.obstacles.push({
+                x: x,
+                y: y,
+                w: OBSTACLE_W,
+                h: OBSTACLE_H,
+                type: isVirus ? '🦠' : '💨'
+            });
+        }
+
+        function spawnItem() {
+            var isMask = Math.random() < 0.25;
+            var x = state.scrollX + cw + ITEM_SIZE;
+            var yGround = Math.random() < 0.5 ? 0 : (ch * 0.25 + Math.random() * ch * 0.3);
+            state.items.push({
+                x: x,
+                y: yGround,
+                w: ITEM_SIZE,
+                h: ITEM_SIZE,
+                type: isMask ? '😷' : '💊'
+            });
+        }
+
+        function loop() {
+            if (!state.run) {
+                animationId = requestAnimationFrame(loop);
+                return;
+            }
+
+            state.speed = RUN_SPEED_BASE + state.scrollX * SPEED_INCREASE;
+            state.scrollX += state.speed * 0.15;
+            state.nextSpawn -= state.speed * 0.15;
+
+            if (state.nextSpawn <= 0) {
+                state.nextSpawn = SPAWN_DISTANCE + Math.random() * 120;
+                if (Math.random() < 0.7) spawnObstacle();
+                if (Math.random() < 0.5) spawnItem();
+            }
+
+            state.vy += GRAVITY;
+            state.py += state.vy;
+            state.floorY = getFloorY();
+            if (state.py > 0) {
+                state.py = 0;
+                state.vy = 0;
+                state.canDoubleJump = true;
+            }
+
+            var playerLeft = state.px;
+            var playerBottom = state.floorY - state.py;
+            var playerTop = playerBottom - PLAYER_H;
+            var playerRight = playerLeft + PLAYER_W;
+
+            for (var i = state.obstacles.length - 1; i >= 0; i--) {
+                var o = state.obstacles[i];
+                o.x -= state.speed * 0.15;
+                if (o.x + o.w < state.scrollX - 50) {
+                    state.obstacles.splice(i, 1);
+                    continue;
+                }
+                var ox = o.x - state.scrollX;
+                var oy = state.floorY - o.y - o.h;
+                if (playerRight > ox && playerLeft < ox + o.w && playerBottom > oy && playerTop < oy + o.h) {
+                    state.obstacles.splice(i, 1);
+                    if (state.shield > 0) {
+                        state.shield--;
+                        document.getElementById('shieldEl').textContent = state.shield;
+                    } else {
+                        state.health--;
+                        document.getElementById('healthEl').textContent = state.health;
+                        if (state.health <= 0) {
+                            state.run = false;
+                            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+                            document.getElementById('finalScore').textContent = state.score;
+                            document.getElementById('goScreen').classList.add('show');
+                            return;
+                        }
+                    }
+                }
+            }
+
+            for (var i = state.items.length - 1; i >= 0; i--) {
+                var it = state.items[i];
+                it.x -= state.speed * 0.15;
+                if (it.x + it.w < state.scrollX - 50) {
+                    state.items.splice(i, 1);
+                    continue;
+                }
+                var ix = it.x - state.scrollX;
+                var iy = state.floorY - it.y - it.h;
+                if (playerRight > ix && playerLeft < ix + it.w && playerBottom > iy && playerTop < iy + it.h) {
+                    state.items.splice(i, 1);
+                    if (it.type === '😷') {
+                        state.shield = Math.min(2, state.shield + 1);
+                        document.getElementById('shieldEl').textContent = state.shield;
+                    } else {
+                        state.score += 50;
+                        document.getElementById('scoreEl').textContent = state.score;
+                    }
+                }
+            }
+
+            state.score += Math.floor(state.speed * 0.3);
+            document.getElementById('scoreEl').textContent = state.score;
+
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(0, 0, cw, ch);
+
+            var stripeW = 80;
+            var stripeOffset = (state.scrollX * 0.4) % (stripeW * 2);
+            for (var sx = -stripeOffset; sx < cw + stripeW; sx += stripeW * 2) {
+                ctx.fillStyle = 'rgba(0,0,0,0.15)';
+                ctx.fillRect(sx, 0, stripeW, ch);
+            }
+
+            var floorY = state.floorY;
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(0, floorY, cw + 200, ch - floorY + 20);
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(0, floorY, cw + 200, 4);
+
+            for (var i = 0; i < state.obstacles.length; i++) {
+                var o = state.obstacles[i];
+                var ox = o.x - state.scrollX;
+                if (ox < -50 || ox > cw + 50) continue;
+                var oy = floorY - o.y - o.h;
+                ctx.font = (o.h * 0.9) + 'px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(o.type, ox + o.w/2, oy + o.h/2);
+            }
+
+            for (var i = 0; i < state.items.length; i++) {
+                var it = state.items[i];
+                var ix = it.x - state.scrollX;
+                if (ix < -50 || ix > cw + 50) continue;
+                var iy = floorY - it.y - it.h;
+                ctx.font = (it.h * 0.9) + 'px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(it.type, ix + it.w/2, iy + it.h/2);
+            }
+
+            ctx.font = '44px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#333';
+            ctx.fillText(Gupaengi, state.px + PLAYER_W/2, floorY - state.py - PLAYER_H/2);
+
+            animationId = requestAnimationFrame(loop);
+        }
+
+        function jump() {
+            if (!state.run) return;
+            if (state.py >= 0) {
+                state.vy = JUMP_POWER;
+                state.canDoubleJump = true;
+            } else if (state.canDoubleJump) {
+                state.vy = DOUBLE_JUMP_POWER;
+                state.canDoubleJump = false;
+            }
+        }
+
+        canvas.addEventListener('touchstart', function(e) { e.preventDefault(); jump(); }, { passive: false });
+        canvas.addEventListener('click', function(e) { e.preventDefault(); jump(); });
+        document.addEventListener('keydown', function(e) { if (e.code === 'Space') { e.preventDefault(); jump(); } });
+
+        function startGame() {
+            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+            state.run = true;
+            state.score = 0;
+            state.health = 3;
+            state.shield = 0;
+            state.px = 120;
+            state.py = 0;
+            state.vy = 0;
+            state.speed = RUN_SPEED_BASE;
+            state.scrollX = 0;
+            state.canDoubleJump = true;
+            state.obstacles = [];
+            state.items = [];
+            state.nextSpawn = SPAWN_DISTANCE;
+            state.floorY = getFloorY();
+            document.getElementById('healthEl').textContent = '3';
+            document.getElementById('shieldEl').textContent = '0';
+            document.getElementById('scoreEl').textContent = '0';
+            document.getElementById('startScreen').classList.add('hide');
+            document.getElementById('goScreen').classList.remove('show');
+            animationId = requestAnimationFrame(loop);
+        }
+
+        document.getElementById('btnStart').addEventListener('click', startGame);
+        document.getElementById('btnRetry').addEventListener('click', startGame);
+
+        animationId = requestAnimationFrame(loop);
+    })();
+    </script>
+</body>
+</html>

@@ -215,23 +215,32 @@
                     <i class="fas fa-running text-5xl mb-3"></i>
                     <h3 class="font-black text-lg text-center">스트레칭 영상</h3>
                 </button>
-                <!-- 구팽이의 면역 전쟁 카드 -->
+                <!-- 1️⃣ 면역 전쟁 (슈팅) -->
                 <div class="col-span-2 md:col-span-1">
-                    <button type="button" onclick="goToGame()"
-                        class="w-full h-full gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-pink-500 to-rose-500 text-white hover:from-pink-600 hover:to-rose-600 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
-                        <i class="fas fa-gamepad text-5xl mb-3"></i>
-                        <h3 class="font-black text-lg text-center">구팽이의 면역 전쟁 (Ver 3.0)</h3>
-                        <p class="text-xs font-bold text-white/80 mt-1">NEW! 잠시 쉬어가세요</p>
-                    </button>
+                    <a href="immunity-war.html" target="_blank" rel="noopener"
+                        class="block w-full h-full gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-pink-500 to-rose-500 text-white hover:from-pink-600 hover:to-rose-600 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px] no-underline">
+                        <i class="fas fa-crosshairs text-5xl mb-3"></i>
+                        <h3 class="font-black text-lg text-center">1️⃣ 면역 전쟁 (슈팅)</h3>
+                        <p class="text-xs font-bold text-white/80 mt-1">세로형 탄막 슈팅 · Ver 4.1</p>
+                    </a>
                 </div>
-                <!-- 구팽이의 면역 전쟁 카드 (보라) -->
+                <!-- 2️⃣ 보건 서바이벌 (생존) -->
                 <div class="col-span-2 md:col-span-1">
-                    <button type="button" onclick="goToGame()"
-                        class="w-full h-full gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white hover:from-violet-600 hover:to-purple-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
+                    <a href="health-survival.html" target="_blank" rel="noopener"
+                        class="block w-full h-full gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white hover:from-violet-600 hover:to-purple-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px] no-underline">
                         <span class="text-5xl mb-3" aria-hidden="true">🐧</span>
-                        <h3 class="font-black text-lg text-center">구팽이의 면역 전쟁 (Ver 3.0)</h3>
-                        <p class="text-xs font-bold text-white/80 mt-1">바이러스 군단을 막아내고 보스를 처치하세요!</p>
-                    </button>
+                        <h3 class="font-black text-lg text-center">2️⃣ 보건 서바이벌 (생존)</h3>
+                        <p class="text-xs font-bold text-white/80 mt-1">XP·레벨업·스킬 3지선다 · Ver 1.0</p>
+                    </a>
+                </div>
+                <!-- 3️⃣ 헬스 런 (점프) -->
+                <div class="col-span-2 md:col-span-1">
+                    <a href="health-run.html" target="_blank" rel="noopener"
+                        class="block w-full h-full gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px] no-underline">
+                        <i class="fas fa-running text-5xl mb-3"></i>
+                        <h3 class="font-black text-lg text-center">3️⃣ 헬스 런 (점프)</h3>
+                        <p class="text-xs font-bold text-white/80 mt-1">쿠키런 스타일 러닝 · Ver 1.0</p>
+                    </a>
                 </div>
             </div>
         </section>
@@ -785,6 +794,12 @@
         }
         function goToImmunityWar() {
             window.location.href = 'immunity-war.html';
+        }
+        function goToHealthSurvival() {
+            window.location.href = 'health-survival.html';
+        }
+        function goToHealthRun() {
+            window.location.href = 'health-run.html';
         }
 
         // ========== 1. 데이터 초기화 (기본값, 시트에서 덮어씀) ==========
