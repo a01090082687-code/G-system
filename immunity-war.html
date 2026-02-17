@@ -1,47 +1,306 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>면역 전쟁 | G-SYSTEM 오락실</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: linear-gradient(180deg, #E0F7FA 0%, #80DEEA 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: none; -webkit-tap-highlight-color: transparent; }
-        .wrap { width: 100%; max-width: 430px; height: 100vh; max-height: 820px; position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.6); }
-        #c { display: block; width: 100%; height: 100%; background: linear-gradient(180deg, #E0F7FA 0%, #80DEEA 100%); }
-        .hud { position: absolute; top: 0; left: 0; right: 0; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 5; }
-        .hud span { color: #333; font-size: 16px; font-weight: bold; font-family: sans-serif; text-shadow: 0 0 2px rgba(255,255,255,0.8); }
-        .power-up-msg { position: absolute; left: 50%; top: 35%; transform: translate(-50%, -50%); font-size: 28px; font-weight: bold; color: #38bdf8; text-shadow: 0 0 20px rgba(56,189,248,0.8); pointer-events: none; z-index: 15; opacity: 0; transition: opacity 0.1s; }
-        .power-up-msg.show { animation: powerUpFade 1.2s ease-out forwards; }
-        .power-up-msg.gold { color: #fbbf24; text-shadow: 0 0 24px rgba(251,191,36,0.9); font-size: 32px; }
-        @keyframes powerUpFade { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -60%) scale(1); } }
-        .flash { position: absolute; inset: 0; background: rgba(56,189,248,0.25); pointer-events: none; z-index: 12; opacity: 0; }
-        .flash.on { animation: flashFade 0.35s ease-out forwards; }
-        .flash.gold { background: rgba(251,191,36,0.35); }
-        @keyframes flashFade { 0% { opacity: 1; } 100% { opacity: 0; } }
-        .start-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.75); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 24px; }
-        .start-screen.hide { display: none; }
-        .start-title { color: #fff; font-size: 24px; margin-bottom: 12px; text-align: center; }
-        .start-desc { color: rgba(255,255,255,0.95); font-size: 14px; line-height: 1.6; text-align: center; margin-bottom: 24px; }
-        .btn { background: linear-gradient(135deg, #0ea5e9, #06b6d4); color: #fff; border: none; padding: 14px 36px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; transition: transform 0.08s ease; }
-        .btn:hover { filter: brightness(1.05); }
-        .btn:active { transform: scale(0.97); }
-        .version-info { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 14px; }
-        .version-info.version-title { margin-top: 6px; margin-bottom: 8px; font-size: 14px; color: rgba(255,255,255,0.95); }
-        .go-screen { position: absolute; inset: 0; background: rgba(255,255,255,0.96); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 24px; }
-        .go-screen.show { display: flex; }
-        .go-title { color: #333; font-size: 26px; margin-bottom: 8px; font-weight: bold; }
-        .go-score { color: #333; font-size: 22px; margin-bottom: 20px; font-weight: bold; }
-        .rank-box { width: 100%; max-width: 320px; background: rgba(255,255,255,0.95); border-radius: 12px; padding: 16px; margin-bottom: 16px; max-height: 200px; overflow-y: auto; color: #333; border: 1px solid rgba(0,0,0,0.1); }
-        .rank-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.1); font-size: 14px; }
-        .rank-row:last-child { border-bottom: none; }
-        .go-inp { width: 100%; max-width: 320px; padding: 12px; margin-bottom: 10px; border: 2px solid rgba(0,0,0,0.2); border-radius: 10px; font-size: 16px; text-align: center; background: #fff; color: #333; }
-        .go-inp:focus { outline: none; border-color: #0ea5e9; }
-        .btn-submit { width: 100%; max-width: 320px; margin-bottom: 10px; }
-        .arcade-back { position: absolute; top: 12px; left: 12px; z-index: 30; padding: 8px 14px; background: rgba(0,0,0,0.5); color: #fff; border-radius: 8px; font-size: 13px; font-weight: bold; text-decoration: none; }
-        .arcade-back:hover { background: rgba(0,0,0,0.7); color: #fff; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(180deg, #E0F7FA 0%, #80DEEA 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: 430px;
+            height: 100vh;
+            max-height: 820px;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+        }
+
+        #c {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #E0F7FA 0%, #80DEEA 100%);
+        }
+
+        .hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .hud span {
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+            font-family: sans-serif;
+            text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .power-up-msg {
+            position: absolute;
+            left: 50%;
+            top: 35%;
+            transform: translate(-50%, -50%);
+            font-size: 28px;
+            font-weight: bold;
+            color: #38bdf8;
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.8);
+            pointer-events: none;
+            z-index: 15;
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+
+        .power-up-msg.show {
+            animation: powerUpFade 1.2s ease-out forwards;
+        }
+
+        .power-up-msg.gold {
+            color: #fbbf24;
+            text-shadow: 0 0 24px rgba(251, 191, 36, 0.9);
+            font-size: 32px;
+        }
+
+        @keyframes powerUpFade {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -60%) scale(1);
+            }
+        }
+
+        .flash {
+            position: absolute;
+            inset: 0;
+            background: rgba(56, 189, 248, 0.25);
+            pointer-events: none;
+            z-index: 12;
+            opacity: 0;
+        }
+
+        .flash.on {
+            animation: flashFade 0.35s ease-out forwards;
+        }
+
+        .flash.gold {
+            background: rgba(251, 191, 36, 0.35);
+        }
+
+        @keyframes flashFade {
+            0% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .start-screen {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 24px;
+        }
+
+        .start-screen.hide {
+            display: none;
+        }
+
+        .start-title {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .start-desc {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 14px;
+            line-height: 1.6;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+            color: #fff;
+            border: none;
+            padding: 14px 36px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.08s ease;
+        }
+
+        .btn:hover {
+            filter: brightness(1.05);
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .version-info {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            margin-top: 14px;
+        }
+
+        .version-info.version-title {
+            margin-top: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .go-screen {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.96);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 24px;
+        }
+
+        .go-screen.show {
+            display: flex;
+        }
+
+        .go-title {
+            color: #333;
+            font-size: 26px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .go-score {
+            color: #333;
+            font-size: 22px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .rank-box {
+            width: 100%;
+            max-width: 320px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+            color: #333;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .rank-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+        }
+
+        .rank-row:last-child {
+            border-bottom: none;
+        }
+
+        .go-inp {
+            width: 100%;
+            max-width: 320px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            font-size: 16px;
+            text-align: center;
+            background: #fff;
+            color: #333;
+        }
+
+        .go-inp:focus {
+            outline: none;
+            border-color: #0ea5e9;
+        }
+
+        .btn-submit {
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 10px;
+        }
+
+        .arcade-back {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 30;
+            padding: 8px 14px;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .arcade-back:hover {
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+        }
     </style>
 </head>
+
 <body>
     <div class="wrap">
         <a href="index.html" class="arcade-back">← G-SYSTEM 오락실</a>
@@ -54,7 +313,8 @@
         <div class="start-screen" id="startScreen">
             <div class="start-title">🐧 면역 전쟁</div>
             <div class="version-info version-title">Ver 5.0 (Sound & Optimization)</div>
-            <div class="start-desc">구팽이가 화면 아래에서 위로 주사기를 발사합니다.<br><strong>이동</strong>: 손가락/마우스를 움직이면 펭귄이 그 위치로 자유롭게 이동 · 문 통과 시 파워업!</div>
+            <div class="start-desc">구팽이가 화면 아래에서 위로 주사기를 발사합니다.<br><strong>이동</strong>: 손가락/마우스를 움직이면 펭귄이 그 위치로 자유롭게 이동
+                · 문 통과 시 파워업!</div>
             <button class="btn" id="btnStart">게임 시작</button>
         </div>
         <div class="go-screen" id="goScreen">
@@ -67,287 +327,270 @@
         </div>
     </div>
     <script>
-    (function() {
-        'use strict';
-        // Applied: Ver 5.0 Sound & Optimization
-        var GAS_URL = 'https://script.google.com/macros/s/AKfycbxKQ7DSfpBhiBE3JOSam39bvs8argQaf0s6hQJIMpH5l5knJKVfEfcW3lpCTODjLBMkiw/exec';
-        var canvas = document.getElementById('c');
-        var ctx = canvas ? canvas.getContext('2d') : null;
-        var cw, ch;
-        function resize() {
-            if (!canvas || !canvas.parentElement) return;
-            var w = canvas.parentElement.clientWidth;
-            var h = canvas.parentElement.clientHeight;
-            cw = w; ch = h;
-            canvas.width = w; canvas.height = h;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        var Sound = (function() {
-            var ctx = null;
-            function init() { if (ctx) return; try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
-            function pew() {
-                init(); if (!ctx) return;
-                var o = ctx.createOscillator(); var g = ctx.createGain();
-                o.connect(g); g.connect(ctx.destination);
-                o.frequency.setValueAtTime(520, ctx.currentTime);
-                o.frequency.exponentialRampToValueAtTime(280, ctx.currentTime + 0.06);
-                o.type = 'square'; g.gain.setValueAtTime(0.1, ctx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
-                o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.06);
+        (function () {
+            'use strict';
+            // Applied: Ver 5.0 Sound & Optimization
+            var GAS_URL = 'https://script.google.com/macros/s/AKfycbxKQ7DSfpBhiBE3JOSam39bvs8argQaf0s6hQJIMpH5l5knJKVfEfcW3lpCTODjLBMkiw/exec'; // [중요] 배포 후 URL 교체 필요
+            var canvas = document.getElementById('c');
+            var ctx = canvas ? canvas.getContext('2d') : null;
+            var cw, ch;
+            function resize() {
+                if (!canvas || !canvas.parentElement) return;
+                var w = canvas.parentElement.clientWidth;
+                var h = canvas.parentElement.clientHeight;
+                cw = w; ch = h;
+                canvas.width = w; canvas.height = h;
             }
-            function boom() {
-                init(); if (!ctx) return;
-                var o = ctx.createOscillator(); var g = ctx.createGain();
-                o.connect(g); g.connect(ctx.destination);
-                o.frequency.setValueAtTime(120, ctx.currentTime);
-                o.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.12);
-                o.type = 'sawtooth'; g.gain.setValueAtTime(0.15, ctx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-                o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.12);
+            window.addEventListener('resize', resize);
+            resize();
+
+            var Sound = (function () {
+                var ctx = null;
+                function init() { if (ctx) return; try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { } }
+                function pew() {
+                    init(); if (!ctx) return;
+                    var o = ctx.createOscillator(); var g = ctx.createGain();
+                    o.connect(g); g.connect(ctx.destination);
+                    o.frequency.setValueAtTime(520, ctx.currentTime);
+                    o.frequency.exponentialRampToValueAtTime(280, ctx.currentTime + 0.06);
+                    o.type = 'square'; g.gain.setValueAtTime(0.1, ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+                    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.06);
+                }
+                function boom() {
+                    init(); if (!ctx) return;
+                    var o = ctx.createOscillator(); var g = ctx.createGain();
+                    o.connect(g); g.connect(ctx.destination);
+                    o.frequency.setValueAtTime(120, ctx.currentTime);
+                    o.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.12);
+                    o.type = 'sawtooth'; g.gain.setValueAtTime(0.15, ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+                    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.12);
+                }
+                function ding() {
+                    init(); if (!ctx) return;
+                    var o = ctx.createOscillator(); var g = ctx.createGain();
+                    o.connect(g); g.connect(ctx.destination);
+                    o.frequency.setValueAtTime(880, ctx.currentTime);
+                    o.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.1);
+                    o.type = 'sine'; g.gain.setValueAtTime(0.12, ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+                    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.1);
+                }
+                function fail() {
+                    init(); if (!ctx) return;
+                    var o = ctx.createOscillator(); var g = ctx.createGain();
+                    o.connect(g); g.connect(ctx.destination);
+                    o.frequency.setValueAtTime(200, ctx.currentTime);
+                    o.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.25);
+                    o.type = 'sawtooth'; g.gain.setValueAtTime(0.12, ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.25);
+                }
+                return { pew: pew, boom: boom, ding: ding, fail: fail, shoot: pew, explosion: boom, beep: ding };
+            })();
+
+            var animationId = null;
+            var Gupaengi = '🐧';
+            var PLAYER_BOTTOM_MARGIN = 0.15;
+            var PLAYER_W = 52, PLAYER_H = 48;
+            var HITBOX_SCALE = 0.6;
+            var PLAYER_LERP = 0.22;
+            var SAFE_ZONE = 0.1;
+            var SPAWN_ZONE = 0.8;
+            var SYR_W = 14, SYR_H = 24, SYR_VY = -11;
+            var GATE_H = 56, GATE_VY = 1.6;
+            var GATE_SPAWN_TICKS = 4800;
+            var ENEMY_SPAWN_BASE = 60;
+            var ENEMY_COUNT_PER_SPAWN = 3;
+            var MAX_ENEMY_ON_SCREEN = 14;
+            var DIFFICULTY_TICKS = 60 * 30;
+
+            var state = {
+                run: false, score: 0, gameTime: 0, difficultyScale: 0.2,
+                px: 0.5, targetPx: 0.5,
+                fireCount: 3,
+                fireInterval: 10, fireTick: 0,
+                syringes: [], enemies: [], gates: [], particles: [], damageNumbers: [],
+                shakeTime: 0, shakeMag: 0, spawnEnemyTick: 0, spawnGateTick: 0
+            };
+            var lastHudScore = -1;
+            var lastHudFire = -1;
+            var scoreEl = null;
+            var fireEl = null;
+            function getHudEls() {
+                if (!scoreEl) scoreEl = document.getElementById('scoreEl');
+                if (!fireEl) fireEl = document.getElementById('fireEl');
             }
-            function ding() {
-                init(); if (!ctx) return;
-                var o = ctx.createOscillator(); var g = ctx.createGain();
-                o.connect(g); g.connect(ctx.destination);
-                o.frequency.setValueAtTime(880, ctx.currentTime);
-                o.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.1);
-                o.type = 'sine'; g.gain.setValueAtTime(0.12, ctx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-                o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.1);
+            function updateHud() {
+                getHudEls();
+                if (scoreEl && state.score !== lastHudScore) { scoreEl.textContent = state.score; lastHudScore = state.score; }
+                if (fireEl && state.fireCount !== lastHudFire) { fireEl.textContent = state.fireCount; lastHudFire = state.fireCount; }
             }
-            function fail() {
-                init(); if (!ctx) return;
-                var o = ctx.createOscillator(); var g = ctx.createGain();
-                o.connect(g); g.connect(ctx.destination);
-                o.frequency.setValueAtTime(200, ctx.currentTime);
-                o.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.25);
-                o.type = 'sawtooth'; g.gain.setValueAtTime(0.12, ctx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-                o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.25);
+
+            function spawnX() { return cw * SAFE_ZONE + Math.random() * (cw * SPAWN_ZONE); }
+
+            function screenShake(mag, dur) { state.shakeMag = Math.max(state.shakeMag, mag || 4); state.shakeTime = Math.max(state.shakeTime, dur || 12); }
+            function addDamageNum(x, y, val) {
+                if (state.damageNumbers.length > 12) state.damageNumbers.splice(0, 4);
+                state.damageNumbers.push({ x: x + (Math.random() - 0.5) * 16, y: y, val: val, life: 1, vy: -2.5 });
             }
-            return { pew: pew, boom: boom, ding: ding, fail: fail, shoot: pew, explosion: boom, beep: ding };
-        })();
-
-        var animationId = null;
-        var Gupaengi = '🐧';
-        var PLAYER_BOTTOM_MARGIN = 0.15;
-        var PLAYER_W = 52, PLAYER_H = 48;
-        var HITBOX_SCALE = 0.6;
-        var PLAYER_LERP = 0.22;
-        var SAFE_ZONE = 0.1;
-        var SPAWN_ZONE = 0.8;
-        var SYR_W = 14, SYR_H = 24, SYR_VY = -11;
-        var GATE_H = 56, GATE_VY = 1.6;
-        var GATE_SPAWN_TICKS = 4800;
-        var ENEMY_SPAWN_BASE = 60;
-        var ENEMY_COUNT_PER_SPAWN = 3;
-        var MAX_ENEMY_ON_SCREEN = 14;
-        var DIFFICULTY_TICKS = 60 * 30;
-
-        var state = {
-            run: false, score: 0, gameTime: 0, difficultyScale: 0.2,
-            px: 0.5, targetPx: 0.5,
-            fireCount: 3,
-            fireInterval: 10, fireTick: 0,
-            syringes: [], enemies: [], gates: [], particles: [], damageNumbers: [],
-            shakeTime: 0, shakeMag: 0, spawnEnemyTick: 0, spawnGateTick: 0
-        };
-        var lastHudScore = -1;
-        var lastHudFire = -1;
-        var scoreEl = null;
-        var fireEl = null;
-        function getHudEls() {
-            if (!scoreEl) scoreEl = document.getElementById('scoreEl');
-            if (!fireEl) fireEl = document.getElementById('fireEl');
-        }
-        function updateHud() {
-            getHudEls();
-            if (scoreEl && state.score !== lastHudScore) { scoreEl.textContent = state.score; lastHudScore = state.score; }
-            if (fireEl && state.fireCount !== lastHudFire) { fireEl.textContent = state.fireCount; lastHudFire = state.fireCount; }
-        }
-
-        function spawnX() { return cw * SAFE_ZONE + Math.random() * (cw * SPAWN_ZONE); }
-
-        function screenShake(mag, dur) { state.shakeMag = Math.max(state.shakeMag, mag || 4); state.shakeTime = Math.max(state.shakeTime, dur || 12); }
-        function addDamageNum(x, y, val) {
-            if (state.damageNumbers.length > 12) state.damageNumbers.splice(0, 4);
-            state.damageNumbers.push({ x: x + (Math.random()-0.5)*16, y: y, val: val, life: 1, vy: -2.5 });
-        }
-        function addParticles(x, y, color, n) {
-            n = n || 6;
-            if (state.particles.length > 50) state.particles.splice(0, 15);
-            for (var i = 0; i < n; i++) {
-                var a = (Math.PI*2*i)/n + Math.random();
-                var v = 2.5 + Math.random()*3;
-                state.particles.push({ x: x, y: y, vx: Math.cos(a)*v, vy: Math.sin(a)*v - 1.5, life: 1, color: color, r: 4 + Math.random()*3 });
+            function addParticles(x, y, color, n) {
+                n = n || 6;
+                if (state.particles.length > 50) state.particles.splice(0, 15);
+                for (var i = 0; i < n; i++) {
+                    var a = (Math.PI * 2 * i) / n + Math.random();
+                    var v = 2.5 + Math.random() * 3;
+                    state.particles.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1.5, life: 1, color: color, r: 4 + Math.random() * 3 });
+                }
             }
-        }
 
-        function addSyringe() {
-            var baseX = state.px * cw;
-            var count = Math.max(1, Math.min(99, state.fireCount));
-            var py = ch * (1 - PLAYER_BOTTOM_MARGIN) - PLAYER_H;
-            for (var i = 0; i < count; i++) {
-                var angle = count === 1 ? 0 : (i - (count-1)/2) * 5 * Math.PI/180;
-                state.syringes.push({
-                    x: baseX - SYR_W/2 + Math.sin(angle)*18,
-                    y: py + PLAYER_H - 8,
-                    w: SYR_W, h: SYR_H,
-                    vy: SYR_VY * Math.cos(angle),
-                    vx: Math.sin(angle) * 3.5
+            function addSyringe() {
+                var baseX = state.px * cw;
+                var count = Math.max(1, Math.min(99, state.fireCount));
+                var py = ch * (1 - PLAYER_BOTTOM_MARGIN) - PLAYER_H;
+                for (var i = 0; i < count; i++) {
+                    var angle = count === 1 ? 0 : (i - (count - 1) / 2) * 5 * Math.PI / 180;
+                    state.syringes.push({
+                        x: baseX - SYR_W / 2 + Math.sin(angle) * 18,
+                        y: py + PLAYER_H - 8,
+                        w: SYR_W, h: SYR_H,
+                        vy: SYR_VY * Math.cos(angle),
+                        vx: Math.sin(angle) * 3.5
+                    });
+                }
+            }
+
+            function addEnemy() {
+                var type = Math.random() > 0.5 ? '🦠' : '😈';
+                var r = 14 + Math.random() * 12;
+                var hp = Math.max(1, Math.floor((1 + r / 14) * state.difficultyScale * 1.2 * 2.5));
+                var vy = (0.7 + Math.random() * 0.5) * state.difficultyScale * 1.25 * 1.5;
+                state.enemies.push({
+                    x: spawnX(),
+                    y: -r * 2,
+                    r: r, hp: hp, maxHp: hp, vy: vy, type: type
                 });
             }
-        }
 
-        function addEnemy() {
-            var type = Math.random() > 0.5 ? '🦠' : '😈';
-            var r = 14 + Math.random() * 12;
-            var hp = Math.max(1, Math.floor((1 + r/14) * state.difficultyScale * 1.2 * 2.5));
-            var vy = (0.7 + Math.random()*0.5) * state.difficultyScale * 1.25 * 1.5;
-            state.enemies.push({
-                x: spawnX(),
-                y: -r*2,
-                r: r, hp: hp, maxHp: hp, vy: vy, type: type
-            });
-        }
-
-        function addGates() {
-            var gw = cw * 0.26;
-            var gateVy = GATE_VY * state.difficultyScale * 1.2;
-            var r = Math.random();
-            var addBonus = r < 0.65 ? 1 : r < 0.92 ? 2 : 3;
-            var x = spawnX();
-            if (x + gw * 2 + 16 > cw * (SAFE_ZONE + SPAWN_ZONE)) x = cw * SAFE_ZONE + Math.random() * (cw * SPAWN_ZONE - gw * 2 - 16);
-            state.gates.push({ x: x, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: true, gold: false, addBonus: addBonus, label: '💉 +' + addBonus });
-            state.gates.push({ x: x + gw + 16, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: false, label: '⚠️ 약화' });
-        }
-
-        function getPlayerHitbox() {
-            var py = ch*(1-PLAYER_BOTTOM_MARGIN)-PLAYER_H;
-            var cx = state.px*cw, cy = py + PLAYER_H/2;
-            var hw = PLAYER_W*HITBOX_SCALE/2, hh = PLAYER_H*HITBOX_SCALE/2;
-            return { left: cx-hw, right: cx+hw, top: cy-hh, bottom: cy+hh };
-        }
-        function hitBulletTarget(b, tx, ty, r) {
-            var bx = b.x + b.w/2, by = b.y + b.h/2;
-            return (bx-tx)*(bx-tx) + (by-ty)*(by-ty) < (r+8)*(r+8);
-        }
-        function hitPlayerGate(g) {
-            var h = getPlayerHitbox();
-            if (g.y + g.h < h.top || g.y > h.bottom) return false;
-            if (h.right < g.x || h.left > g.x + g.w) return false;
-            return true;
-        }
-
-        function setPlayerX(clientX) {
-            if (!canvas) return;
-            var rect = canvas.getBoundingClientRect();
-            var rx = (clientX - rect.left) / (rect.width || 1);
-            state.targetPx = Math.max(0, Math.min(1, rx));
-        }
-        if (canvas) {
-            canvas.addEventListener('touchstart', function(e) { e.preventDefault(); if (e.touches.length) setPlayerX(e.touches[0].clientX); }, { passive: false });
-            canvas.addEventListener('touchmove', function(e) { e.preventDefault(); if (e.touches.length) setPlayerX(e.touches[0].clientX); }, { passive: false });
-            canvas.addEventListener('mousedown', function(e) { setPlayerX(e.clientX); });
-            canvas.addEventListener('mousemove', function(e) { if (e.buttons === 1) setPlayerX(e.clientX); });
-        }
-
-        function loop() {
-            animationId = requestAnimationFrame(loop);
-            if (!state.run) return;
-            if (!ctx || !canvas || cw <= 0 || ch <= 0) return;
-
-            state.gameTime++;
-            if (state.gameTime > 60*20 && state.gameTime % DIFFICULTY_TICKS === 0)
-                state.difficultyScale = Math.min(2.8, state.difficultyScale + 0.12);
-
-            state.px += (state.targetPx - state.px) * PLAYER_LERP;
-
-            var shakeX = 0, shakeY = 0;
-            if (state.shakeTime > 0) {
-                state.shakeTime--;
-                shakeX = (Math.random()-0.5)*2*state.shakeMag;
-                shakeY = (Math.random()-0.5)*2*state.shakeMag;
-                if (state.shakeTime <= 0) state.shakeMag = 0;
-            }
-            ctx.save();
-            ctx.translate(shakeX, shakeY);
-
-            var bg = ctx.createLinearGradient(0,0,0,ch);
-            bg.addColorStop(0,'#E0F7FA'); bg.addColorStop(1,'#80DEEA');
-            ctx.fillStyle = bg;
-            ctx.fillRect(-10,-10,cw+20,ch+20);
-
-            state.fireTick++;
-            if (state.fireTick >= state.fireInterval) {
-                state.fireTick = 0;
-                addSyringe();
-                Sound.pew();
+            function addGates() {
+                var gw = cw * 0.26;
+                var gateVy = GATE_VY * state.difficultyScale * 1.2;
+                var r = Math.random();
+                var addBonus = r < 0.65 ? 1 : r < 0.92 ? 2 : 3;
+                var x = spawnX();
+                if (x + gw * 2 + 16 > cw * (SAFE_ZONE + SPAWN_ZONE)) x = cw * SAFE_ZONE + Math.random() * (cw * SPAWN_ZONE - gw * 2 - 16);
+                state.gates.push({ x: x, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: true, gold: false, addBonus: addBonus, label: '💉 +' + addBonus });
+                state.gates.push({ x: x + gw + 16, y: -GATE_H, w: gw, h: GATE_H, vy: gateVy, good: false, label: '⚠️ 약화' });
             }
 
-            for (var i = state.syringes.length - 1; i >= 0; i--) {
-                var s = state.syringes[i];
-                s.y += s.vy;
-                s.x += s.vx || 0;
-                if (s.y + s.h < 0 || s.y > ch+40 || s.x < -30 || s.x > cw+30) { state.syringes.splice(i,1); continue; }
-                var hit = false;
-                for (var j = state.enemies.length - 1; j >= 0 && !hit; j--) {
-                    var e = state.enemies[j];
-                    if (!hitBulletTarget(s, e.x, e.y, e.r)) continue;
-                    e.hp--;
-                    addDamageNum(e.x, e.y - e.r, 1);
-                    state.syringes.splice(i,1);
-                    hit = true;
-                    if (e.hp <= 0) {
-                        addParticles(e.x, e.y, '#f87171', 6);
-                        state.enemies.splice(j,1);
-                        state.score += 12;
-                        screenShake(2, 5);
-                        Sound.boom();
+            function getPlayerHitbox() {
+                var py = ch * (1 - PLAYER_BOTTOM_MARGIN) - PLAYER_H;
+                var cx = state.px * cw, cy = py + PLAYER_H / 2;
+                var hw = PLAYER_W * HITBOX_SCALE / 2, hh = PLAYER_H * HITBOX_SCALE / 2;
+                return { left: cx - hw, right: cx + hw, top: cy - hh, bottom: cy + hh };
+            }
+            function hitBulletTarget(b, tx, ty, r) {
+                var bx = b.x + b.w / 2, by = b.y + b.h / 2;
+                return (bx - tx) * (bx - tx) + (by - ty) * (by - ty) < (r + 8) * (r + 8);
+            }
+            function hitPlayerGate(g) {
+                var h = getPlayerHitbox();
+                if (g.y + g.h < h.top || g.y > h.bottom) return false;
+                if (h.right < g.x || h.left > g.x + g.w) return false;
+                return true;
+            }
+
+            function setPlayerX(clientX) {
+                if (!canvas) return;
+                var rect = canvas.getBoundingClientRect();
+                var rx = (clientX - rect.left) / (rect.width || 1);
+                state.targetPx = Math.max(0, Math.min(1, rx));
+            }
+            if (canvas) {
+                canvas.addEventListener('touchstart', function (e) { e.preventDefault(); if (e.touches.length) setPlayerX(e.touches[0].clientX); }, { passive: false });
+                canvas.addEventListener('touchmove', function (e) { e.preventDefault(); if (e.touches.length) setPlayerX(e.touches[0].clientX); }, { passive: false });
+                canvas.addEventListener('mousedown', function (e) { setPlayerX(e.clientX); });
+                canvas.addEventListener('mousemove', function (e) { if (e.buttons === 1) setPlayerX(e.clientX); });
+            }
+
+            function loop() {
+                animationId = requestAnimationFrame(loop);
+                if (!state.run) return;
+                if (!ctx || !canvas || cw <= 0 || ch <= 0) return;
+
+                state.gameTime++;
+                if (state.gameTime > 60 * 20 && state.gameTime % DIFFICULTY_TICKS === 0)
+                    state.difficultyScale = Math.min(2.8, state.difficultyScale + 0.12);
+
+                state.px += (state.targetPx - state.px) * PLAYER_LERP;
+
+                var shakeX = 0, shakeY = 0;
+                if (state.shakeTime > 0) {
+                    state.shakeTime--;
+                    shakeX = (Math.random() - 0.5) * 2 * state.shakeMag;
+                    shakeY = (Math.random() - 0.5) * 2 * state.shakeMag;
+                    if (state.shakeTime <= 0) state.shakeMag = 0;
+                }
+                ctx.save();
+                ctx.translate(shakeX, shakeY);
+
+                var bg = ctx.createLinearGradient(0, 0, 0, ch);
+                bg.addColorStop(0, '#E0F7FA'); bg.addColorStop(1, '#80DEEA');
+                ctx.fillStyle = bg;
+                ctx.fillRect(-10, -10, cw + 20, ch + 20);
+
+                state.fireTick++;
+                if (state.fireTick >= state.fireInterval) {
+                    state.fireTick = 0;
+                    addSyringe();
+                    Sound.pew();
+                }
+
+                for (var i = state.syringes.length - 1; i >= 0; i--) {
+                    var s = state.syringes[i];
+                    s.y += s.vy;
+                    s.x += s.vx || 0;
+                    if (s.y + s.h < 0 || s.y > ch + 40 || s.x < -30 || s.x > cw + 30) { state.syringes.splice(i, 1); continue; }
+                    var hit = false;
+                    for (var j = state.enemies.length - 1; j >= 0 && !hit; j--) {
+                        var e = state.enemies[j];
+                        if (!hitBulletTarget(s, e.x, e.y, e.r)) continue;
+                        e.hp--;
+                        addDamageNum(e.x, e.y - e.r, 1);
+                        state.syringes.splice(i, 1);
+                        hit = true;
+                        if (e.hp <= 0) {
+                            addParticles(e.x, e.y, '#f87171', 6);
+                            state.enemies.splice(j, 1);
+                            state.score += 12;
+                            screenShake(2, 5);
+                            Sound.boom();
+                        }
+                        break;
                     }
-                    break;
                 }
-            }
 
-            state.spawnEnemyTick++;
-            if (state.spawnEnemyTick >= ENEMY_SPAWN_BASE && state.enemies.length < MAX_ENEMY_ON_SCREEN) {
-                state.spawnEnemyTick = 0;
-                for (var n = 0; n < ENEMY_COUNT_PER_SPAWN; n++) {
-                    if (state.enemies.length >= MAX_ENEMY_ON_SCREEN) break;
-                    addEnemy();
+                state.spawnEnemyTick++;
+                if (state.spawnEnemyTick >= ENEMY_SPAWN_BASE && state.enemies.length < MAX_ENEMY_ON_SCREEN) {
+                    state.spawnEnemyTick = 0;
+                    for (var n = 0; n < ENEMY_COUNT_PER_SPAWN; n++) {
+                        if (state.enemies.length >= MAX_ENEMY_ON_SCREEN) break;
+                        addEnemy();
+                    }
                 }
-            }
 
-            state.spawnGateTick++;
-            if (state.spawnGateTick >= GATE_SPAWN_TICKS) {
-                state.spawnGateTick = 0;
-                addGates();
-            }
-
-            var h = getPlayerHitbox();
-            for (var i = state.enemies.length - 1; i >= 0; i--) {
-                var e = state.enemies[i];
-                e.y += e.vy;
-                if (e.y - e.r > ch) {
-                    state.run = false;
-                    Sound.fail();
-                    if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
-                    document.getElementById('finalScore').textContent = state.score;
-                    document.getElementById('goScreen').classList.add('show');
-                    loadRankings();
-                    ctx.restore();
-                    return;
+                state.spawnGateTick++;
+                if (state.spawnGateTick >= GATE_SPAWN_TICKS) {
+                    state.spawnGateTick = 0;
+                    addGates();
                 }
-                var ex1 = e.x - e.r, ex2 = e.x + e.r, ey1 = e.y - e.r, ey2 = e.y + e.r;
-                if (ex2 >= h.left && ex1 <= h.right && ey2 >= h.top && ey1 <= h.bottom) {
-                    state.fireCount = Math.max(0, state.fireCount - 2);
-                    state.enemies.splice(i,1);
-                    addParticles(e.x, e.y, '#f87171', 5);
-                    screenShake(4, 10);
-                    updateHud();
-                    if (state.fireCount <= 0) {
+
+                var h = getPlayerHitbox();
+                for (var i = state.enemies.length - 1; i >= 0; i--) {
+                    var e = state.enemies[i];
+                    e.y += e.vy;
+                    if (e.y - e.r > ch) {
                         state.run = false;
                         Sound.fail();
                         if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
@@ -357,192 +600,210 @@
                         ctx.restore();
                         return;
                     }
-                }
-            }
-
-            for (var k = state.gates.length - 1; k >= 0; k--) {
-                var g = state.gates[k];
-                g.y += g.vy;
-                if (g.y > ch + GATE_H) { state.gates.splice(k,1); continue; }
-                if (hitPlayerGate(g)) {
-                    if (g.good) {
-                        Sound.ding();
-                        state.fireCount = Math.min(99, state.fireCount + (g.addBonus || 1));
-                        var msg = document.getElementById('powerUpMsg');
-                        var fl = document.getElementById('flash');
-                        if (msg) { msg.textContent = 'Power UP!'; msg.classList.remove('gold'); msg.classList.add('show'); }
-                        if (fl) { fl.classList.remove('gold'); fl.classList.add('on'); }
-                        setTimeout(function() {
-                            var m = document.getElementById('powerUpMsg');
-                            var f = document.getElementById('flash');
-                            if (m) m.classList.remove('show');
-                            if (f) { f.classList.remove('on'); f.classList.remove('gold'); }
-                        }, 1000);
-                    } else {
-                        state.fireCount = Math.max(1, Math.floor(state.fireCount/2));
-                        state.fireInterval = Math.min(18, state.fireInterval + 1);
+                    var ex1 = e.x - e.r, ex2 = e.x + e.r, ey1 = e.y - e.r, ey2 = e.y + e.r;
+                    if (ex2 >= h.left && ex1 <= h.right && ey2 >= h.top && ey1 <= h.bottom) {
+                        state.fireCount = Math.max(0, state.fireCount - 2);
+                        state.enemies.splice(i, 1);
+                        addParticles(e.x, e.y, '#f87171', 5);
+                        screenShake(4, 10);
+                        updateHud();
+                        if (state.fireCount <= 0) {
+                            state.run = false;
+                            Sound.fail();
+                            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+                            document.getElementById('finalScore').textContent = state.score;
+                            document.getElementById('goScreen').classList.add('show');
+                            loadRankings();
+                            ctx.restore();
+                            return;
+                        }
                     }
-                    updateHud();
-                    state.gates.splice(k,1);
                 }
-            }
 
-            for (var i = 0; i < state.syringes.length; i++) {
-                var s = state.syringes[i];
-                ctx.font = '20px Arial';
+                for (var k = state.gates.length - 1; k >= 0; k--) {
+                    var g = state.gates[k];
+                    g.y += g.vy;
+                    if (g.y > ch + GATE_H) { state.gates.splice(k, 1); continue; }
+                    if (hitPlayerGate(g)) {
+                        if (g.good) {
+                            Sound.ding();
+                            state.fireCount = Math.min(99, state.fireCount + (g.addBonus || 1));
+                            var msg = document.getElementById('powerUpMsg');
+                            var fl = document.getElementById('flash');
+                            if (msg) { msg.textContent = 'Power UP!'; msg.classList.remove('gold'); msg.classList.add('show'); }
+                            if (fl) { fl.classList.remove('gold'); fl.classList.add('on'); }
+                            setTimeout(function () {
+                                var m = document.getElementById('powerUpMsg');
+                                var f = document.getElementById('flash');
+                                if (m) m.classList.remove('show');
+                                if (f) { f.classList.remove('on'); f.classList.remove('gold'); }
+                            }, 1000);
+                        } else {
+                            state.fireCount = Math.max(1, Math.floor(state.fireCount / 2));
+                            state.fireInterval = Math.min(18, state.fireInterval + 1);
+                        }
+                        updateHud();
+                        state.gates.splice(k, 1);
+                    }
+                }
+
+                for (var i = 0; i < state.syringes.length; i++) {
+                    var s = state.syringes[i];
+                    ctx.font = '20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('💉', s.x + s.w / 2, s.y + s.h / 2);
+                }
+                for (var i = 0; i < state.enemies.length; i++) {
+                    var e = state.enemies[i];
+                    ctx.font = (e.r * 1.5) + 'px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(e.type, e.x, e.y);
+                }
+                for (var k = 0; k < state.gates.length; k++) {
+                    var g = state.gates[k];
+                    ctx.fillStyle = g.good ? 'rgba(59,130,246,0.9)' : 'rgba(239,68,68,0.9)';
+                    ctx.strokeStyle = g.good ? '#60a5fa' : '#f87171';
+                    ctx.fillRect(g.x, g.y, g.w, g.h);
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(g.x, g.y, g.w, g.h);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '11px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(g.label, g.x + g.w / 2, g.y + g.h / 2 + 2);
+                }
+                for (var d = state.damageNumbers.length - 1; d >= 0; d--) {
+                    var dn = state.damageNumbers[d];
+                    dn.y += dn.vy;
+                    dn.life -= 0.025;
+                    if (dn.life <= 0) { state.damageNumbers.splice(d, 1); continue; }
+                    ctx.globalAlpha = dn.life;
+                    ctx.font = '14px sans-serif';
+                    ctx.fillStyle = '#333';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('-' + dn.val, dn.x, dn.y);
+                    ctx.globalAlpha = 1;
+                }
+                for (var p = state.particles.length - 1; p >= 0; p--) {
+                    var pt = state.particles[p];
+                    pt.x += pt.vx; pt.y += pt.vy;
+                    pt.life -= 0.03;
+                    if (pt.life <= 0) { state.particles.splice(p, 1); continue; }
+                    ctx.globalAlpha = pt.life;
+                    ctx.fillStyle = pt.color;
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+
+                var py = ch * (1 - PLAYER_BOTTOM_MARGIN) - PLAYER_H;
+                var cx = state.px * cw, cy = py + PLAYER_H / 2;
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillStyle = '#fbbf24';
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 1.5;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.strokeText('Lv.' + state.fireCount, cx, py - 2);
+                ctx.fillText('Lv.' + state.fireCount, cx, py - 2);
+                ctx.font = '42px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('💉', s.x + s.w/2, s.y + s.h/2);
-            }
-            for (var i = 0; i < state.enemies.length; i++) {
-                var e = state.enemies[i];
-                ctx.font = (e.r*1.5)+'px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(e.type, e.x, e.y);
-            }
-            for (var k = 0; k < state.gates.length; k++) {
-                var g = state.gates[k];
-                ctx.fillStyle = g.good ? 'rgba(59,130,246,0.9)' : 'rgba(239,68,68,0.9)';
-                ctx.strokeStyle = g.good ? '#60a5fa' : '#f87171';
-                ctx.fillRect(g.x, g.y, g.w, g.h);
-                ctx.lineWidth = 2;
-                ctx.strokeRect(g.x, g.y, g.w, g.h);
-                ctx.fillStyle = '#fff';
-                ctx.font = '11px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(g.label, g.x+g.w/2, g.y+g.h/2+2);
-            }
-            for (var d = state.damageNumbers.length - 1; d >= 0; d--) {
-                var dn = state.damageNumbers[d];
-                dn.y += dn.vy;
-                dn.life -= 0.025;
-                if (dn.life <= 0) { state.damageNumbers.splice(d,1); continue; }
-                ctx.globalAlpha = dn.life;
-                ctx.font = '14px sans-serif';
                 ctx.fillStyle = '#333';
-                ctx.textAlign = 'center';
-                ctx.fillText('-'+dn.val, dn.x, dn.y);
-                ctx.globalAlpha = 1;
-            }
-            for (var p = state.particles.length - 1; p >= 0; p--) {
-                var pt = state.particles[p];
-                pt.x += pt.vx; pt.y += pt.vy;
-                pt.life -= 0.03;
-                if (pt.life <= 0) { state.particles.splice(p,1); continue; }
-                ctx.globalAlpha = pt.life;
-                ctx.fillStyle = pt.color;
-                ctx.beginPath();
-                ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI*2);
-                ctx.fill();
-                ctx.globalAlpha = 1;
+                ctx.fillText(Gupaengi, cx, cy);
+
+                updateHud();
+                ctx.restore();
             }
 
-            var py = ch*(1-PLAYER_BOTTOM_MARGIN)-PLAYER_H;
-            var cx = state.px*cw, cy = py + PLAYER_H/2;
-            ctx.font = 'bold 14px sans-serif';
-            ctx.fillStyle = '#fbbf24';
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 1.5;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            ctx.strokeText('Lv.'+state.fireCount, cx, py-2);
-            ctx.fillText('Lv.'+state.fireCount, cx, py-2);
-            ctx.font = '42px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#333';
-            ctx.fillText(Gupaengi, cx, cy);
+            function startGame() {
+                if (!canvas || !ctx) return;
+                if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+                resize();
+                state.run = true;
+                state.score = 0;
+                state.gameTime = 0;
+                state.difficultyScale = 0.2;
+                state.px = 0.5;
+                state.targetPx = 0.5;
+                state.fireCount = 3;
+                state.fireInterval = 10;
+                state.fireTick = 0;
+                state.syringes = [];
+                state.enemies = [];
+                state.gates = [];
+                state.particles = [];
+                state.damageNumbers = [];
+                state.shakeTime = 0;
+                state.spawnEnemyTick = 0;
+                state.spawnGateTick = 0;
+                lastHudScore = 0;
+                lastHudFire = 3;
+                updateHud();
+                document.getElementById('startScreen').classList.add('hide');
+                document.getElementById('goScreen').classList.remove('show');
+                animationId = requestAnimationFrame(loop);
+            }
 
-            updateHud();
-            ctx.restore();
-        }
+            function loadRankings() {
+                var el = document.getElementById('rankList');
+                el.textContent = '로딩 중...';
+                if (!GAS_URL || !GAS_URL.trim()) { el.innerHTML = '랭킹 서버 URL 없음'; return; }
+                fetch(GAS_URL + '?action=getRankings&t=' + Date.now(), { method: 'GET' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) {
+                        if (d.ok && d.rankings && d.rankings.length) {
+                            var html = '';
+                            d.rankings.forEach(function (r, i) {
+                                var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) + '위';
+                                html += '<div class="rank-row">' + medal + ' ' + (r.name || '익명') + ' <strong>' + r.score + '</strong></div>';
+                            });
+                            el.innerHTML = html;
+                        } else el.innerHTML = '아직 랭킹이 없습니다.';
+                    })
+                    .catch(function () { el.textContent = '랭킹 불러오기 실패'; });
+            }
 
-        function startGame() {
-            if (!canvas || !ctx) return;
-            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
-            resize();
-            state.run = true;
-            state.score = 0;
-            state.gameTime = 0;
-            state.difficultyScale = 0.2;
-            state.px = 0.5;
-            state.targetPx = 0.5;
-            state.fireCount = 3;
-            state.fireInterval = 10;
-            state.fireTick = 0;
-            state.syringes = [];
-            state.enemies = [];
-            state.gates = [];
-            state.particles = [];
-            state.damageNumbers = [];
-            state.shakeTime = 0;
-            state.spawnEnemyTick = 0;
-            state.spawnGateTick = 0;
-            lastHudScore = 0;
-            lastHudFire = 3;
-            updateHud();
-            document.getElementById('startScreen').classList.add('hide');
-            document.getElementById('goScreen').classList.remove('show');
+            function submitRanking() {
+                var name = (document.getElementById('playerName').value || '').trim();
+                if (!name) { alert('이름을 입력해 주세요.'); return; }
+                if (name.length > 10) name = name.substring(0, 10);
+                if (!GAS_URL || !GAS_URL.trim()) { alert('서버 연결 실패'); return; }
+                var btn = document.getElementById('btnSubmit');
+                btn.disabled = true;
+                btn.textContent = '등록 중...';
+                fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'saveRanking', payload: { name: name, score: state.score } }),
+                    keepalive: true
+                })
+                    .then(function (res) { return res.text(); })
+                    .then(function (text) {
+                        var data;
+                        try { data = JSON.parse(text); } catch (e) { data = { ok: false }; }
+                        if (data.ok) { alert('랭킹 등록 완료!'); loadRankings(); document.getElementById('playerName').value = ''; }
+                        else alert('등록 실패: ' + (data.message || '오류'));
+                    })
+                    .catch(function () { alert('등록 중 오류가 발생했습니다.'); })
+                    .then(function () { btn.disabled = false; btn.textContent = '랭킹 등록'; });
+            }
+
+            document.getElementById('btnStart').addEventListener('click', function () { startGame(); });
+            document.getElementById('btnRetry').addEventListener('click', function () { startGame(); });
+            document.getElementById('btnSubmit').addEventListener('click', submitRanking);
+            document.getElementById('playerName').addEventListener('keypress', function (e) { if (e.key === 'Enter') submitRanking(); });
+
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden && animationId) { cancelAnimationFrame(animationId); animationId = null; }
+                else if (!document.hidden && state.run && !animationId) animationId = requestAnimationFrame(loop);
+            });
+
             animationId = requestAnimationFrame(loop);
-        }
-
-        function loadRankings() {
-            var el = document.getElementById('rankList');
-            el.textContent = '로딩 중...';
-            if (!GAS_URL || !GAS_URL.trim()) { el.innerHTML = '랭킹 서버 URL 없음'; return; }
-            fetch(GAS_URL + '?action=getRankings&t=' + Date.now(), { method: 'GET' })
-                .then(function(r) { return r.json(); })
-                .then(function(d) {
-                    if (d.ok && d.rankings && d.rankings.length) {
-                        var html = '';
-                        d.rankings.forEach(function(r, i) {
-                            var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)+'위';
-                            html += '<div class="rank-row">'+medal+' '+(r.name||'익명')+' <strong>'+r.score+'</strong></div>';
-                        });
-                        el.innerHTML = html;
-                    } else el.innerHTML = '아직 랭킹이 없습니다.';
-                })
-                .catch(function() { el.textContent = '랭킹 불러오기 실패'; });
-        }
-
-        function submitRanking() {
-            var name = (document.getElementById('playerName').value || '').trim();
-            if (!name) { alert('이름을 입력해 주세요.'); return; }
-            if (name.length > 10) name = name.substring(0, 10);
-            if (!GAS_URL || !GAS_URL.trim()) { alert('서버 연결 실패'); return; }
-            var btn = document.getElementById('btnSubmit');
-            btn.disabled = true;
-            btn.textContent = '등록 중...';
-            fetch(GAS_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'saveRanking', payload: { name: name, score: state.score } }),
-                keepalive: true
-            })
-                .then(function(res) { return res.text(); })
-                .then(function(text) {
-                    var data;
-                    try { data = JSON.parse(text); } catch (e) { data = { ok: false }; }
-                    if (data.ok) { alert('랭킹 등록 완료!'); loadRankings(); document.getElementById('playerName').value = ''; }
-                    else alert('등록 실패: ' + (data.message || '오류'));
-                })
-                .catch(function() { alert('등록 중 오류가 발생했습니다.'); })
-                .then(function() { btn.disabled = false; btn.textContent = '랭킹 등록'; });
-        }
-
-        document.getElementById('btnStart').addEventListener('click', function() { startGame(); });
-        document.getElementById('btnRetry').addEventListener('click', function() { startGame(); });
-        document.getElementById('btnSubmit').addEventListener('click', submitRanking);
-        document.getElementById('playerName').addEventListener('keypress', function(e) { if (e.key === 'Enter') submitRanking(); });
-
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden && animationId) { cancelAnimationFrame(animationId); animationId = null; }
-            else if (!document.hidden && state.run && !animationId) animationId = requestAnimationFrame(loop);
-        });
-
-        animationId = requestAnimationFrame(loop);
-    })();
+        })();
     </script>
 </body>
+
 </html>

@@ -4,11 +4,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>G-SYSTEM V3.9 | 구영테크 보건시스템 · 오락실</title>
+    <title>G-SYSTEM V4.0 | 구영테크 보건시스템</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=4.1">
+    <style>
+        /* [수정됨] 탭 전환 핵심 스타일 */
+        .tab-content {
+            display: none;
+            /* 기본적으로 숨김 */
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        /* active 클래스가 붙으면 보임 */
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* 모바일/데스크탑 반응형 제어 */
+        @media (max-width: 768px) {
+
+            /* 모바일에서는 데스크탑 전용 요소 숨김 */
+            .desktop-default:not(.active) {
+                display: none !important;
+            }
+
+            #main-aside {
+                display: none !important;
+            }
+
+            /* 사이드바 숨김 */
+            header {
+                display: flex !important;
+            }
+
+            /* 헤더 보임 */
+        }
+
+        @media (min-width: 769px) {
+
+            /* 데스크탑에서는 모바일 전용 요소 숨김 */
+            .mobile-only:not(.active) {
+                display: none !important;
+            }
+
+            #main-aside {
+                display: flex !important;
+            }
+
+            /* 사이드바 보임 */
+            header {
+                display: none !important;
+            }
+
+            /* 모바일 헤더 숨김 */
+        }
+
+        /* 디자인 포인트 */
+        .innovation-card {
+            border-left: 4px solid #0f766e;
+        }
+
+        .savings-highlight {
+            color: #d97706;
+            font-weight: 900;
+        }
+
+        .mobile-scroll {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* 로딩 오버레이 */
+        #data-loading-overlay {
+            z-index: 9999;
+        }
+    </style>
 </head>
 
 <body class="flex h-screen overflow-hidden text-slate-800">
@@ -45,16 +118,19 @@
                     G</div>
                 <div>
                     <h1 class="font-black text-xl text-slate-800 tracking-tight">G-SYSTEM</h1>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">보건시스템 V3.9</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">보건시스템 V4.0</p>
                 </div>
             </div>
             <nav class="space-y-1">
+                <button onclick="changeTab('innovation')"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
+                    id="nav-innovation"><i class="fas fa-award w-5 text-center"></i> 혁신 성과</button>
                 <button onclick="changeTab('dashboard')"
                     class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
                     id="nav-dashboard"><i class="fas fa-chart-pie w-5 text-center"></i> 대시보드</button>
                 <button onclick="changeTab('list')"
                     class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-list"><i class="fas fa-users w-5 text-center"></i> 집중관리 명단</button>
+                    id="nav-list"><i class="fas fa-users w-5 text-center"></i> 집중관리</button>
                 <button onclick="changeTab('expense')"
                     class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
                     id="nav-expense"><i class="fas fa-won-sign w-5 text-center"></i> 병원비 지출</button>
@@ -67,9 +143,6 @@
                 <button onclick="changeTab('medicine-survey')"
                     class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
                     id="nav-medicine-survey"><i class="fas fa-medkit w-5 text-center"></i> 의약품조사</button>
-                <button onclick="changeTab('innovation')"
-                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-innovation"><i class="fas fa-award w-5 text-center"></i> 혁신성과</button>
                 <button onclick="changeTab('emergency')"
                     class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
                     id="nav-emergency"><i class="fas fa-phone-volume w-5 text-center"></i> 응급연락망</button>
@@ -113,7 +186,7 @@
                 class="px-3 py-1.5 rounded-lg font-bold text-xs bg-teal-500 text-white hover:bg-teal-600 transition-colors"><i
                     class="fas fa-lock"></i></button>
             <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" id="mobile-menu-btn"
-                class="admin-only p-2 text-slate-600"><i class="fas fa-bars text-xl"></i></button>
+                class="p-2 text-slate-600"><i class="fas fa-bars text-xl"></i></button>
         </div>
     </header>
 
@@ -126,25 +199,32 @@
                 <button onclick="goToWorkerHome(); document.getElementById('mobile-menu').classList.add('hidden')"
                     class="worker-only block w-full text-left font-bold text-slate-600"><i class="fas fa-home"></i>
                     홈으로</button>
-                <button onclick="changeTab('dashboard'); document.getElementById('mobile-menu').classList.add('hidden')"
-                    class="block w-full text-left font-bold text-slate-600">대시보드</button>
-                <button onclick="changeTab('list'); document.getElementById('mobile-menu').classList.add('hidden')"
-                    class="admin-only hidden block w-full text-left font-bold text-slate-600">집중관리</button>
-                <button onclick="changeTab('expense'); document.getElementById('mobile-menu').classList.add('hidden')"
-                    class="admin-only hidden block w-full text-left font-bold text-slate-600">병원비</button>
-                <button
-                    onclick="changeTab('risk-factors'); document.getElementById('mobile-menu').classList.add('hidden')"
-                    class="block w-full text-left font-bold text-slate-600">작업환경</button>
-                <button onclick="changeTab('noise'); document.getElementById('mobile-menu').classList.add('hidden')"
-                    class="block w-full text-left font-bold text-slate-600">소음 현황</button>
-                <button
-                    onclick="changeTab('medicine-survey'); document.getElementById('mobile-menu').classList.add('hidden')"
-                    class="block w-full text-left font-bold text-slate-600">의약품</button>
                 <button
                     onclick="changeTab('innovation'); document.getElementById('mobile-menu').classList.add('hidden')"
-                    class="block w-full text-left font-bold text-slate-600">혁신성과</button>
+                    class="admin-only hidden block w-full text-left font-bold text-slate-600"><i
+                        class="fas fa-award"></i> 혁신 성과</button>
+                <button onclick="changeTab('dashboard'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="block w-full text-left font-bold text-slate-600"><i class="fas fa-chart-pie"></i>
+                    대시보드</button>
+                <button onclick="changeTab('list'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="admin-only hidden block w-full text-left font-bold text-slate-600"><i
+                        class="fas fa-users"></i> 집중관리</button>
+                <button onclick="changeTab('expense'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="admin-only hidden block w-full text-left font-bold text-slate-600"><i
+                        class="fas fa-won-sign"></i> 병원비</button>
+                <button
+                    onclick="changeTab('risk-factors'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="block w-full text-left font-bold text-slate-600"><i class="fas fa-hard-hat"></i>
+                    작업환경</button>
+                <button onclick="changeTab('noise'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="block w-full text-left font-bold text-slate-600"><i class="fas fa-volume-up"></i> 소음
+                    현황</button>
+                <button
+                    onclick="changeTab('medicine-survey'); document.getElementById('mobile-menu').classList.add('hidden')"
+                    class="block w-full text-left font-bold text-slate-600"><i class="fas fa-medkit"></i> 의약품</button>
                 <button onclick="changeTab('emergency'); document.getElementById('mobile-menu').classList.add('hidden')"
-                    class="block w-full text-left font-bold text-slate-600">응급연락망</button>
+                    class="block w-full text-left font-bold text-slate-600"><i class="fas fa-phone-volume"></i>
+                    응급연락망</button>
                 <button
                     onclick="changeTab('survey-results'); document.getElementById('mobile-menu').classList.add('hidden')"
                     class="admin-only hidden block w-full text-left font-bold text-slate-600">설문결과</button>
@@ -155,7 +235,7 @@
                     class="admin-only hidden block w-full text-left font-bold text-slate-600">MSDS</button>
                 <button
                     onclick="changeTab('stretching'); document.getElementById('mobile-menu').classList.add('hidden')"
-                    class="block w-full text-left font-bold text-slate-600">스트레칭</button>
+                    class="block w-full text-left font-bold text-slate-600"><i class="fas fa-running"></i> 스트레칭</button>
             </nav>
         </div>
     </div>
@@ -181,8 +261,8 @@
     </div>
 
     <main class="flex-1 overflow-y-auto h-full p-4 md:p-8 pt-20 md:pt-8 bg-[#F1F5F9]">
-        <!-- 근로자 홈 화면 (비로그인 상태 기본 화면) -->
-        <section id="worker-home" class="tab-content active max-w-4xl mx-auto space-y-6">
+        <!-- 근로자 홈 화면 (모바일 기본 화면) -->
+        <section id="worker-home" class="tab-content mobile-only max-w-4xl mx-auto space-y-6">
             <div class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white">
                 <div class="p-6 md:p-8 relative z-10 text-center">
                     <h2 class="text-2xl md:text-3xl font-black mb-2">구영테크 보건시스템</h2>
@@ -190,68 +270,38 @@
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
-                <!-- 의약품 신청 카드 -->
+                <!-- 아파요 (의약품 신청) - 가장 크게 -->
                 <button type="button" onclick="changeTab('medicine-survey')"
-                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-teal-500 to-teal-600 text-white hover:from-teal-600 hover:to-teal-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
-                    <i class="fas fa-pills text-5xl mb-3"></i>
-                    <h3 class="font-black text-lg text-center">의약품 신청</h3>
+                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-pink-400 to-rose-500 text-white hover:from-pink-500 hover:to-rose-600 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[180px] col-span-2">
+                    <i class="fas fa-pills text-6xl mb-3"></i>
+                    <h3 class="font-black text-xl text-center">아파요</h3>
+                    <p class="text-sm text-white/90 mt-1">의약품/진료 신청</p>
                 </button>
-                <!-- 소음 위험 지도 카드 -->
-                <button type="button"
-                    onclick="changeTab('noise'); setTimeout(function(){setNoiseFilter('exceed');}, 100);"
-                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-red-500 to-orange-500 text-white hover:from-red-600 hover:to-orange-600 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
-                    <i class="fas fa-exclamation-triangle text-5xl mb-3"></i>
-                    <h3 class="font-black text-lg text-center">소음 위험 지도</h3>
-                </button>
-                <!-- 응급 연락망 카드 -->
+                <!-- 응급상황 -->
                 <button type="button" onclick="changeTab('emergency')"
                     class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
                     <i class="fas fa-ambulance text-5xl mb-3"></i>
-                    <h3 class="font-black text-lg text-center">응급 연락망</h3>
+                    <h3 class="font-black text-lg text-center">응급상황</h3>
                 </button>
-                <!-- 스트레칭 영상 카드 -->
+                <!-- 위험해요 (MSDS/소음) -->
+                <button type="button"
+                    onclick="changeTab('noise'); setTimeout(function(){setNoiseFilter('exceed');}, 100);"
+                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-orange-500 to-amber-600 text-white hover:from-orange-600 hover:to-amber-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
+                    <i class="fas fa-exclamation-triangle text-5xl mb-3"></i>
+                    <h3 class="font-black text-lg text-center">위험해요</h3>
+                    <p class="text-xs text-white/90 mt-1">MSDS/소음</p>
+                </button>
+                <!-- 스트레칭 -->
                 <button type="button" onclick="changeTab('stretching')"
-                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-indigo-500 to-blue-600 text-white hover:from-indigo-600 hover:to-blue-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
+                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-indigo-500 to-blue-600 text-white hover:from-indigo-600 hover:to-blue-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px] col-span-2">
                     <i class="fas fa-running text-5xl mb-3"></i>
-                    <h3 class="font-black text-lg text-center">스트레칭 영상</h3>
+                    <h3 class="font-black text-lg text-center">스트레칭</h3>
+                    <p class="text-xs text-white/90 mt-1">1분 스트레칭 영상</p>
                 </button>
-            </div>
-            <!-- G-SYSTEM 오락실: 게임 3개 버튼만 (health-catch-game 등 옛날 파일로 연결 금지) -->
-            <div id="arcade" class="mt-8">
-                <h2 class="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
-                    <i class="fas fa-gamepad text-teal-500"></i>
-                    G-SYSTEM 오락실
-                </h2>
-                <div class="flex flex-col gap-3">
-                    <button type="button" onclick="location.href='immunity-war.html'" class="gu-card p-5 rounded-2xl shadow-lg bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:from-pink-600 hover:to-rose-600 transition-all flex items-center gap-4 w-full text-left border-0 cursor-pointer">
-                        <span class="text-4xl w-14 text-center">🔫</span>
-                        <div class="flex-1">
-                            <h3 class="font-black text-lg">면역 전쟁</h3>
-                            <p class="text-xs text-white/80 mt-0.5">면역 전쟁 - 슈팅 · 종스크롤 탄막</p>
-                        </div>
-                        <i class="fas fa-chevron-right text-white/70"></i>
-                    </button>
-                    <button type="button" onclick="location.href='health-survival.html'" class="gu-card p-5 rounded-2xl shadow-lg bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:from-violet-600 hover:to-purple-700 transition-all flex items-center gap-4 w-full text-left border-0 cursor-pointer">
-                        <span class="text-4xl w-14 text-center">🛡️</span>
-                        <div class="flex-1">
-                            <h3 class="font-black text-lg">보건 서바이벌</h3>
-                            <p class="text-xs text-white/80 mt-0.5">보건 서바이벌 - 생존 · 360° 자동 사격</p>
-                        </div>
-                        <i class="fas fa-chevron-right text-white/70"></i>
-                    </button>
-                    <button type="button" onclick="location.href='health-run.html'" class="gu-card p-5 rounded-2xl shadow-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 transition-all flex items-center gap-4 w-full text-left border-0 cursor-pointer">
-                        <span class="text-4xl w-14 text-center">🏃</span>
-                        <div class="flex-1">
-                            <h3 class="font-black text-lg">헬스 런</h3>
-                            <p class="text-xs text-white/80 mt-0.5">헬스 런 - 러닝 · 횡스크롤 점프</p>
-                        </div>
-                        <i class="fas fa-chevron-right text-white/70"></i>
-                    </button>
-                </div>
             </div>
         </section>
 
-        <section id="dashboard" class="tab-content max-w-7xl mx-auto space-y-8">
+        <section id="dashboard" class="tab-content desktop-default max-w-7xl mx-auto space-y-8">
             <div class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white">
                 <div class="p-8 md:p-10 relative z-10">
                     <div
@@ -565,17 +615,20 @@
             </div>
         </section>
 
-        <section id="innovation" class="tab-content max-w-7xl mx-auto space-y-6">
+        <section id="innovation" class="tab-content desktop-default max-w-7xl mx-auto space-y-6">
             <div class="flex flex-wrap items-center justify-between gap-4">
-                <h2 class="text-2xl font-black text-slate-800">주요 업무 실적</h2>
+                <h2 class="text-2xl font-black text-slate-800">혁신 성과</h2>
                 <button type="button" id="innovation-add-btn"
-                    class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600"
+                    class="admin-only hidden px-4 py-2 rounded-xl font-bold text-sm bg-[#0f766e] text-white hover:bg-[#0d9488]"
                     onclick="addInnovation()"><i class="fas fa-plus"></i> 항목 추가</button>
             </div>
-            <!-- 누적 예산 절감액 카드 -->
-            <div class="gu-card p-6 border-t-4 border-t-emerald-500">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">누적 예산 절감액</p>
-                <h3 class="text-4xl font-black text-slate-800"><span id="innovation-total-savings">₩ 0</span></h3>
+            <!-- 누적 예산 절감액 카드 (Deep Teal + Gold 강조) -->
+            <div class="gu-card p-8 border-l-4 border-l-[#0f766e] bg-gradient-to-br from-teal-50 to-emerald-50">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">누적 예산 절감액</p>
+                <h3 class="text-5xl font-black savings-highlight"><span id="innovation-total-savings">₩ 0</span></h3>
+                <p class="text-sm text-slate-600 mt-2 flex items-center gap-1">
+                    <i class="fas fa-chart-line text-[#0f766e]"></i> 자동 집계 중
+                </p>
             </div>
             <div id="innovation-tab-list" class="space-y-4"></div>
         </section>
@@ -899,22 +952,7 @@
                 { category: "System", title: "자체 보건 전산 시스템 개발", desc: "웹 기반 보건시스템(G-System) 구축으로 데이터 자동화 및 행정 효율화", date: "2026.02", savings: 10000000, imageUrl: "" },
                 { category: "Cost", title: "협력병원(W병원, 우리허브) MOU 할인", desc: "임직원 진료비 10% 할인 혜택 적용 (자동 집계)", date: "2025.01", savings: 0, id: "hospital_mou", imageUrl: "" }
             ],
-            members: [
-                { name: "김규주", dept: "1공장", risk: "Highest", note: "소음성 난청 (양측)", isIntensiveCare: true, counseling: { 1: { date: "01/15", count: 1 }, 2: { date: "02/10", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
-                { name: "남덕현", dept: "1공장", risk: "Highest", note: "고혈압 (중)당뇨", isIntensiveCare: true, counseling: { 1: { date: "01/20", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
-                { name: "박기태", dept: "1공장", risk: "Highest", note: "소음감각", isIntensiveCare: true, counseling: { 1: null, 2: { date: "02/15", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
-                { name: "박태양", dept: "1공장", risk: "Highest", note: "당뇨병", isIntensiveCare: true, counseling: { 1: { date: "01/10", count: 1 }, 2: { date: "02/20", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
-                { name: "송치훈", dept: "1공장", risk: "Highest", note: "고혈압", isIntensiveCare: true, counseling: { 1: { date: "01/12", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
-                { name: "양병석", dept: "1공장", risk: "High", note: "CO2용접", isIntensiveCare: false, counseling: { 1: null, 2: { date: "02/25", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
-                { name: "오지웅", dept: "1공장", risk: "Highest", note: "만성신부전", isIntensiveCare: true, counseling: { 1: { date: "01/18", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
-                { name: "제창희", dept: "1공장", risk: "Highest", note: "뇌심혈관 고위험", isIntensiveCare: true, counseling: { 1: { date: "01/25", count: 1 }, 2: null, 3: { date: "03/15", count: 1 }, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
-                { name: "하대준", dept: "1공장", risk: "Highest", note: "폐기능 저하", isIntensiveCare: true, counseling: { 1: null, 2: { date: "02/18", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
-                { name: "황동민", dept: "1공장", risk: "High", note: "관절염/허리부", isIntensiveCare: false, counseling: { 1: { date: "01/30", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
-                { name: "문영채", dept: "2공장", risk: "Highest", note: "당뇨", isIntensiveCare: true, counseling: { 1: { date: "01/22", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
-                { name: "백대용", dept: "2공장", risk: "High", note: "근골", isIntensiveCare: false, counseling: { 1: null, 2: { date: "02/12", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
-                { name: "안성형", dept: "2공장", risk: "Highest", note: "당뇨", isIntensiveCare: true, counseling: { 1: { date: "01/28", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
-                { name: "전영용", dept: "2공장", risk: "High", note: "근골", isIntensiveCare: false, counseling: { 1: null, 2: { date: "02/24", count: 1 }, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } }
-            ],
+            members: [], // 보안: 개인정보는 로그인 후 서버에서 로드
             stretchingVideos: [
                 { id: 1, title: "구영테크 스트레칭 영상", description: "근골격계 부담 예방을 위한 실전 스트레칭 가이드", videoUrl: "https://youtu.be/oYmiL6Bh_ak", thumbnail: "", duration: "", category: "전체", createdAt: "2026-02-12" }
             ]
@@ -943,10 +981,15 @@
 
         // ========== 탭 전환 ==========
         function goToWorkerHome() {
-            if (!isAdminLoggedIn()) {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
                 changeTab('worker-home');
             } else {
-                changeTab('dashboard');
+                if (isAdminLoggedIn()) {
+                    changeTab('innovation'); // 데스크탑 관리자: 혁신성과
+                } else {
+                    changeTab('dashboard'); // 데스크탑 비로그인: 대시보드
+                }
             }
         }
 
@@ -981,9 +1024,9 @@
             if (tabId === 'stretching') {
                 renderStretchingVideos();
             }
-            // 소음현황 탭으로 전환 시 배치도 표시
-            if (tabId === 'noise') {
-                showNoiseFloorplan(1);
+            // 응급상황 탭으로 전환 시 응급연락망 렌더링
+            if (tabId === 'emergency') {
+                renderEmergencyContacts();
             }
         }
 
@@ -1006,7 +1049,8 @@
 
         function applyDataFromServer(data) {
             if (!data) return;
-            if (Array.isArray(data.members)) APP_DATA.members = data.members;
+            // 보안: members는 로그인 후에만 로드 (loadSensitiveData에서 처리)
+            // if (Array.isArray(data.members)) APP_DATA.members = data.members;
             if (Array.isArray(data.risks)) APP_DATA.risks = data.risks;
             if (Array.isArray(data.noise)) {
                 NOISE_DATA = data.noise.map(function (n) {
@@ -1018,8 +1062,9 @@
                 });
             }
             if (Array.isArray(data.innovations)) APP_DATA.innovations = data.innovations;
-            if (Array.isArray(data.expenses_2025)) APP_DATA.expenses_2025 = data.expenses_2025;
-            if (Array.isArray(data.expenses_2026)) APP_DATA.expenses_2026 = data.expenses_2026;
+            // 보안: expenses는 로그인 후에만 로드 (loadSensitiveData에서 처리)
+            // if (Array.isArray(data.expenses_2025)) APP_DATA.expenses_2025 = data.expenses_2025;
+            // if (Array.isArray(data.expenses_2026)) APP_DATA.expenses_2026 = data.expenses_2026;
             // 배치도 데이터 처리 (Google Sheets 우선, localStorage fallback)
             if (data.floorplans && typeof data.floorplans === 'object') {
                 const floorplansFromServer = data.floorplans;
@@ -1772,19 +1817,19 @@
             const html = APP_DATA.innovations.map((item, i) => {
                 var savingsText = '';
                 if (item.savings && item.savings > 0) {
-                    savingsText = '<div class="mt-2"><span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-700">절감액: ₩ ' + item.savings.toLocaleString() + '</span></div>';
+                    savingsText = '<div class="mt-3"><span class="px-4 py-2 rounded-lg text-sm font-black bg-gradient-to-r from-[#d97706] to-[#f59e0b] text-white shadow-md">절감액: ₩ ' + item.savings.toLocaleString() + '</span></div>';
                 }
                 return `
-            <div class="gu-card p-4 flex items-start gap-4">
-                <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold flex-shrink-0">${i + 1}</div>
+            <div class="gu-card innovation-card p-5 flex items-start gap-4 hover:shadow-lg transition-shadow">
+                <div class="w-14 h-14 rounded-xl bg-[#0f766e] flex items-center justify-center text-white font-black text-lg flex-shrink-0 shadow-md">${i + 1}</div>
                 <div class="flex-1">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <span class="px-2 py-0.5 rounded text-xs font-black bg-slate-100">${item.category || ''}</span>
-                        <span class="text-xs font-bold text-slate-400">${item.date || ''}</span>
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                        <span class="px-3 py-1 rounded-lg text-xs font-black bg-[#0f766e]/10 text-[#0f766e] border border-[#0f766e]/20">${item.category || ''}</span>
+                        <span class="text-xs font-bold text-slate-500">${item.date || ''}</span>
                         ${isAdmin ? `<button type="button" onclick="editInnovation(${i})" class="text-xs font-bold px-2 py-1 rounded bg-slate-200 text-slate-700 hover:bg-slate-300">수정</button><button type="button" onclick="deleteInnovation(${i})" class="text-xs font-bold px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">삭제</button>` : ''}
                     </div>
-                    <h4 class="font-black text-slate-800 mt-1">${item.title || ''}</h4>
-                    <p class="text-sm text-slate-600">${item.desc || ''}</p>
+                    <h4 class="font-black text-lg text-slate-800 mb-2">${item.title || ''}</h4>
+                    <p class="text-sm text-slate-600 leading-relaxed">${item.desc || ''}</p>
                     ${savingsText}
                 </div>
             </div>
@@ -2568,9 +2613,13 @@
         function toggleAuth() {
             if (isAdminLoggedIn()) {
                 localStorage.removeItem('g_auth_mode');
+                // 로그아웃 시 민감 데이터 초기화
+                APP_DATA.members = [];
+                APP_DATA.expenses_2025 = [];
+                APP_DATA.expenses_2026 = [];
                 updateAuthUI();
                 updateAdminOnlyElements();
-                changeTab('worker-home');
+                initViewMode(); // 뷰 모드 재설정
             } else {
                 document.getElementById('auth-modal').classList.remove('hidden');
                 document.getElementById('auth-password').value = '';
@@ -2583,12 +2632,43 @@
             if (password === ADMIN_PASSWORD) {
                 localStorage.setItem('g_auth_mode', 'admin');
                 document.getElementById('auth-modal').classList.add('hidden');
+                // 로그인 성공 시 민감 데이터 로드
+                loadSensitiveData();
                 updateAuthUI();
                 updateAdminOnlyElements();
-                changeTab('dashboard');
+                // 뷰 모드 재설정 (데스크탑/모바일에 따라 다른 화면 표시)
+                initViewMode();
             } else {
                 document.getElementById('auth-error').classList.remove('hidden');
             }
+        }
+
+        // 민감 데이터 로드 함수 (로그인 후에만 호출)
+        function loadSensitiveData() {
+            if (!GAS_URL || GAS_URL.trim() === '') return;
+            const loadingOverlay = document.getElementById('data-loading-overlay');
+            if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+
+            fetch(GAS_URL + '?t=' + Date.now())
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data && Array.isArray(data.members)) {
+                        APP_DATA.members = data.members;
+                        renderDashboard();
+                        renderMemberTable(APP_DATA.members);
+                    }
+                    if (data && Array.isArray(data.expenses_2025)) {
+                        APP_DATA.expenses_2025 = data.expenses_2025;
+                    }
+                    if (data && Array.isArray(data.expenses_2026)) {
+                        APP_DATA.expenses_2026 = data.expenses_2026;
+                    }
+                    hideDataLoadingOverlay();
+                })
+                .catch(function (error) {
+                    console.error('민감 데이터 로드 실패:', error);
+                    hideDataLoadingOverlay();
+                });
         }
 
         function updateAuthUI() {
@@ -2686,11 +2766,49 @@
             }
         }
 
+        // 데스크탑/모바일 모드 감지 및 초기 화면 설정
+        function initViewMode() {
+            const isMobile = window.innerWidth <= 768;
+            const isAdmin = isAdminLoggedIn();
+
+            // 1. 모든 탭 숨기기 (초기화)
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // 2. 모바일/데스크탑에 따른 첫 화면 설정
+            if (isMobile) {
+                // 모바일 환경
+                if (!isAdmin) {
+                    changeTab('worker-home'); // 근로자는 '홈'
+                } else {
+                    changeTab('dashboard'); // 관리자는 '대시보드'
+                }
+            } else {
+                // 데스크탑 환경
+                if (isAdmin) {
+                    changeTab('innovation'); // 관리자는 '혁신성과'
+                } else {
+                    changeTab('dashboard'); // 비로그인 PC는 '대시보드'
+                }
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', function () {
-            localStorage.removeItem('g_auth_mode');
+            // localStorage.removeItem('g_auth_mode'); // 주석 처리: 로그인 상태 유지
 
             // 초기 데이터 설정 (한 번만 실행)
             initializeDefaultData();
+
+            // 초기 뷰 모드 설정
+            initViewMode();
+
+            // 리사이즈 시 뷰 모드 재설정
+            let resizeTimer;
+            window.addEventListener('resize', function () {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(initViewMode, 250);
+            });
 
             // 페이지 로드 시 localStorage에서 의약품 설문조사 URL 복원
             const savedUrl = localStorage.getItem('medicine_survey_url');
@@ -2750,6 +2868,62 @@
                 loadDataFromSheets(true); // silent 모드로 조용히 새로고침
             }, 10000); // 10초마다 (더 빠른 동기화)
         });
+    </script>
+
+    <!-- 푸터: 오락실 링크 (숨김) -->
+    <footer class="fixed bottom-4 right-4 z-30">
+        <button onclick="showArcadeModal()"
+            class="px-3 py-2 rounded-lg bg-slate-400/30 hover:bg-slate-500/40 text-slate-600 text-xs font-bold backdrop-blur-sm transition-colors flex items-center gap-1.5">
+            <span>☕</span> <span class="hidden md:inline">휴게실</span>
+        </button>
+    </footer>
+
+    <!-- 오락실 모달 -->
+    <div id="arcade-modal"
+        class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+        onclick="this.classList.add('hidden')">
+        <div class="gu-card max-w-md w-full p-6" onclick="event.stopPropagation()">
+            <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
+                <span>☕</span> 휴게실
+            </h3>
+            <p class="text-sm text-slate-600 mb-6 bg-amber-50 p-4 rounded-lg border border-amber-200">
+                <i class="fas fa-info-circle text-amber-500"></i> 업무 외 휴게 시간에만 이용해 주세요.<br>스트레스 해소용 공간입니다.
+            </p>
+            <div class="flex flex-col gap-3 mb-4">
+                <button type="button" onclick="location.href='immunity-war.html'"
+                    class="gu-card p-4 rounded-xl shadow-lg bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:from-pink-600 hover:to-rose-600 transition-all flex items-center gap-3 w-full text-left border-0 cursor-pointer">
+                    <span class="text-3xl w-12 text-center">🔫</span>
+                    <div class="flex-1">
+                        <h3 class="font-black text-base">면역 전쟁</h3>
+                        <p class="text-xs text-white/80 mt-0.5">슈팅 · 종스크롤 탄막</p>
+                    </div>
+                </button>
+                <button type="button" onclick="location.href='health-survival.html'"
+                    class="gu-card p-4 rounded-xl shadow-lg bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:from-violet-600 hover:to-purple-700 transition-all flex items-center gap-3 w-full text-left border-0 cursor-pointer">
+                    <span class="text-3xl w-12 text-center">🛡️</span>
+                    <div class="flex-1">
+                        <h3 class="font-black text-base">보건 서바이벌</h3>
+                        <p class="text-xs text-white/80 mt-0.5">생존 · 360° 자동 사격</p>
+                    </div>
+                </button>
+                <button type="button" onclick="location.href='health-run.html'"
+                    class="gu-card p-4 rounded-xl shadow-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 transition-all flex items-center gap-3 w-full text-left border-0 cursor-pointer">
+                    <span class="text-3xl w-12 text-center">🏃</span>
+                    <div class="flex-1">
+                        <h3 class="font-black text-base">헬스 런</h3>
+                        <p class="text-xs text-white/80 mt-0.5">러닝 · 횡스크롤 점프</p>
+                    </div>
+                </button>
+            </div>
+            <button onclick="document.getElementById('arcade-modal').classList.add('hidden')"
+                class="w-full px-4 py-2 bg-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-300">닫기</button>
+        </div>
+    </div>
+
+    <script>
+        function showArcadeModal() {
+            document.getElementById('arcade-modal').classList.remove('hidden');
+        }
     </script>
 </body>
 

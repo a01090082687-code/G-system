@@ -1,412 +1,329 @@
 /**
- * G-System Google Sheets Backend
- * 배포: 웹 앱으로 배포 후 "액세스: 모든 사용자" 선택, URL을 index.html의 GAS_URL에 넣으세요.
+ * G-SYSTEM Google Apps Script Backend
+ * 
+ * 기능:
+ * 1. doGet: 모든 시트 데이터 읽기 (JSON 반환)
+ * 2. doPost: 데이터 저장 (Rankings, Members, Risks, Innovations, 등)
+ * 3. CORS 해결: 모든 응답에 헤더 추가
  */
 
-var SHEET_NAMES = {
-  members: 'Members',
-  risks: 'Risks',
-  noise: 'Noise',
-  expenses: 'Expenses',
-  innovations: 'Innovations',
-  config: 'Config',
-  gameRankings: 'GameRankings'
+const SCRIPT_PROP = PropertiesService.getScriptProperties();
+
+// 필수 시트 이름 목록
+const SHEET_NAMES = {
+  MEMBERS: 'Members',        // 명단/상담
+  RISKS: 'Risks',            // 유해인자
+  NOISE: 'Noise',            // 소음
+  INNOVATIONS: 'Innovations',// 혁신성과
+  EXPENSES: 'Expenses',      // 병원비
+  RANKINGS: 'Rankings',      // 게임 랭킹
+  CONFIG: 'Config'           // 설정 (영상, 도면, URL 등)
 };
 
-function doGet(e) {
-  try {
-    var action = e.parameter.action;
-    
-    // 게임 랭킹 조회
-    if (action === 'getRankings') {
-      var rankings = getRankings();
-      return createJsonResponse({ ok: true, rankings: rankings });
-    }
-    
-    // 기본 데이터 조회
-    var result = getAllData();
-    return createJsonResponse(result);
-  } catch (err) {
-    return createJsonResponse({ error: err.toString() });
-  }
-}
-
-function doOptions(e) {
-  // CORS 프리플라이트 요청 처리 (GitHub Pages 등 크로스 오리진 요청 허용)
-  // Google Apps Script는 "모든 사용자"로 배포하면 자동으로 CORS가 처리됩니다.
-  // 주의: ContentService에는 .addHeader() 메서드가 없습니다. 사용 시 에러가 발생하여 CORS 오류의 원인이 됩니다.
-  return ContentService
-    .createTextOutput('')
-    .setMimeType(ContentService.MimeType.TEXT);
-}
-
-function doPost(e) {
-  // 프론트에서 text/plain;charset=utf-8 로 보낸 데이터를 JSON으로 파싱
-  var params = {};
-  try {
-    if (e && e.postData && e.postData.contents) {
-      params = JSON.parse(e.postData.contents);
-    }
-  } catch (err) {
-    return createJsonResponse({ ok: false, message: 'Invalid JSON: ' + err.toString() });
-  }
-
-  var action = params.action;
-  var payload = params.payload || {};
-  var out = { ok: false, message: '' };
-
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-
-    switch (action) {
-      case 'saveMembers':
-        writeMembers(ss, payload);
-        out.ok = true;
-        break;
-      case 'saveRisks':
-        writeRisks(ss, payload);
-        out.ok = true;
-        break;
-      case 'saveNoise':
-        writeNoise(ss, payload);
-        out.ok = true;
-        break;
-      case 'saveInnovations':
-        writeInnovations(ss, payload);
-        out.ok = true;
-        break;
-      case 'saveEmergencyContacts':
-        writeConfigKey(ss, 'emergencyContacts', payload);
-        out.ok = true;
-        break;
-      case 'saveStretchingVideos':
-        writeConfigKey(ss, 'stretchingVideos', payload);
-        out.ok = true;
-        break;
-      case 'saveMedicineSurveyUrl':
-        writeConfigKey(ss, 'medicine_survey_url', payload.url !== undefined ? payload.url : '');
-        out.ok = true;
-        break;
-      case 'saveConsultationSchedule':
-        if (payload.factory1) writeConfigKey(ss, 'factory1', payload.factory1);
-        if (payload.factory2) writeConfigKey(ss, 'factory2', payload.factory2);
-        out.ok = true;
-        break;
-      case 'saveExpenses':
-        writeExpenses(ss, payload.year, payload.expenses || []);
-        out.ok = true;
-        break;
-      case 'saveFloorplans':
-        writeConfigKey(ss, 'floorplans', payload);
-        out.ok = true;
-        break;
-      case 'saveRanking':
-        saveRanking(ss, payload.name, payload.score);
-        out.ok = true;
-        out.message = 'Ranking saved successfully';
-        break;
-      default:
-        out.message = 'Unknown action: ' + action;
-    }
-  } catch (err) {
-    out.message = err.toString();
-  }
-
-  return createJsonResponse(out);
-}
-
-function createJsonResponse(obj) {
-  var json = JSON.stringify(obj);
-  // Google Apps Script는 "모든 사용자"로 배포하면 자동으로 CORS가 처리됩니다
-  // ContentService는 직접 CORS 헤더를 설정할 수 없지만(addHeader 없음), 배포 설정으로 해결됩니다
-  return ContentService
-    .createTextOutput(json)
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function getAllData() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var config = readConfig(ss);
-  // floorplans가 빈 객체가 아닌 경우에만 반환 (factory1 또는 factory2가 있어야 함)
-  var floorplans = {};
-  if (config.floorplans && typeof config.floorplans === 'object') {
-    if (config.floorplans.factory1 || config.floorplans.factory2) {
-      floorplans = config.floorplans;
-    }
-  }
-  return {
-    members: readMembers(ss),
-    risks: readSheet(ss, SHEET_NAMES.risks, ['type', 'dept', 'health', 'action', 'level']),
-    noise: readSheet(ss, SHEET_NAMES.noise, ['factory', 'processName', 'processDept', 'measuredDb', 'standardDb', 'result', 'protectionGear']),
-    innovations: readSheet(ss, SHEET_NAMES.innovations, ['category', 'title', 'desc', 'date', 'imageUrl', 'savings']),
-    expenses_2025: readExpensesByYear(ss, 2025),
-    expenses_2026: readExpensesByYear(ss, 2026),
-    floorplans: floorplans,
-    config: config
-  };
-}
-
-function readSheet(ss, sheetName, columns) {
-  var sh = ss.getSheetByName(sheetName);
-  if (!sh) return [];
-  var data = sh.getDataRange().getValues();
-  if (!data || data.length < 2) return [];
-  var headers = data[0];
-  var out = [];
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    var obj = {};
-    for (var c = 0; c < columns.length; c++) {
-      var key = columns[c];
-      var val = row[c];
-      if (key === 'measuredDb' || key === 'standardDb' || key === 'savings') val = typeof val === 'number' ? val : (parseFloat(val) || 0);
-      obj[key] = val !== undefined && val !== '' ? val : (key === 'savings' ? undefined : '');
-    }
-    out.push(obj);
-  }
-  return out;
-}
-
-function readMembers(ss) {
-  var sh = ss.getSheetByName(SHEET_NAMES.members);
-  if (!sh) return [];
-  var data = sh.getDataRange().getValues();
-  if (!data || data.length < 2) return [];
-  var out = [];
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    var counseling = {};
-    try {
-      counseling = row[5] ? JSON.parse(row[5]) : {};
-    } catch (e) {}
-    for (var m = 1; m <= 12; m++) if (counseling[m] === undefined) counseling[m] = null;
-    out.push({
-      name: row[0] || '',
-      dept: row[1] || '',
-      risk: row[2] || '',
-      note: row[3] || '',
-      isIntensiveCare: row[4] === true || row[4] === 'TRUE' || row[4] === '1',
-      counseling: counseling
-    });
-  }
-  return out;
-}
-
-function writeMembers(ss, arr) {
-  var sh = getOrCreateSheet(ss, SHEET_NAMES.members);
-  sh.clear();
-  sh.getRange(1, 1, 1, 6).setValues([['name', 'dept', 'risk', 'note', 'isIntensiveCare', 'counseling']]);
-  if (!arr || !arr.length) return;
-  var rows = arr.map(function(m) {
-    return [
-      m.name || '',
-      m.dept || '',
-      m.risk || '',
-      m.note || '',
-      m.isIntensiveCare === true ? 'TRUE' : 'FALSE',
-      JSON.stringify(m.counseling || {})
-    ];
-  });
-  sh.getRange(2, 1, 1 + rows.length, 6).setValues(rows);
-}
-
-function writeRisks(ss, arr) {
-  writeSheet(ss, SHEET_NAMES.risks, ['type', 'dept', 'health', 'action', 'level'], arr);
-}
-
-function writeNoise(ss, arr) {
-  writeSheet(ss, SHEET_NAMES.noise, ['factory', 'processName', 'processDept', 'measuredDb', 'standardDb', 'result', 'protectionGear'], arr);
-}
-
-function writeInnovations(ss, arr) {
-  writeSheet(ss, SHEET_NAMES.innovations, ['category', 'title', 'desc', 'date', 'imageUrl', 'savings'], arr);
-}
-
-function writeSheet(ss, sheetName, columns, arr) {
-  var sh = getOrCreateSheet(ss, sheetName);
-  sh.clear();
-  sh.getRange(1, 1, 1, columns.length).setValues([columns]);
-  if (!arr || !arr.length) return;
-  var rows = arr.map(function(item) {
-    return columns.map(function(col) { return item[col] !== undefined ? item[col] : ''; });
-  });
-  sh.getRange(2, 1, 1 + rows.length, columns.length).setValues(rows);
-}
-
-function readExpensesByYear(ss, year) {
-  var sh = ss.getSheetByName(SHEET_NAMES.expenses);
-  if (!sh) return [];
-  var data = sh.getDataRange().getValues();
-  if (!data || data.length < 2) return [];
-  var byMonth = {};
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    if (Number(row[0]) !== year) continue;
-    var month = Number(row[1]) || 1;
-    if (!byMonth[month]) byMonth[month] = [];
-    byMonth[month].push({ name: row[2] || '', amount: Number(row[3]) || 0, hospital: row[4] || '' });
-  }
-  var result = [];
-  for (var m = 1; m <= 12; m++) {
-    result.push({ month: m, items: byMonth[m] || [] });
-  }
-  return result;
-}
-
-function writeExpenses(ss, year, monthlyExpenses) {
-  var sh = getOrCreateSheet(ss, SHEET_NAMES.expenses);
-  var data = sh.getDataRange().getValues();
-  var newRows = [];
-  for (var i = 1; i < data.length; i++) {
-    if (Number(data[i][0]) !== year) newRows.push(data[i]);
-  }
-  if (monthlyExpenses && monthlyExpenses.length) {
-    monthlyExpenses.forEach(function(me) {
-      var month = me.month;
-      (me.items || []).forEach(function(item) {
-        newRows.push([year, month, item.name || '', item.amount || 0, item.hospital || '']);
-      });
-    });
-  }
-  sh.clear();
-  sh.getRange(1, 1, 1, 5).setValues([['year', 'month', 'name', 'amount', 'hospital']]);
-  if (newRows.length) sh.getRange(2, 1, 1 + newRows.length, 5).setValues(newRows);
-}
-
-function readConfig(ss) {
-  var sh = getOrCreateSheet(ss, SHEET_NAMES.config);
-  var data = sh.getDataRange().getValues();
-  var config = defaultConfig();
-  if (data.length < 2 || !data[0] || data[0][0] !== 'key') {
-    sh.clear();
-    sh.getRange(1, 1, 1, 2).setValues([['key', 'value']]);
-    return config;
-  }
-  for (var i = 1; i < data.length; i++) {
-    var key = String(data[i][0] || '').trim();
-    var val = data[i][1];
-    if (!key) continue;
-    try {
-      if (typeof val === 'string' && val.trim() !== '' && (val.indexOf('[') === 0 || val.indexOf('{') === 0)) {
-        val = JSON.parse(val);
+/**
+ * 초기 설정: 시트가 없으면 생성
+ */
+function setup() {
+  const doc = SpreadsheetApp.getActiveSpreadsheet();
+  Object.values(SHEET_NAMES).forEach(sheetName => {
+    if (!doc.getSheetByName(sheetName)) {
+      doc.insertSheet(sheetName);
+      // 헤더 초기화 예시 (필요 시 구체화 가능)
+      const sheet = doc.getSheetByName(sheetName);
+      if (sheetName === SHEET_NAMES.RANKINGS) {
+        sheet.appendRow(['Timestamp', 'Game', 'Name', 'Score']);
+      } else if (sheetName === SHEET_NAMES.CONFIG) {
+        sheet.appendRow(['Key', 'Value', 'Updated At']);
+        // 기본 키 세팅
+        sheet.appendRow(['medicineSurveyUrl', '', new Date()]);
+        sheet.appendRow(['floorplan1', '', new Date()]);
+        sheet.appendRow(['floorplan2', '', new Date()]);
       }
-    } catch (e) {}
-    if (val !== undefined && val !== null && val !== '') {
-      config[key] = val;
     }
-  }
-  return config;
+  });
 }
 
-function defaultConfig() {
-  return {
-    emergencyContacts: [],
-    hospitals: [],
-    announcements: { title: '', description: '', imageUrl: '' },
-    metadata: {},
-    factory1: [],
-    factory2: [],
-    medicine_survey_url: '',
-    stretchingVideos: [],
-    floorplans: {}
-  };
+/**
+ * GET 요청 처리: 시트의 모든 데이터를 JSON으로 반환
+ */
+function doGet(e) {
+  const lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+  
+  try {
+    const doc = SpreadsheetApp.getActiveSpreadsheet();
+    const result = { ok: true, data: {} };
+    
+    // 1. Members
+    result.data.members = getSheetData(doc, SHEET_NAMES.MEMBERS);
+    
+    // 2. Risks
+    result.data.risks = getSheetData(doc, SHEET_NAMES.RISKS);
+    
+    // 3. Noise
+    result.data.noise = getSheetData(doc, SHEET_NAMES.NOISE);
+    
+    // 4. Innovations
+    result.data.innovations = getSheetData(doc, SHEET_NAMES.INNOVATIONS);
+    
+    // 5. Expenses
+    result.data.expenses = getSheetData(doc, SHEET_NAMES.EXPENSES);
+    
+    // 6. Config (Key-Value 쌍으로 변환하여 전달)
+    const configData = getSheetData(doc, SHEET_NAMES.CONFIG);
+    const configMap = {};
+    configData.forEach(row => {
+      // Key가 있는 경우만. row[0]=Key, row[1]=Value
+      if (row.Key) configMap[row.Key] = row.Value; 
+    });
+    result.data.config = configMap;
+    
+    // 7. Rankings (게임별 분류는 프론트에서 처리하거나 여기서 분류 가능. 일단 전체 전달)
+    result.data.rankings = getSheetData(doc, SHEET_NAMES.RANKINGS);
+
+    
+    // 8. Stretching (Config 시트에 JSON string으로 저장하거나 별도 시트로 관리할 수 있음. 
+    //    현재 요구사항에는 'saveStretchingVideos'가 있으므로 Config에 저장된 JSON을 파싱해서 줄 수도 있고,
+    //    별도 시트 'Stretching'을 만들어도 됨. 
+    //    *간단하게 Config에 저장된 JSON 문자열을 그대로 주거나, 별도 시트 사용 권장.*
+    //    여기서는 'Stretching' 시트가 있다면 가져오고, 없으면 Config에서 찾도록 구현 유연성 확보.
+    if (doc.getSheetByName('Stretching')) {
+        result.data.stretching = getSheetData(doc, 'Stretching');
+    }
+
+    return responseJSON(result);
+    
+  } catch (e) {
+    return responseJSON({ ok: false, error: e.toString() });
+  } finally {
+    lock.releaseLock();
+  }
 }
 
-function writeConfigKey(ss, key, value) {
-  var sh = getOrCreateSheet(ss, SHEET_NAMES.config);
-  var data = sh.getDataRange().getValues();
-  if (data.length < 1 || !data[0] || data[0][0] !== 'key') {
-    sh.clear();
-    sh.getRange(1, 1, 1, 2).setValues([['key', 'value']]);
-    data = [['key', 'value']];
+/**
+ * POST 요청 처리: 데이터 저장
+ */
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.tryLock(10000); // 10초 대기
+  
+  try {
+    const doc = SpreadsheetApp.getActiveSpreadsheet();
+    const action = e.parameter.action;
+    
+    // POST 데이터 파싱 (JSON body 또는 form-data)
+    let payload = {};
+    try {
+      if (e.postData && e.postData.contents) {
+        payload = JSON.parse(e.postData.contents);
+      }
+    } catch (err) {
+      // form-data일 경우 e.parameter 사용
+      payload = e.parameter;
+    }
+    
+    // action이 payload 내부에 있을 수도 있음 (JSON body의 경우)
+    const activeAction = action || payload.action;
+    const activePayload = payload.payload || payload; // payload 안에 또 payload가 있을 수 있음
+
+    if (activeAction === 'saveRanking') {
+      // 게임 랭킹 저장
+      // payload: { game: 'immunity-war', name: '홍길동', score: 100 }
+      const sheet = getOrCreateSheet(doc, SHEET_NAMES.RANKINGS);
+      sheet.appendRow([
+        new Date(),
+        activePayload.game || 'unknown',
+        activePayload.name,
+        activePayload.score
+      ]);
+      return responseJSON({ ok: true, message: 'Ranking saved' });
+    }
+    
+    else if (activeAction === 'saveMembers') {
+      // 전체 멤버 리스트 덮어쓰기 (Admin 모드에서 저장 시 보통 전체 데이터를 줌)
+      // payload: [ { name: '...', ... }, ... ]
+      const sheet = getOrCreateSheet(doc, SHEET_NAMES.MEMBERS);
+      saveAllData(sheet, activePayload);
+      return responseJSON({ ok: true, message: 'Members saved' });
+    }
+    
+    else if (activeAction === 'saveRisks') {
+        const sheet = getOrCreateSheet(doc, SHEET_NAMES.RISKS);
+        saveAllData(sheet, activePayload);
+        return responseJSON({ ok: true, message: 'Risks saved' });
+    }
+    
+    else if (activeAction === 'saveInnovations') {
+        const sheet = getOrCreateSheet(doc, SHEET_NAMES.INNOVATIONS);
+        saveAllData(sheet, activePayload);
+        return responseJSON({ ok: true, message: 'Innovations saved' });
+    }
+    
+    else if (activeAction === 'saveNoise') {
+        const sheet = getOrCreateSheet(doc, SHEET_NAMES.NOISE);
+        saveAllData(sheet, activePayload);
+        return responseJSON({ ok: true, message: 'Noise saved' });
+    }
+
+    else if (activeAction === 'saveExpenses') { // 병원비
+        const sheet = getOrCreateSheet(doc, SHEET_NAMES.EXPENSES);
+        saveAllData(sheet, activePayload);
+        return responseJSON({ ok: true, message: 'Expenses saved' });
+    }
+
+    else if (activeAction === 'saveMedicineSurveyUrl') {
+        // Config 시트에 업데이트 (Key: medicineSurveyUrl)
+        updateConfig(doc, 'medicineSurveyUrl', activePayload.url);
+        return responseJSON({ ok: true, message: 'URL saved' });
+    }
+    
+    else if (activeAction === 'saveFloorplans') {
+        // Config 시트에 업데이트
+        // payload: { floor: 1, image: 'base64...' }
+        const key = 'floorplan' + activePayload.floor;
+        updateConfig(doc, key, activePayload.image);
+        return responseJSON({ ok: true, message: 'Floorplan saved' });
+    }
+    
+    else if (activeAction === 'saveStretchingVideos') {
+        // 스트레칭 비디오 목록 저장
+        // 별도 시트 'Stretching'에 저장하거나 Config에 JSON으로 저장
+        // 여기서는 'Stretching' 시트를 새로 덮어쓰는 방식으로 구현
+        const sheet = getOrCreateSheet(doc, 'Stretching');
+        saveAllData(sheet, activePayload); // activePayload should be array of objects
+        return responseJSON({ ok: true, message: 'Stretching videos saved' });
+    }
+    
+    else {
+      return responseJSON({ ok: false, error: 'Unknown action: ' + activeAction });
+    }
+    
+  } catch (e) {
+    return responseJSON({ ok: false, error: e.toString() });
+  } finally {
+    lock.releaseLock();
   }
-  var found = false;
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][0] || '').trim() === key) {
-      var valToWrite = typeof value === 'object' ? JSON.stringify(value) : (value !== undefined && value !== null ? String(value) : '');
-      sh.getRange(i + 1, 2).setValue(valToWrite);
+}
+
+// --------------------------------------------------------------------------
+// Helper Functions
+// --------------------------------------------------------------------------
+
+function getOrCreateSheet(doc, name) {
+  let sheet = doc.getSheetByName(name);
+  if (!sheet) {
+    sheet = doc.insertSheet(name);
+  }
+  return sheet;
+}
+
+/**
+ * 시트의 모든 데이터를 읽어 객체 배열로 반환
+ * 첫 번째 행을 헤더(Key)로 사용
+ */
+function getSheetData(doc, sheetName) {
+  const sheet = doc.getSheetByName(sheetName);
+  if (!sheet) return [];
+  
+  const data = sheet.getDataRange().getValues();
+  if (data.length < 2) return []; // 헤더만 있거나 비어있음
+  
+  const headers = data[0];
+  const rows = data.slice(1);
+  
+  return rows.map(row => {
+    const obj = {};
+    headers.forEach((header, index) => {
+      // 빈 헤더는 건너뜀
+      if (header) {
+        obj[header] = row[index];
+      }
+    });
+    return obj;
+  });
+}
+
+/**
+ * 시트 데이터를 모두 지우고(헤더 제외) 새로운 데이터로 덮어쓰기
+ */
+function saveAllData(sheet, dataArray) {
+  if (!Array.isArray(dataArray) || dataArray.length === 0) {
+    // 데이터가 비었으면, 헤더 남기고 내용만 삭제
+    const lastRow = sheet.getLastRow();
+    if (lastRow > 1) {
+      sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).clearContent();
+    }
+    return;
+  }
+  
+  // 1. 헤더 추출 (첫 번째 객체의 키 기준, 또는 기존 시트 헤더 유지?)
+  // -> 유연성을 위해 전달받은 데이터의 키를 기준으로 헤더를 다시 씀 (Schema migration 효과)
+  const headers = Object.keys(dataArray[0]);
+  
+  // 2. 시트 초기화
+  sheet.clear();
+  
+  // 3. 헤더 쓰기
+  sheet.appendRow(headers);
+  
+  // 4. 데이터 쓰기
+  // 2차원 배열로 변환
+  const rows = dataArray.map(obj => {
+    return headers.map(header => {
+      // 날짜 객체 처리 등 필요 시 여기서 변환
+      let val = obj[header];
+      if (Array.isArray(val) || (typeof val === 'object' && val !== null && !(val instanceof Date))) {
+          // 객체나 배열은 JSON 문자열로 저장
+          return JSON.stringify(val);
+      }
+      return val;
+    });
+  });
+  
+  // 대량 쓰기 (setValues가 빠름)
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+}
+
+/**
+ * Config 시트에서 Key에 해당하는 Value 업데이트 (없으면 추가)
+ */
+function updateConfig(doc, key, value) {
+  const sheet = getOrCreateSheet(doc, SHEET_NAMES.CONFIG);
+  const data = sheet.getDataRange().getValues();
+  let found = false;
+  
+  // 헤더가 없으면 생성
+  if (data.length === 0) {
+      sheet.appendRow(['Key', 'Value', 'Updated At']);
+  }
+  
+  // 행 순회하며 Key 찾기
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === key) {
+      // 찾음 -> 업데이트
+      sheet.getRange(i + 1, 2).setValue(value); // Value 컬럼
+      sheet.getRange(i + 1, 3).setValue(new Date()); // Updated At 컬럼
       found = true;
       break;
     }
   }
+  
+  // 못 찾음 -> 추가
   if (!found) {
-    var nextRow = data.length + 1;
-    sh.getRange(nextRow, 1).setValue(key);
-    var valToWrite = typeof value === 'object' ? JSON.stringify(value) : (value !== undefined && value !== null ? String(value) : '');
-    sh.getRange(nextRow, 2).setValue(valToWrite);
+    sheet.appendRow([key, value, new Date()]);
   }
 }
 
-function getOrCreateSheet(ss, name) {
-  var sh = ss.getSheetByName(name);
-  if (!sh) sh = ss.insertSheet(name);
-  return sh;
+/**
+ * JSON 응답 생성 (CORS 헤더 포함)
+ */
+function responseJSON(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
-// ========== 게임 랭킹 관련 함수 ==========
-
-function getRankings() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = getOrCreateSheet(ss, SHEET_NAMES.gameRankings);
-  var data = sh.getDataRange().getValues();
-  
-  if (data.length < 2) {
-    return [];
-  }
-  
-  var rankings = [];
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    if (row[0] && row[1] !== undefined) {
-      rankings.push({
-        name: String(row[0] || '').trim(),
-        score: Number(row[1]) || 0,
-        date: row[2] || new Date().toISOString()
-      });
-    }
-  }
-  
-  // 점수 내림차순 정렬
-  rankings.sort(function(a, b) {
-    return b.score - a.score;
-  });
-  
-  // Top 10만 반환
-  return rankings.slice(0, 10);
-}
-
-function saveRanking(ss, name, score) {
-  if (!name || !name.trim()) {
-    throw new Error('Name is required');
-  }
-  if (score === undefined || score === null || isNaN(score)) {
-    throw new Error('Score is required');
-  }
-  
-  var sh = getOrCreateSheet(ss, SHEET_NAMES.gameRankings);
-  var data = sh.getDataRange().getValues();
-  
-  // 헤더가 없으면 추가
-  if (data.length < 1 || !data[0] || data[0][0] !== 'name') {
-    sh.clear();
-    sh.getRange(1, 1, 1, 3).setValues([['name', 'score', 'date']]);
-    data = [['name', 'score', 'date']];
-  }
-  
-  // 새 랭킹 추가
-  var now = new Date();
-  sh.appendRow([name.trim().substring(0, 10), Number(score), now]);
-  
-  // 전체 랭킹 가져오기
-  var allRankings = getRankings();
-  
-  // Top 10만 유지 (나머지 삭제)
-  if (allRankings.length > 10) {
-    sh.clear();
-    sh.getRange(1, 1, 1, 3).setValues([['name', 'score', 'date']]);
-    for (var i = 0; i < 10; i++) {
-      var rank = allRankings[i];
-      sh.appendRow([rank.name, rank.score, rank.date]);
-    }
-  }
-}
+// OPTIONS 요청 처리 (만약 필요한 경우, 보통 doGet/doPost에서 처리됨)
+// Google Web App은 OPTIONS 요청을 직접 제어하기 어려우나, 
+// doGet/doPost가 JSON을 반환하면 브라우저가 값을 읽을 수 있음.
