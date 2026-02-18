@@ -408,10 +408,15 @@
 
         <section id="list" class="admin-only hidden tab-content max-w-7xl mx-auto space-y-6">
             <h2 class="text-2xl font-black text-slate-800">보건 집중관리 대상자 (<span id="list-total-members">0</span>명)</h2>
-            <div class="gu-card p-4 mb-4">
-                <label class="block text-sm font-bold text-slate-700 mb-2">이름 검색</label>
-                <input type="text" id="list-search" placeholder="이름으로 검색..." oninput="searchMembers(this.value)"
-                    class="w-full md:max-w-md px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-teal-500">
+            <div class="gu-card p-4 mb-4 flex flex-wrap items-end gap-3">
+                <div class="flex-1 min-w-0 md:max-w-md">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">이름 검색</label>
+                    <input type="text" id="list-search" placeholder="이름으로 검색..." oninput="searchMembers(this.value)"
+                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-teal-500">
+                </div>
+                <button type="button" onclick="addMember()" class="admin-only px-4 py-3 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600 transition-colors flex items-center gap-2">
+                    <i class="fas fa-plus"></i> 대상자 추가
+                </button>
             </div>
             <div class="flex flex-wrap gap-2 mb-4">
                 <button onclick="filterList('All')"
@@ -445,6 +450,7 @@
                                 <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">10월</th>
                                 <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">11월</th>
                                 <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">12월</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center admin-only">관리</th>
                             </tr>
                         </thead>
                         <tbody id="member-table-body"
@@ -975,6 +981,24 @@
             '오늘의 안전이 내일의 행복입니다.',
             '작은 부주의가 큰 사고를 부릅니다.',
             '안전 모드, 항상 켜 두세요.'
+        ];
+
+        const INITIAL_MEMBERS = [
+            { name: "강규돈", dept: "생산팀 프레스", risk: "High", note: "당뇨병 유질환자", counseling: { 1: { date: "01/01", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+            { name: "권유겸", dept: "생산팀 용접", risk: "High", note: "고혈압-치료중,당뇨-치료중", counseling: {} },
+            { name: "박세봉", dept: "스폿용접", risk: "High", note: "고혈압의심,당뇨의심,비만의심,청각장애", counseling: {} },
+            { name: "서길섭", dept: "CO2 용접", risk: "High", note: "소음성난청 요관찰자,간질환,고혈압 의심", counseling: { 1: { date: "01/01", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+            { name: "서용철", dept: "사무실", risk: "High", note: "간질환의심,고혈압-치료중,당뇨-치료중", counseling: { 1: { date: "01/01", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+            { name: "유호성", dept: "개발2팀", risk: "High", note: "간질환의심,고혈압의심,단백뇨주의", counseling: { 1: { date: "01/01", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+            { name: "장재혁", dept: "CO2 용접", risk: "High", note: "고혈압,당뇨병 유질환자,폐기능 저하", counseling: {} },
+            { name: "정창현", dept: "사무실", risk: "High", note: "간질환의심,고혈압,당뇨,이상지질-치료중", counseling: {} },
+            { name: "최은탁", dept: "물류팀", risk: "High", note: "간질환의심,고혈압의심,이상지질혈증주의", counseling: {} },
+            { name: "문정재", dept: "2공장 공무", risk: "High", note: "간질환의심,비만의심", counseling: { 1: { date: "01/01", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } },
+            { name: "전성호", dept: "2공장 자재팀", risk: "High", note: "간질환의심,고혈압의심,비만의심", counseling: {} },
+            { name: "김대원", dept: "임원", risk: "Highest", note: "고혈압-치료중,이상지질혈증-치료중", counseling: {} },
+            { name: "제창희", dept: "생산팀 용접", risk: "Highest", note: "음주주의", counseling: {} },
+            { name: "박인학", dept: "2공장 조립", risk: "Highest", note: "간질환의심,고혈압,당뇨병 유질환자", counseling: {} },
+            { name: "박태양", dept: "2공장 품질", risk: "Highest", note: "간질환의심,고혈압 의심,당뇨병 유질환자", counseling: { 1: { date: "01/01", count: 1 }, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null, 10: null, 11: null, 12: null } }
         ];
 
         const slides = ['dashboard', 'noise', 'expense', 'risk-factors', 'innovation'];
@@ -2508,6 +2532,15 @@
             renderMemberTable(filtered);
         }
 
+        function renderDashboard() {
+            var total = (APP_DATA.members || []).length;
+            var el = document.getElementById('dashboard-total-members');
+            if (el) el.textContent = total;
+            var listTotal = document.getElementById('list-total-members');
+            if (listTotal) listTotal.textContent = total;
+            updateDashboardCounselingRate();
+        }
+
         function toggleCounselingByBtn(btn) {
             const name = btn.getAttribute('data-name');
             const dept = btn.getAttribute('data-dept');
@@ -2541,7 +2574,10 @@
         function renderMemberTable(members) {
             const tbody = document.getElementById('member-table-body');
             if (!tbody) return;
-            tbody.innerHTML = (members || []).map(m => {
+            const isAdmin = isAdminLoggedIn();
+            const list = members || [];
+            tbody.innerHTML = list.map(m => {
+                const fullIndex = APP_DATA.members.findIndex(mem => mem.name === m.name && mem.dept === m.dept);
                 const isIntensive = m.isIntensiveCare === true;
                 const rowClass = isIntensive ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-slate-50';
                 const badge = isIntensive ? '<span class="ml-2 px-2 py-0.5 bg-yellow-400 text-yellow-900 rounded text-[10px] font-black">집중관찰</span>' : '';
@@ -2552,8 +2588,72 @@
                     const dept = (m.dept || '').replace(/"/g, '&quot;');
                     return `<td class="p-2 text-center"><button type="button" onclick="toggleCounselingByBtn(this)" data-name="${name}" data-dept="${dept}" data-month="${mon}" class="w-7 h-7 rounded-full inline-flex items-center justify-center text-xs font-bold ${done ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}">${done ? 'O' : '－'}</button></td>`;
                 }).join('');
-                return `<tr class="${rowClass}"><td class="p-3 font-bold">${m.name}${badge}</td><td class="p-3 text-slate-500 font-bold">${m.dept}</td><td class="p-3"><span class="status-badge ${m.risk === 'Highest' ? 'status-highest' : 'status-high'}">${m.risk}</span></td><td class="p-3 text-xs font-bold text-slate-600">${m.note}</td>${monthCells}</tr>`;
+                const actionCells = isAdmin && fullIndex >= 0 ? `<td class="p-2 text-center whitespace-nowrap"><button type="button" onclick="editMember(${fullIndex})" class="px-2 py-1 rounded text-xs font-bold bg-slate-200 text-slate-700 hover:bg-slate-300">수정</button> <button type="button" onclick="deleteMember(${fullIndex})" class="px-2 py-1 rounded text-xs font-bold bg-red-100 text-red-700 hover:bg-red-200">삭제</button></td>` : (isAdmin ? '<td class="p-2"></td>' : '');
+                return `<tr class="${rowClass}"><td class="p-3 font-bold">${m.name}${badge}</td><td class="p-3 text-slate-500 font-bold">${m.dept}</td><td class="p-3"><span class="status-badge ${m.risk === 'Highest' ? 'status-highest' : 'status-high'}">${m.risk}</span></td><td class="p-3 text-xs font-bold text-slate-600">${m.note}</td>${monthCells}${actionCells}</tr>`;
             }).join('');
+        }
+
+        function addMember() {
+            const name = prompt('성명', '');
+            if (name == null || name.trim() === '') return;
+            const dept = prompt('부서', '');
+            if (dept == null) return;
+            const risk = prompt('위험등급 (Highest 또는 High)', 'High');
+            if (risk == null) return;
+            const note = prompt('관리 소견', '') || '';
+            const counseling = {};
+            for (var mon = 1; mon <= 12; mon++) counseling[mon] = null;
+            APP_DATA.members.push({ name: name.trim(), dept: (dept || '').trim(), risk: (risk || 'High').trim() || 'High', note: note.trim(), isIntensiveCare: false, counseling: counseling });
+            apiPost('saveMembers', APP_DATA.members).then(function () {
+                renderDashboard();
+                applyListFilter();
+                updateDashboardCounselingRate();
+                console.log('✅ 대상자가 추가되었습니다.');
+            }).catch(function (err) {
+                console.error('저장 실패:', err);
+                alert('저장 중 오류가 발생했습니다.');
+            });
+        }
+
+        function editMember(index) {
+            const m = APP_DATA.members[index];
+            if (!m) return;
+            const name = prompt('성명', m.name || '');
+            if (name == null) return;
+            const dept = prompt('부서', m.dept || '');
+            if (dept == null) return;
+            const risk = prompt('위험등급 (Highest 또는 High)', m.risk || 'High');
+            if (risk == null) return;
+            const note = prompt('관리 소견', m.note || '') || '';
+            m.name = name.trim();
+            m.dept = (dept || '').trim();
+            m.risk = (risk || 'High').trim() || 'High';
+            m.note = note.trim();
+            apiPost('saveMembers', APP_DATA.members).then(function () {
+                renderDashboard();
+                applyListFilter();
+                updateDashboardCounselingRate();
+                console.log('✅ 대상자 정보가 수정되었습니다.');
+            }).catch(function (err) {
+                console.error('저장 실패:', err);
+                alert('저장 중 오류가 발생했습니다.');
+            });
+        }
+
+        function deleteMember(index) {
+            const m = APP_DATA.members[index];
+            if (!m) return;
+            if (!confirm('"' + (m.name || '') + '" 대상자를 명단에서 삭제할까요?')) return;
+            APP_DATA.members.splice(index, 1);
+            apiPost('saveMembers', APP_DATA.members).then(function () {
+                renderDashboard();
+                applyListFilter();
+                updateDashboardCounselingRate();
+                console.log('✅ 대상자가 삭제되었습니다.');
+            }).catch(function (err) {
+                console.error('저장 실패:', err);
+                alert('저장 중 오류가 발생했습니다.');
+            });
         }
 
         // ========== 병원비 ==========
@@ -2643,6 +2743,14 @@
             }
         }
 
+        // 집중관리 명단 counseling 객체에 1~12월 키 보장
+        function normalizeMemberCounseling(m) {
+            var c = m.counseling || {};
+            for (var mon = 1; mon <= 12; mon++) { if (c[mon] === undefined) c[mon] = null; }
+            m.counseling = c;
+            return m;
+        }
+
         // 민감 데이터 로드 함수 (로그인 후에만 호출)
         function loadSensitiveData() {
             if (!GAS_URL || GAS_URL.trim() === '') return;
@@ -2652,10 +2760,22 @@
             fetch(GAS_URL + '?t=' + Date.now())
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
-                    if (data && Array.isArray(data.members)) {
-                        APP_DATA.members = data.members;
+                    var membersLoaded = data && Array.isArray(data.members) && data.members.length > 0;
+                    if (membersLoaded) {
+                        APP_DATA.members = data.members.map(normalizeMemberCounseling);
                         renderDashboard();
-                        renderMemberTable(APP_DATA.members);
+                        applyListFilter();
+                    } else {
+                        // 구글 시트가 비어 있으면 초기 15명 주입 후 시트에 저장
+                        APP_DATA.members = INITIAL_MEMBERS.map(function (m) {
+                            return normalizeMemberCounseling(JSON.parse(JSON.stringify(m)));
+                        });
+                        apiPost('saveMembers', APP_DATA.members).then(function () {
+                            renderDashboard();
+                            applyListFilter();
+                            updateDashboardCounselingRate();
+                            console.log('✅ 집중관리 명단 초기 데이터가 Google Sheets에 저장되었습니다.');
+                        }).catch(function (err) { console.error('초기 명단 저장 실패:', err); });
                     }
                     if (data && Array.isArray(data.expenses_2025)) {
                         APP_DATA.expenses_2025 = data.expenses_2025;
