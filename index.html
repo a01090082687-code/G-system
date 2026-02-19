@@ -87,7 +87,7 @@
 <body class="flex h-screen overflow-hidden text-slate-800">
     <!-- 데이터 로딩 오버레이 -->
     <div id="data-loading-overlay"
-        class="hidden fixed inset-0 z-[100] bg-slate-900/80 flex flex-col items-center justify-center gap-4">
+        class="fixed inset-0 z-[100] bg-slate-900/80 flex flex-col items-center justify-center gap-4">
         <div class="w-12 h-12 border-4 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
         <p class="text-white font-bold">데이터 불러오는 중...</p>
     </div>
@@ -414,7 +414,8 @@
                     <input type="text" id="list-search" placeholder="이름으로 검색..." oninput="searchMembers(this.value)"
                         class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-teal-500">
                 </div>
-                <button type="button" onclick="addMember()" class="admin-only px-4 py-3 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600 transition-colors flex items-center gap-2">
+                <button type="button" onclick="addMember()"
+                    class="admin-only px-4 py-3 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600 transition-colors flex items-center gap-2">
                     <i class="fas fa-plus"></i> 대상자 추가
                 </button>
             </div>
@@ -450,7 +451,8 @@
                                 <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">10월</th>
                                 <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">11월</th>
                                 <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">12월</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center admin-only">관리</th>
+                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center admin-only">
+                                    관리</th>
                             </tr>
                         </thead>
                         <tbody id="member-table-body"
@@ -852,7 +854,7 @@
 
     <script>
         // ========== 0. 구글 시트 백엔드 URL ==========
-        var GAS_URL = 'https://script.google.com/macros/s/AKfycbziwcFQgIxJ4D8Jq84e76pMoezKup2pntr02ZfQscYKEdkzojrPf0F_GTg961kcizZTmg/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyJwKPCt8ux0G27yPMXXP7XQ_nVzXXnP7uqZXaw3EFxZGkXj3YcPiKREUUfMIsSDJLeiw/exec';
 
         function goToGame() {
             window.location.href = 'immunity-war.html';
@@ -1073,8 +1075,19 @@
 
         function applyDataFromServer(data) {
             if (!data) return;
-            // 보안: members는 로그인 후에만 로드 (loadSensitiveData에서 처리)
-            // if (Array.isArray(data.members)) APP_DATA.members = data.members;
+            if (data && Array.isArray(data.members) && data.members.length > 0) {
+                APP_DATA.members = data.members.map(normalizeMemberCounseling);
+            } else {
+                // 구글 시트가 비어 있으면(0명이면) 강제로 15명 실데이터 주입 후 즉시 저장 (새로고침 시 증발 방지)
+                if (typeof INITIAL_MEMBERS !== 'undefined') {
+                    APP_DATA.members = INITIAL_MEMBERS.map(function (m) {
+                        return normalizeMemberCounseling(JSON.parse(JSON.stringify(m)));
+                    });
+                    apiPost('saveMembers', APP_DATA.members).then(function () {
+                        console.log('✅ 집중관리 명단 초기 데이터 자동 복구 및 구글 시트 저장 완료');
+                    }).catch(function (err) { console.error('초기 명단 저장 실패:', err); });
+                }
+            }
             if (Array.isArray(data.risks)) APP_DATA.risks = data.risks;
             if (Array.isArray(data.noise)) {
                 NOISE_DATA = data.noise.map(function (n) {
@@ -1086,9 +1099,8 @@
                 });
             }
             if (Array.isArray(data.innovations)) APP_DATA.innovations = data.innovations;
-            // 보안: expenses는 로그인 후에만 로드 (loadSensitiveData에서 처리)
-            // if (Array.isArray(data.expenses_2025)) APP_DATA.expenses_2025 = data.expenses_2025;
-            // if (Array.isArray(data.expenses_2026)) APP_DATA.expenses_2026 = data.expenses_2026;
+            if (Array.isArray(data.expenses_2025)) APP_DATA.expenses_2025 = data.expenses_2025;
+            if (Array.isArray(data.expenses_2026)) APP_DATA.expenses_2026 = data.expenses_2026;
             // 배치도 데이터 처리 (Google Sheets 우선, localStorage fallback)
             if (data.floorplans && typeof data.floorplans === 'object') {
                 const floorplansFromServer = data.floorplans;
@@ -1237,31 +1249,20 @@
             const overlay = document.getElementById('data-loading-overlay');
             if (!silent && overlay) overlay.classList.remove('hidden');
             if (!GAS_URL || GAS_URL.trim() === '') {
-                console.warn('⚠️ GAS_URL이 설정되지 않았습니다. Google Sheets 연동이 불가능합니다.');
+                console.warn('⚠️ GAS_URL이 설정되지 않았습니다.');
                 hideDataLoadingOverlay();
                 initApp(silent);
                 return Promise.resolve();
             }
-
-            // 디버깅: GAS_URL 확인
-            console.log('📡 Google Sheets 데이터 로드 시도:', GAS_URL);
-
-            // 캐시 방지를 위해 타임스탬프 추가 (쿼리스트링으로 충분하므로 headers 제거)
-            return fetch(GAS_URL + '?t=' + Date.now(), {
-                method: 'GET'
-                // headers 속성 제거: Preflight 요청을 방지하기 위해
-            })
+            // 오직 fetch(GAS_URL)로만 데이터 로드 (로컬 서버/더미 데이터 없음)
+            return fetch(GAS_URL + '?t=' + Date.now(), { method: 'GET' })
                 .then(function (r) {
-                    if (!r.ok) {
-                        throw new Error('HTTP ' + r.status + ': ' + r.statusText);
-                    }
+                    if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + r.statusText);
                     return r.json();
                 })
                 .then(function (data) {
-                    console.log('✅ Google Sheets 데이터 로드 성공:', data);
                     applyDataFromServer(data);
                     hideDataLoadingOverlay();
-                    // 데이터 적용 직후 즉시 UI 갱신 (initApp 전에 먼저 실행)
                     calculateDynamicSavings();
                     updateTotalSavingsUI();
                     renderCharts();
@@ -1274,72 +1275,14 @@
                     filterList('All');
                     setNoiseFilter('all');
                     renderExpenseData(2025);
-                    // 그 다음 initApp 실행 (전체 초기화)
                     initApp(silent);
-                    // 추가로 한 번 더 강제 갱신 (Race Condition 완전 방지)
-                    setTimeout(function () {
-                        calculateDynamicSavings();
-                        updateTotalSavingsUI();
-                        renderCharts();
-                        renderHealthNews();
-                        renderSchedule();
-                        renderDashboardNoise();
-                        renderSafetyQuote();
-                        updateDashboardCounselingRate();
-                        calculateTotalSavings();
-                        filterList('All');
-                        setNoiseFilter('all');
-                        renderMedicineSurveyUserArea(); // 의약품 설문조사 링크 재표시
-                        renderStretchingVideos(); // 스트레칭 영상 재표시
-                        showNoiseFloorplan(1); // 배치도 재표시
-                    }, 100);
                 })
                 .catch(function (error) {
                     console.error('❌ Google Sheets 데이터 로드 실패:', error);
-                    console.error('GAS_URL:', GAS_URL);
-                    console.error('에러 상세:', error.message || error);
-
-                    // 사용자에게 알림 (개발 모드에서만)
                     if (!silent) {
-                        const errorMsg = 'Google Sheets 연결 실패: ' + (error.message || '알 수 없는 오류');
-                        console.warn('⚠️', errorMsg);
-                        console.warn('💡 해결 방법:');
-                        console.warn('1. Google Apps Script가 웹 앱으로 배포되어 있는지 확인');
-                        console.warn('2. 배포 시 "액세스 권한: 모든 사용자"로 설정했는지 확인');
-                        console.warn('3. GAS_URL이 올바른지 확인');
+                        console.warn('💡 GAS 웹 앱 배포 및 "모든 사용자" 액세스 확인');
                     }
-
                     hideDataLoadingOverlay();
-                    // 에러 발생 시에도 localStorage에서 데이터 복원 시도
-                    const savedUrl = localStorage.getItem('medicine_survey_url');
-                    if (savedUrl) {
-                        medicineSurveyUrlFromServer = savedUrl;
-                    }
-                    const savedVideos = localStorage.getItem('stretching_videos');
-                    if (savedVideos) {
-                        try {
-                            const videos = JSON.parse(savedVideos);
-                            if (Array.isArray(videos) && videos.length > 0) {
-                                APP_DATA.stretchingVideos = videos;
-                            }
-                        } catch (e) {
-                            console.error('스트레칭 영상 복원 오류:', e);
-                        }
-                    }
-                    const savedFloorplans = localStorage.getItem('noise_floorplans');
-                    if (savedFloorplans) {
-                        try {
-                            const floorplans = JSON.parse(savedFloorplans);
-                            if (floorplans && typeof floorplans === 'object' && (floorplans.factory1 || floorplans.factory2)) {
-                                if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
-                                APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, floorplans);
-                                if (floorplans.factory1) window.floorplan_1 = floorplans.factory1;
-                                if (floorplans.factory2) window.floorplan_2 = floorplans.factory2;
-                            }
-                        } catch (e) {
-                            console.error('배치도 복원 오류:', e);
-                        }
-                    }
                     initApp(silent);
                 });
         }
@@ -2753,42 +2696,8 @@
 
         // 민감 데이터 로드 함수 (로그인 후에만 호출)
         function loadSensitiveData() {
-            if (!GAS_URL || GAS_URL.trim() === '') return;
-            const loadingOverlay = document.getElementById('data-loading-overlay');
-            if (loadingOverlay) loadingOverlay.classList.remove('hidden');
-
-            fetch(GAS_URL + '?t=' + Date.now())
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    var membersLoaded = data && Array.isArray(data.members) && data.members.length > 0;
-                    if (membersLoaded) {
-                        APP_DATA.members = data.members.map(normalizeMemberCounseling);
-                        renderDashboard();
-                        applyListFilter();
-                    } else {
-                        // 구글 시트가 비어 있으면 초기 15명 주입 후 시트에 저장
-                        APP_DATA.members = INITIAL_MEMBERS.map(function (m) {
-                            return normalizeMemberCounseling(JSON.parse(JSON.stringify(m)));
-                        });
-                        apiPost('saveMembers', APP_DATA.members).then(function () {
-                            renderDashboard();
-                            applyListFilter();
-                            updateDashboardCounselingRate();
-                            console.log('✅ 집중관리 명단 초기 데이터가 Google Sheets에 저장되었습니다.');
-                        }).catch(function (err) { console.error('초기 명단 저장 실패:', err); });
-                    }
-                    if (data && Array.isArray(data.expenses_2025)) {
-                        APP_DATA.expenses_2025 = data.expenses_2025;
-                    }
-                    if (data && Array.isArray(data.expenses_2026)) {
-                        APP_DATA.expenses_2026 = data.expenses_2026;
-                    }
-                    hideDataLoadingOverlay();
-                })
-                .catch(function (error) {
-                    console.error('민감 데이터 로드 실패:', error);
-                    hideDataLoadingOverlay();
-                });
+            // applyDataFromServer에서 명단 초기화 및 렌더링을 알아서 처리하므로 데이터만 강제로 불러옴
+            loadDataFromSheets(false);
         }
 
         function updateAuthUI() {
@@ -2915,78 +2824,60 @@
         }
 
         window.addEventListener('DOMContentLoaded', function () {
-            // localStorage.removeItem('g_auth_mode'); // 주석 처리: 로그인 상태 유지
-
-            // 초기 데이터 설정 (한 번만 실행)
-            initializeDefaultData();
-
-            // 초기 뷰 모드 설정
-            initViewMode();
-
-            // 리사이즈 시 뷰 모드 재설정
-            let resizeTimer;
-            window.addEventListener('resize', function () {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(initViewMode, 250);
-            });
-
-            // 페이지 로드 시 localStorage에서 의약품 설문조사 URL 복원
-            const savedUrl = localStorage.getItem('medicine_survey_url');
-            if (savedUrl && !medicineSurveyUrlFromServer) {
-                medicineSurveyUrlFromServer = savedUrl;
-            }
-
-            // 페이지 로드 시 localStorage에서 스트레칭 영상 복원
-            const savedVideos = localStorage.getItem('stretching_videos');
-            if (savedVideos) {
-                try {
-                    const videos = JSON.parse(savedVideos);
-                    if (Array.isArray(videos) && videos.length > 0) {
-                        // Google Sheets에서 로드되지 않았거나 비어있으면 localStorage 값 사용
-                        if (!APP_DATA.stretchingVideos || APP_DATA.stretchingVideos.length === 0) {
-                            APP_DATA.stretchingVideos = videos;
-                        }
+            // 1. 로딩 오버레이 유지 상태에서 오직 fetch(GAS_URL)로만 데이터 로드
+            loadDataFromSheets()
+                .then(function () {
+                    // 2. 구글 시트 로드 성공 후 로딩 종료·initApp은 loadDataFromSheets 내부에서 처리됨. 이어서 UI 초기화.
+                    initializeDefaultData();
+                    initViewMode();
+                    var resizeTimer;
+                    window.addEventListener('resize', function () {
+                        clearTimeout(resizeTimer);
+                        resizeTimer = setTimeout(initViewMode, 250);
+                    });
+                    var savedUrl = localStorage.getItem('medicine_survey_url');
+                    if (savedUrl && !medicineSurveyUrlFromServer) medicineSurveyUrlFromServer = savedUrl;
+                    var savedVideos = localStorage.getItem('stretching_videos');
+                    if (savedVideos) {
+                        try {
+                            var videos = JSON.parse(savedVideos);
+                            if (Array.isArray(videos) && videos.length > 0 && (!APP_DATA.stretchingVideos || APP_DATA.stretchingVideos.length === 0)) {
+                                APP_DATA.stretchingVideos = videos;
+                            }
+                        } catch (e) { console.error('스트레칭 영상 복원 오류:', e); }
                     }
-                } catch (e) {
-                    console.error('스트레칭 영상 복원 오류:', e);
-                }
-            }
-
-            // 페이지 로드 시 localStorage에서 배치도 이미지 복원
-            const savedFloorplans = localStorage.getItem('noise_floorplans');
-            if (savedFloorplans) {
-                try {
-                    const floorplans = JSON.parse(savedFloorplans);
-                    if (floorplans && typeof floorplans === 'object') {
-                        // Google Sheets에서 로드되지 않았거나 비어있으면 localStorage 값 사용
-                        if (!APP_DATA.floorplans || (!APP_DATA.floorplans.factory1 && !APP_DATA.floorplans.factory2)) {
-                            if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
-                            APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, floorplans);
-                            if (floorplans.factory1) window.floorplan_1 = floorplans.factory1;
-                            if (floorplans.factory2) window.floorplan_2 = floorplans.factory2;
-                        }
+                    var savedFloorplans = localStorage.getItem('noise_floorplans');
+                    if (savedFloorplans) {
+                        try {
+                            var floorplans = JSON.parse(savedFloorplans);
+                            if (floorplans && typeof floorplans === 'object' && (floorplans.factory1 || floorplans.factory2)) {
+                                if (!APP_DATA.floorplans) APP_DATA.floorplans = {};
+                                APP_DATA.floorplans = Object.assign({}, APP_DATA.floorplans, floorplans);
+                                if (floorplans.factory1) window.floorplan_1 = floorplans.factory1;
+                                if (floorplans.factory2) window.floorplan_2 = floorplans.factory2;
+                            }
+                        } catch (e) { console.error('배치도 복원 오류:', e); }
                     }
-                } catch (e) {
-                    console.error('배치도 이미지 복원 오류:', e);
-                }
-            }
-
-            renderNavigation();
-            updateAuthUI();
-            updateAdminOnlyElements();
-            renderMedicineSurveyUserArea(); // 초기 로드 시에도 링크 표시
-            renderStretchingVideos(); // 초기 로드 시에도 스트레칭 영상 표시
-            showNoiseFloorplan(1); // 초기 로드 시에도 배치도 표시
-
-            // 초기 데이터 로드
-            loadDataFromSheets();
-
-            // 실시간 연동: 10초마다 Google Sheets에서 데이터 자동 새로고침
-            // (다른 기기에서 수정한 내용이 실시간으로 반영됨)
-            // GitHub Pages 사용 시 다른 사용자들이 최신 데이터를 볼 수 있도록 짧은 간격으로 새로고침
-            setInterval(function () {
-                loadDataFromSheets(true); // silent 모드로 조용히 새로고침
-            }, 10000); // 10초마다 (더 빠른 동기화)
+                    renderNavigation();
+                    updateAuthUI();
+                    updateAdminOnlyElements();
+                    renderMedicineSurveyUserArea();
+                    renderStretchingVideos();
+                    showNoiseFloorplan(1);
+                    setInterval(function () { loadDataFromSheets(true); }, 10000);
+                })
+                .catch(function () {
+                    // 실패 시에도 로딩 숨김·initApp은 loadDataFromSheets 내부에서 처리. 이어서 최소 UI 초기화.
+                    initializeDefaultData();
+                    initViewMode();
+                    renderNavigation();
+                    updateAuthUI();
+                    updateAdminOnlyElements();
+                    renderMedicineSurveyUserArea();
+                    renderStretchingVideos();
+                    showNoiseFloorplan(1);
+                    setInterval(function () { loadDataFromSheets(true); }, 10000);
+                });
         });
     </script>
 
