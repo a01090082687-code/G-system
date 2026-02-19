@@ -336,19 +336,24 @@
                 </div>
                 <div class="gu-card p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 class="text-sm font-bold text-slate-500 mb-4 flex items-center gap-2">
-                        <i class="fas fa-stethoscope text-emerald-500"></i> <span id="current-month-text">이번 달</span> 집중관리 상담 달성률
+                        <i class="fas fa-stethoscope text-emerald-500"></i> <span id="current-month-text">이번 달</span>
+                        집중관리 상담 달성률
                     </h3>
                     <div class="flex items-end justify-between">
                         <div>
                             <div class="text-3xl font-black text-slate-800" id="counseling-rate">0%</div>
-                            <p class="text-sm text-slate-500 mt-1"><span id="counseling-done">0</span>명 완료 / 총 대상 <span id="counseling-total">0</span>명</p>
+                            <p class="text-sm text-slate-500 mt-1"><span id="counseling-done">0</span>명 완료 / 총 대상 <span
+                                    id="counseling-total">0</span>명</p>
                         </div>
-                        <div class="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
+                        <div
+                            class="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
                             <i class="fas fa-clipboard-check"></i>
                         </div>
                     </div>
                     <div class="w-full bg-slate-100 rounded-full h-2 mt-4 overflow-hidden">
-                        <div id="counseling-progress-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        <div id="counseling-progress-bar"
+                            class="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style="width: 0%">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -425,6 +430,28 @@
 
         <section id="list" class="admin-only hidden tab-content max-w-7xl mx-auto space-y-6">
             <h2 class="text-2xl font-black text-slate-800">보건 집중관리 대상자 (<span id="list-total-members">0</span>명)</h2>
+            <!-- 집중관리 상담 달성률 카드 (리스트 뷰용) -->
+            <div class="gu-card p-6 mb-6 rounded-2xl shadow-sm border border-slate-200 bg-white">
+                <h3 class="text-sm font-bold text-slate-500 mb-4 flex items-center gap-2">
+                    <i class="fas fa-stethoscope text-emerald-500"></i> <span id="list-current-month-text">이번 달</span>
+                    집중관리 상담 달성률
+                </h3>
+                <div class="flex items-end justify-between">
+                    <div>
+                        <div class="text-3xl font-black text-slate-800" id="list-counseling-rate">0%</div>
+                        <p class="text-sm text-slate-500 mt-1"><span id="list-counseling-done">0</span>명 완료 / 총 대상 <span
+                                id="list-counseling-total">0</span>명</p>
+                    </div>
+                    <div
+                        class="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2 mt-4 overflow-hidden">
+                    <div id="list-counseling-progress-bar"
+                        class="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                </div>
+            </div>
             <div class="gu-card p-4 mb-4 flex flex-wrap items-end gap-3">
                 <div class="flex-1 min-w-0 md:max-w-md">
                     <label class="block text-sm font-bold text-slate-700 mb-2">이름 검색</label>
@@ -2508,8 +2535,11 @@
             }
             var rate = total > 0 ? Math.round((doneCount / total) * 100) : 0;
             var monthLabels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+            var monthText = monthLabels[currentMonth - 1] || '이번 달';
+
+            // 대시보드 업데이트
             var currentMonthEl = document.getElementById('current-month-text');
-            if (currentMonthEl) currentMonthEl.textContent = monthLabels[currentMonth - 1] || '이번 달';
+            if (currentMonthEl) currentMonthEl.textContent = monthText;
             var rateEl = document.getElementById('counseling-rate');
             if (rateEl) rateEl.textContent = rate + '%';
             var doneEl = document.getElementById('counseling-done');
@@ -2518,6 +2548,18 @@
             if (totalEl) totalEl.textContent = total;
             var barEl = document.getElementById('counseling-progress-bar');
             if (barEl) barEl.style.width = rate + '%';
+
+            // 리스트 뷰 업데이트
+            var listMonthEl = document.getElementById('list-current-month-text');
+            if (listMonthEl) listMonthEl.textContent = monthText;
+            var listRateEl = document.getElementById('list-counseling-rate');
+            if (listRateEl) listRateEl.textContent = rate + '%';
+            var listDoneEl = document.getElementById('list-counseling-done');
+            if (listDoneEl) listDoneEl.textContent = doneCount;
+            var listTotalEl = document.getElementById('list-counseling-total');
+            if (listTotalEl) listTotalEl.textContent = total;
+            var listBarEl = document.getElementById('list-counseling-progress-bar');
+            if (listBarEl) listBarEl.style.width = rate + '%';
         }
 
         function renderDashboard() {
