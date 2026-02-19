@@ -312,7 +312,7 @@
                     <p id="announcement-desc" class="text-white/80 font-bold text-sm">작업자 건강과 안전을 위한 보건 관리</p>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="gu-card p-6 border-t-4 border-t-[#064E3B]">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">총 관리인원</p>
                     <h3 class="text-3xl font-black text-slate-800 mt-1"><span id="dashboard-total-members">0</span><span
@@ -333,6 +333,23 @@
                     <p class="text-xs font-bold text-amber-600 mt-2 flex items-center gap-1">
                         <i class="fas fa-chart-line"></i> 자동 집계 중
                     </p>
+                </div>
+                <div class="gu-card p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-bold text-slate-500 mb-4 flex items-center gap-2">
+                        <i class="fas fa-stethoscope text-emerald-500"></i> <span id="current-month-text">이번 달</span> 집중관리 상담 달성률
+                    </h3>
+                    <div class="flex items-end justify-between">
+                        <div>
+                            <div class="text-3xl font-black text-slate-800" id="counseling-rate">0%</div>
+                            <p class="text-sm text-slate-500 mt-1"><span id="counseling-done">0</span>명 완료 / 총 대상 <span id="counseling-total">0</span>명</p>
+                        </div>
+                        <div class="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2 mt-4 overflow-hidden">
+                        <div id="counseling-progress-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
             <!-- 금월 건강상담 대상자 명단 -->
@@ -2479,6 +2496,30 @@
             renderMemberTable(filtered);
         }
 
+        function updateCounselingStats() {
+            var members = APP_DATA.members || [];
+            var intensive = members.filter(function (m) { return String(m.isIntensiveCare).toUpperCase() === 'TRUE'; });
+            var total = intensive.length;
+            var currentMonth = new Date().getMonth() + 1;
+            var doneCount = 0;
+            for (var i = 0; i < intensive.length; i++) {
+                var c = intensive[i].counseling;
+                if (c && c[currentMonth] != null) doneCount++;
+            }
+            var rate = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+            var monthLabels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+            var currentMonthEl = document.getElementById('current-month-text');
+            if (currentMonthEl) currentMonthEl.textContent = monthLabels[currentMonth - 1] || '이번 달';
+            var rateEl = document.getElementById('counseling-rate');
+            if (rateEl) rateEl.textContent = rate + '%';
+            var doneEl = document.getElementById('counseling-done');
+            if (doneEl) doneEl.textContent = doneCount;
+            var totalEl = document.getElementById('counseling-total');
+            if (totalEl) totalEl.textContent = total;
+            var barEl = document.getElementById('counseling-progress-bar');
+            if (barEl) barEl.style.width = rate + '%';
+        }
+
         function renderDashboard() {
             var total = (APP_DATA.members || []).length;
             var el = document.getElementById('dashboard-total-members');
@@ -2486,6 +2527,7 @@
             var listTotal = document.getElementById('list-total-members');
             if (listTotal) listTotal.textContent = total;
             updateDashboardCounselingRate();
+            updateCounselingStats();
         }
 
         function toggleCounselingByBtn(btn) {
