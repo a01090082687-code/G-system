@@ -91,11 +91,7 @@
         <div class="w-12 h-12 border-4 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
         <p class="text-white font-bold">데이터 불러오는 중...</p>
     </div>
-    <!-- PT 모드 버튼 (우측 하단) -->
-    <button type="button" id="pt-mode-btn" onclick="togglePTMode()"
-        class="fixed bottom-6 right-6 z-[60] px-4 py-2 rounded-xl font-bold text-sm bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg flex items-center gap-2">
-        <i class="fas fa-tv"></i> PT 모드
-    </button>
+    <!-- PT 모드 버튼은 사이드바 하단(프로필 위)으로 이동 -->
     <div id="pt-mode-bar"
         class="hidden fixed bottom-0 left-0 right-0 z-[70] h-16 bg-slate-800/95 flex items-center justify-center gap-4 px-4">
         <button type="button" onclick="ptPrevSlide()"
@@ -121,46 +117,37 @@
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">보건시스템 V4.0</p>
                 </div>
             </div>
-            <nav class="space-y-1">
-                <button onclick="changeTab('innovation')"
-                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-innovation"><i class="fas fa-award w-5 text-center"></i> 혁신 성과</button>
-                <button onclick="changeTab('dashboard')"
-                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-dashboard"><i class="fas fa-chart-pie w-5 text-center"></i> 대시보드</button>
-                <button onclick="changeTab('list')"
-                    class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-list"><i class="fas fa-users w-5 text-center"></i> 집중관리</button>
-                <button onclick="changeTab('expense')"
-                    class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-expense"><i class="fas fa-won-sign w-5 text-center"></i> 병원비 지출</button>
-                <button onclick="changeTab('risk-factors')"
-                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-risk-factors"><i class="fas fa-hard-hat w-5 text-center"></i> 작업환경</button>
-                <button onclick="changeTab('noise')"
-                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-noise"><i class="fas fa-volume-up w-5 text-center"></i> 소음 현황</button>
-                <button onclick="changeTab('medicine-survey')"
-                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-medicine-survey"><i class="fas fa-medkit w-5 text-center"></i> 의약품조사</button>
-                <button onclick="changeTab('emergency')"
-                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-emergency"><i class="fas fa-phone-volume w-5 text-center"></i> 응급연락망</button>
-                <button onclick="changeTab('survey-results')"
-                    class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-survey-results"><i class="fas fa-chart-bar w-5 text-center"></i> 설문결과</button>
-                <button onclick="changeTab('health-checkup')"
-                    class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-health-checkup"><i class="fas fa-user-check w-5 text-center"></i> 건강검진 관리</button>
-                <button onclick="changeTab('msds')"
-                    class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-msds"><i class="fas fa-flask w-5 text-center"></i> MSDS 관리</button>
-                <button onclick="changeTab('stretching')"
-                    class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500"
-                    id="nav-stretching"><i class="fas fa-running w-5 text-center"></i> 스트레칭 영상</button>
+            <nav class="space-y-1 flex-1 overflow-y-auto">
+                <p class="text-xs uppercase text-slate-400 font-bold mt-6 mb-2 first:mt-0">📊 경영 성과 Report</p>
+                <div class="space-y-0.5 mb-2">
+                    <button onclick="changeTab('dashboard')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-dashboard"><i class="fas fa-chart-pie w-5 text-center"></i> 대시보드</button>
+                    <button onclick="changeTab('innovation')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-innovation"><i class="fas fa-award w-5 text-center"></i> 혁신 성과</button>
+                    <button onclick="changeTab('expense')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-expense"><i class="fas fa-won-sign w-5 text-center"></i> 병원비 지출</button>
+                </div>
+                <p class="text-xs uppercase text-slate-400 font-bold mt-6 mb-2">🩺 임직원 건강 관리</p>
+                <div class="space-y-0.5 mb-2">
+                    <button onclick="changeTab('list')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-list"><i class="fas fa-users w-5 text-center"></i> 보건 집중관리</button>
+                    <button onclick="changeTab('health-checkup')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-health-checkup"><i class="fas fa-user-check w-5 text-center"></i> 건강검진 관리</button>
+                </div>
+                <p class="text-xs uppercase text-slate-400 font-bold mt-6 mb-2">🏭 작업환경 및 안전</p>
+                <div class="space-y-0.5 mb-2">
+                    <button onclick="changeTab('noise')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-noise"><i class="fas fa-volume-up w-5 text-center"></i> 소음 현황</button>
+                    <button onclick="changeTab('risk-factors')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-risk-factors"><i class="fas fa-hard-hat w-5 text-center"></i> 핵심 유해인자</button>
+                    <button onclick="changeTab('msds')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-msds"><i class="fas fa-flask w-5 text-center"></i> MSDS 관리</button>
+                </div>
+                <p class="text-xs uppercase text-slate-400 font-bold mt-6 mb-2">현장 지원 서비스</p>
+                <div class="space-y-0.5 mb-2">
+                    <button onclick="changeTab('medicine-survey')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-medicine-survey"><i class="fas fa-medkit w-5 text-center"></i> 의약품 수요조사</button>
+                    <button onclick="changeTab('emergency')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-emergency"><i class="fas fa-phone-volume w-5 text-center"></i> 응급연락망</button>
+                    <button onclick="changeTab('stretching')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-stretching"><i class="fas fa-running w-5 text-center"></i> 스트레칭 영상</button>
+                </div>
+                <button onclick="changeTab('survey-results')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50 mt-2" id="nav-survey-results"><i class="fas fa-chart-bar w-5 text-center"></i> 설문결과</button>
             </nav>
         </div>
-        <div class="mt-auto p-6 border-t border-slate-100 bg-slate-50">
+        <div class="mt-auto p-4 border-t border-slate-200 bg-slate-50 flex-shrink-0">
+            <button type="button" id="pt-mode-btn" onclick="togglePTMode()" class="w-full mb-4 px-4 py-3 rounded-xl font-bold text-sm bg-slate-800 text-white hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 border border-slate-600">
+                <i class="fas fa-tv"></i> 📺 경영진 보고 모드 (PT)
+            </button>
             <div class="flex items-center gap-3 mb-4">
                 <div
                     class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold border-2 border-white shadow-sm">
@@ -262,63 +249,50 @@
 
     <main class="flex-1 overflow-y-auto h-full p-4 md:p-8 pt-20 md:pt-8 bg-[#F1F5F9]">
         <!-- 근로자 홈 화면 (모바일 기본 화면) -->
-        <section id="worker-home" class="tab-content mobile-only max-w-4xl mx-auto space-y-6">
+        <section id="worker-home" class="tab-content mobile-only max-w-4xl mx-auto space-y-4 flex flex-col min-h-[70vh]">
             <div class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white">
-                <div class="p-6 md:p-8 relative z-10 text-center">
-                    <h2 class="text-2xl md:text-3xl font-black mb-2">구영테크 보건시스템</h2>
-                    <p class="text-white/80 font-bold text-sm">작업자 건강과 안전을 위한 보건 관리</p>
+                <div class="p-6 relative z-10 text-center">
+                    <h2 class="text-xl font-black mb-1">구영테크 보건시스템</h2>
+                    <p class="text-white/80 font-bold text-xs">작업자 건강과 안전</p>
                 </div>
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <!-- 아파요 (의약품 신청) - 가장 크게 -->
-                <button type="button" onclick="changeTab('medicine-survey')"
-                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-pink-400 to-rose-500 text-white hover:from-pink-500 hover:to-rose-600 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[180px] col-span-2">
-                    <i class="fas fa-pills text-6xl mb-3"></i>
-                    <h3 class="font-black text-xl text-center">아파요</h3>
-                    <p class="text-sm text-white/90 mt-1">의약품/진료 신청</p>
-                </button>
-                <!-- 응급상황 -->
-                <button type="button" onclick="changeTab('emergency')"
-                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
-                    <i class="fas fa-ambulance text-5xl mb-3"></i>
-                    <h3 class="font-black text-lg text-center">응급상황</h3>
-                </button>
-                <!-- 위험해요 (MSDS/소음) -->
-                <button type="button"
-                    onclick="changeTab('noise'); setTimeout(function(){setNoiseFilter('exceed');}, 100);"
-                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-orange-500 to-amber-600 text-white hover:from-orange-600 hover:to-amber-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px]">
-                    <i class="fas fa-exclamation-triangle text-5xl mb-3"></i>
-                    <h3 class="font-black text-lg text-center">위험해요</h3>
-                    <p class="text-xs text-white/90 mt-1">MSDS/소음</p>
-                </button>
-                <!-- 스트레칭 -->
-                <button type="button" onclick="changeTab('stretching')"
-                    class="gu-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-indigo-500 to-blue-600 text-white hover:from-indigo-600 hover:to-blue-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center min-h-[160px] col-span-2">
-                    <i class="fas fa-running text-5xl mb-3"></i>
-                    <h3 class="font-black text-lg text-center">스트레칭</h3>
-                    <p class="text-xs text-white/90 mt-1">1분 스트레칭 영상</p>
-                </button>
-            </div>
+            <!-- 의약품/상담 신청 (70%) -->
+            <button type="button" onclick="changeTab('medicine-survey')"
+                class="gu-card flex-[3] min-h-[42vh] p-6 rounded-2xl shadow-md border border-slate-200 bg-gradient-to-br from-teal-500 to-emerald-600 text-white hover:from-teal-600 hover:to-emerald-700 transition-all flex flex-col items-center justify-center">
+                <i class="fas fa-pills text-6xl md:text-7xl mb-4 opacity-90"></i>
+                <h3 class="font-black text-2xl text-center">📋 의약품/상담 신청</h3>
+                <p class="text-sm text-white/90 mt-2">설문으로 신청하기</p>
+            </button>
+            <!-- 응급상황 연락망 (30%) -->
+            <button type="button" onclick="changeTab('emergency')"
+                class="gu-card flex-[1] min-h-[18vh] p-6 rounded-2xl shadow-md border border-slate-200 bg-gradient-to-br from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 transition-all flex flex-col items-center justify-center">
+                <i class="fas fa-phone-volume text-4xl mb-2"></i>
+                <h3 class="font-black text-lg text-center">🚨 응급상황 연락망</h3>
+            </button>
         </section>
 
-        <section id="dashboard" class="tab-content desktop-default max-w-7xl mx-auto space-y-8">
-            <div class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white">
-                <div class="p-8 md:p-10 relative z-10">
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/30 text-[10px] font-black uppercase tracking-widest mb-3">
+        <section id="dashboard" class="tab-content desktop-default max-w-7xl mx-auto space-y-6">
+            <!-- 보고용 헤더: 타이틀 + 기준일 -->
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-2">
+                <h2 class="text-2xl md:text-3xl font-black text-slate-800">실시간 보건 경영 지표</h2>
+                <p id="dashboard-report-date" class="text-sm font-bold text-slate-500">기준일: <span id="dashboard-date-text"></span></p>
+            </div>
+            <div class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white shadow-sm border border-slate-200">
+                <div class="p-6 md:p-8 relative z-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/30 text-[10px] font-black uppercase tracking-widest mb-2">
                         <span class="w-2 h-2 rounded-full bg-yellow-400"></span> 실시간 운영중
                     </div>
-                    <h2 id="announcement-title" class="text-3xl md:text-4xl font-black mb-2">구영테크 보건시스템</h2>
+                    <h2 id="announcement-title" class="text-2xl md:text-3xl font-black mb-1">구영테크 보건시스템</h2>
                     <p id="announcement-desc" class="text-white/80 font-bold text-sm">작업자 건강과 안전을 위한 보건 관리</p>
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="gu-card p-6 border-t-4 border-t-[#064E3B]">
+                <div class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-t-4 border-t-[#064E3B]">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">총 관리인원</p>
                     <h3 class="text-3xl font-black text-slate-800 mt-1"><span id="dashboard-total-members">0</span><span
                             class="text-base text-slate-400 ml-1">명</span></h3>
                 </div>
-                <div class="gu-card p-6 border-t-4 border-t-red-500">
+                <div class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-t-4 border-t-red-500">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">최고위험군 상담 진행률</p>
                     <h3 class="text-3xl font-black text-slate-800 mt-1"><span id="dashboard-counseling-rate">0</span>%
                     </h3>
@@ -326,7 +300,7 @@
                         <div id="dashboard-counseling-rate-bar" class="bg-red-500 h-full" style="width: 0%"></div>
                     </div>
                 </div>
-                <div class="gu-card p-6 border-t-4 border-t-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
+                <div class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-t-4 border-t-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">누적 예산 절감액</p>
                     <h3 class="text-3xl font-black text-amber-700 mt-1"><span id="dashboard-total-savings">₩ 0</span>
                     </h3>
@@ -334,7 +308,7 @@
                         <i class="fas fa-chart-line"></i> 자동 집계 중
                     </p>
                 </div>
-                <div class="gu-card p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="gu-card p-6 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="text-sm font-bold text-slate-500 mb-4 flex items-center gap-2">
                         <i class="fas fa-stethoscope text-emerald-500"></i> <span id="current-month-text">이번 달</span>
                         집중관리 상담 달성률
@@ -358,7 +332,7 @@
                 </div>
             </div>
             <!-- 금월 건강상담 대상자 명단 -->
-            <div class="gu-card p-6 border-t-4 border-t-purple-500">
+            <div class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-t-4 border-t-purple-500">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i
                             class="fas fa-calendar-check text-purple-600"></i> 금월 건강상담 대상자 명단</h3>
@@ -386,7 +360,7 @@
                 <div id="schedule-list" class="space-y-2 max-h-80 overflow-y-auto"></div>
             </div>
             <!-- 부서별 소음 현황 (대시보드) -->
-            <div class="gu-card p-6 border-t-4 border-t-red-500">
+            <div class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-t-4 border-t-red-500">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i
                             class="fas fa-volume-up text-red-500"></i> 부서별 소음 현황</h3>
@@ -398,7 +372,7 @@
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- 오늘의 안전 명언 카드 -->
-                <div class="gu-card p-6 border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
+                <div class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
                     <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2"><i
                             class="fas fa-quote-left text-amber-500"></i> 오늘의 안전 명언</h3>
                     <p id="safety-quote-text" class="text-lg md:text-xl font-black text-slate-800 leading-relaxed">안전은
@@ -407,7 +381,7 @@
                 </div>
                 <!-- 1분 스트레칭 바로가기 카드 -->
                 <div
-                    class="gu-card p-6 border-l-4 border-l-teal-500 bg-gradient-to-br from-teal-50 to-emerald-50 flex flex-col justify-center">
+                    class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-l-4 border-l-teal-500 bg-gradient-to-br from-teal-50 to-emerald-50 flex flex-col justify-center">
                     <h3 class="font-bold text-slate-700 mb-2 flex items-center gap-2"><i
                             class="fas fa-running text-teal-500"></i> 1분 스트레칭</h3>
                     <p class="text-slate-600 font-bold mb-4">뻐근하시죠? 1분만 투자하세요.</p>
@@ -418,7 +392,7 @@
                 </div>
             </div>
             <!-- 오늘의 건강 뉴스 -->
-            <div class="gu-card p-6">
+            <div class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-bold text-slate-700 flex items-center gap-2"><i
                             class="fas fa-heartbeat text-teal-500"></i> 오늘의 건강 뉴스</h3>
@@ -429,7 +403,57 @@
         </section>
 
         <section id="list" class="admin-only hidden tab-content max-w-7xl mx-auto space-y-6">
-            <h2 class="text-2xl font-black text-slate-800">보건 집중관리 대상자 (<span id="list-total-members">0</span>명)</h2>
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <h2 class="text-2xl font-black text-slate-800">보건 집중관리 대상자 (<span id="list-total-members">0</span>명)</h2>
+                <button type="button" onclick="toggleListReportMode()" id="list-report-mode-btn"
+                    class="px-4 py-2 rounded-xl font-bold text-sm bg-slate-600 text-white hover:bg-slate-700 transition-colors flex items-center gap-2">
+                    <i class="fas fa-chart-bar"></i> <span id="list-report-mode-label">보고 모드</span>
+                </button>
+            </div>
+            <!-- 보고 모드: 월별 상담 현황 한눈에 -->
+            <div id="list-report-view" class="hidden space-y-4">
+                <div class="gu-card p-6 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white">
+                    <h3 class="text-lg font-black text-slate-800 mb-2 flex items-center gap-2"><i class="fas fa-calendar-alt text-emerald-600"></i> 집중관리 월별 상담 이수 현황</h3>
+                    <p class="text-sm text-slate-500 mb-4">1월부터 해당 월까지 <strong>누적</strong>으로 상담을 모두 이수한 인원·완료율입니다. (해당 월까지 매월 상담 이수한 사람)</p>
+                    <!-- 한눈에 보는 월별 테이블 -->
+                    <div class="overflow-x-auto mb-6">
+                        <table class="w-full text-left border-collapse rounded-xl overflow-hidden border border-slate-200">
+                            <thead>
+                                <tr class="bg-emerald-600 text-white">
+                                    <th class="p-3 text-sm font-black">월</th>
+                                    <th class="p-3 text-sm font-black text-center">누적 이수(명)</th>
+                                    <th class="p-3 text-sm font-black text-center">전체 대상(명)</th>
+                                    <th class="p-3 text-sm font-black text-center">완료율</th>
+                                </tr>
+                            </thead>
+                            <tbody id="list-report-table-body" class="divide-y divide-slate-100 text-sm font-medium text-slate-700 cursor-pointer"></tbody>
+                        </table>
+                    </div>
+                    <!-- 월별 카드 그리드 (클릭 시 해당 월 상세 명단 표시) -->
+                    <div class="text-sm font-bold text-slate-600 mb-2">월별 요약 카드 · 클릭하면 해당 월 상담 이수 명단을 볼 수 있습니다</div>
+                    <div id="list-report-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
+                    <!-- 선택한 월 상담 이수 대상자 명단 + 완료율 -->
+                    <div id="list-report-month-detail" class="hidden mt-6 p-6 rounded-2xl border-2 border-emerald-300 bg-white">
+                        <h4 id="list-report-month-detail-title" class="text-lg font-black text-slate-800 mb-2"></h4>
+                        <p id="list-report-month-detail-rate" class="text-sm text-slate-600 mb-4"></p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse rounded-xl border border-slate-200">
+                                <thead>
+                                    <tr class="bg-slate-100">
+                                        <th class="p-2 text-left text-xs font-black text-slate-600">성명</th>
+                                        <th class="p-2 text-left text-xs font-black text-slate-600">부서</th>
+                                        <th class="p-2 text-left text-xs font-black text-slate-600">위험등급</th>
+                                        <th class="p-2 text-center text-xs font-black text-slate-600">상담일</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="list-report-month-detail-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 명단 모드 (기본) -->
+            <div id="list-list-view">
             <!-- 집중관리 상담 달성률 카드 (리스트 뷰용) -->
             <div class="gu-card p-6 mb-6 rounded-2xl shadow-sm border border-slate-200 bg-white">
                 <div class="flex items-center justify-between mb-4">
@@ -496,6 +520,23 @@
                     class="filter-btn px-4 py-2 rounded-xl bg-orange-50 text-orange-600 font-bold text-xs"
                     data-filter="Pending">미상담</button>
             </div>
+            <!-- 명단 위 현재 누적 이수율 한눈에 -->
+            <div id="list-current-rate-bar" class="gu-card px-4 py-3 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white flex flex-wrap items-center gap-4 mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-sm"><i class="fas fa-chart-pie"></i></span>
+                    <div>
+                        <span class="text-xs font-bold text-slate-500">현재 누적 이수율</span>
+                        <span id="list-current-rate-month" class="text-xs text-slate-400 ml-1">(이번 달 기준)</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                    <span id="list-current-rate-value" class="text-2xl font-black text-emerald-600 whitespace-nowrap">0%</span>
+                    <span id="list-current-rate-count" class="text-sm text-slate-500">0명/0명</span>
+                    <div class="flex-1 min-w-[80px] h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div id="list-current-rate-fill" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
             <div class="gu-card overflow-hidden">
                 <div class="mobile-scroll overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -526,6 +567,8 @@
                     </table>
                 </div>
             </div>
+            </div>
+            <!-- // list-list-view -->
         </section>
 
         <section id="expense" class="admin-only hidden tab-content max-w-7xl mx-auto space-y-6">
@@ -1120,6 +1163,12 @@
             if (tabId === 'emergency') {
                 renderEmergencyContacts();
             }
+            // 집중관리 탭: 보고 모드일 때 월별 현황 갱신, 명단 위 현재 이수율 바 갱신
+            if (tabId === 'list') {
+                if (typeof updateListCurrentCumulativeBar === 'function') updateListCurrentCumulativeBar();
+                if (typeof listReportModeOn !== 'undefined' && listReportModeOn) renderListReport();
+            }
+            if (tabId === 'dashboard') updateDashboardDate();
         }
 
         function updateWorkerOnlyElements() {
@@ -1137,6 +1186,16 @@
         function hideDataLoadingOverlay() {
             const el = document.getElementById('data-loading-overlay');
             if (el) el.classList.add('hidden');
+        }
+
+        function updateDashboardDate() {
+            var el = document.getElementById('dashboard-date-text');
+            if (!el) return;
+            var d = new Date();
+            var y = d.getFullYear();
+            var m = d.getMonth() + 1;
+            var day = d.getDate();
+            el.textContent = y + '년 ' + m + '월 ' + day + '일';
         }
 
         function applyDataFromServer(data) {
@@ -1423,6 +1482,7 @@
             const listTotal = document.getElementById('list-total-members');
             if (listTotal) listTotal.textContent = total;
             updateDashboardCounselingRate();
+            if (typeof updateDashboardDate === 'function') updateDashboardDate();
 
             // 추가된 초기화 로직
             if (typeof updateFebruaryCounselingList === 'function') updateFebruaryCounselingList();
@@ -1455,6 +1515,7 @@
             calculateTotalSavings();
             updateWorkerOnlyElements();
             updateAdminOnlyElements();
+            if (typeof updateDashboardDate === 'function') updateDashboardDate();
             if (!preserveNavigation) {
                 if (!isAdmin) {
                     changeTab('worker-home');
@@ -2334,6 +2395,10 @@
 
                 if (floorplans && floorplans['factory' + factoryNum]) {
                     imageSrc = floorplans['factory' + factoryNum];
+                } else {
+                    // 도면 파일이 없을 때 표시할 플레이스홀더 SVG (복구용)
+                    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300"><rect width="400" height="300" fill="#f1f5f9"/><rect x="20" y="20" width="360" height="260" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2" rx="8"/><text x="200" y="140" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#64748b">' + factoryNum + '공장 소음 측정 위치도</text><text x="200" y="165" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#94a3b8">도면 이미지를 추가하려면 관리자로 로그인 후</text><text x="200" y="185" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#94a3b8">이미지 추가 버튼을 사용하세요</text></svg>';
+                    imageSrc = 'data:image/svg+xml,' + encodeURIComponent(svg);
                 }
 
                 img.src = imageSrc;
@@ -2517,6 +2582,8 @@
         // ========== 집중관리 명단 ==========
         let listFilterType = 'All';
         let listSearchQuery = '';
+        let listReportModeOn = false;
+        let listReportSelectedMonth = 0;
 
         function filterList(type) {
             document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -2539,6 +2606,33 @@
             if (listFilterType === 'Pending') filtered = filtered.filter(m => !Object.values(m.counseling || {}).some(c => c !== null));
             if (listSearchQuery) filtered = filtered.filter(m => (m.name || '').toLowerCase().includes(listSearchQuery.toLowerCase()));
             renderMemberTable(filtered);
+            if (listReportModeOn) renderListReport();
+            updateListCurrentCumulativeBar();
+        }
+
+        function updateListCurrentCumulativeBar() {
+            var monthEl = document.getElementById('list-current-rate-month');
+            var valueEl = document.getElementById('list-current-rate-value');
+            var countEl = document.getElementById('list-current-rate-count');
+            var fillEl = document.getElementById('list-current-rate-fill');
+            if (!valueEl || !countEl || !fillEl) return;
+            var members = APP_DATA.members || [];
+            var intensive = members.filter(function (m) { return String(m.isIntensiveCare).toUpperCase() === 'TRUE'; });
+            var total = intensive.length;
+            var currentMonth = new Date().getMonth() + 1;
+            var monthLabels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+            var doneCount = 0;
+            for (var i = 0; i < intensive.length; i++) {
+                var c = intensive[i].counseling;
+                var allDone = true;
+                for (var k = 1; k <= currentMonth; k++) { if (!c || c[k] == null) { allDone = false; break; } }
+                if (allDone) doneCount++;
+            }
+            var rate = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+            if (monthEl) monthEl.textContent = '(' + (monthLabels[currentMonth - 1] || '') + ' 기준)';
+            valueEl.textContent = rate + '%';
+            countEl.textContent = doneCount + '명/' + total + '명';
+            if (fillEl) fillEl.style.width = rate + '%';
         }
 
         function updateCounselingStats(targetMonth) {
@@ -2576,7 +2670,7 @@
 
             // 리스트 뷰 업데이트 (선택된 월 기준)
             var listMonthEl = document.getElementById('list-current-month-text');
-            if (listMonthEl) listMonthEl.textContent = monthText + (targetMonth ? '' : ' (현재)');
+            if (listMonthEl) listMonthEl.textContent = monthText;
             var listRateEl = document.getElementById('list-counseling-rate');
             if (listRateEl) listRateEl.textContent = rate + '%';
             var listDoneEl = document.getElementById('list-counseling-done');
@@ -2585,6 +2679,107 @@
             if (listTotalEl) listTotalEl.textContent = total;
             var listBarEl = document.getElementById('list-counseling-progress-bar');
             if (listBarEl) listBarEl.style.width = rate + '%';
+        }
+
+        function toggleListReportMode() {
+            listReportModeOn = !listReportModeOn;
+            var reportView = document.getElementById('list-report-view');
+            var listView = document.getElementById('list-list-view');
+            var btn = document.getElementById('list-report-mode-btn');
+            var label = document.getElementById('list-report-mode-label');
+            if (reportView) reportView.classList.toggle('hidden', !listReportModeOn);
+            if (listView) listView.classList.toggle('hidden', listReportModeOn);
+            if (label) label.textContent = listReportModeOn ? '명단 보기' : '보고 모드';
+            if (btn) btn.classList.toggle('bg-emerald-600', listReportModeOn);
+            if (listReportModeOn) renderListReport();
+        }
+
+        function renderListReport() {
+            var grid = document.getElementById('list-report-grid');
+            var tableBody = document.getElementById('list-report-table-body');
+            if (!grid && !tableBody) return;
+            var members = APP_DATA.members || [];
+            var intensive = members.filter(function (m) { return String(m.isIntensiveCare).toUpperCase() === 'TRUE'; });
+            var total = intensive.length;
+            var monthLabels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+            var tableHtml = '';
+            var gridHtml = '';
+            for (var month = 1; month <= 12; month++) {
+                var doneCount = 0;
+                for (var i = 0; i < intensive.length; i++) {
+                    var c = intensive[i].counseling;
+                    var allDone = true;
+                    for (var k = 1; k <= month; k++) { if (!c || c[k] == null) { allDone = false; break; } }
+                    if (allDone) doneCount++;
+                }
+                var rate = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+                var isSelected = month === listReportSelectedMonth;
+                var rowClass = (isSelected ? 'bg-emerald-200 ring-2 ring-emerald-500 ' : '') + 'hover:bg-emerald-100 cursor-pointer';
+                tableHtml += '<tr class="' + rowClass + '" data-month="' + month + '" onclick="selectReportMonth(' + month + ')">';
+                tableHtml += '<td class="p-3">' + monthLabels[month - 1] + '</td>';
+                tableHtml += '<td class="p-3 text-center font-black text-slate-800">' + doneCount + '명</td>';
+                tableHtml += '<td class="p-3 text-center text-slate-600">' + total + '명</td>';
+                tableHtml += '<td class="p-3 text-center"><span class="font-black text-emerald-600">' + rate + '%</span></td>';
+                tableHtml += '</tr>';
+                var cardClass = 'rounded-xl border-2 p-3 text-center cursor-pointer border-slate-200 bg-white ' + (isSelected ? 'ring-2 ring-emerald-500 bg-emerald-100 border-emerald-500' : 'hover:bg-slate-50');
+                gridHtml += '<div class="' + cardClass + '" data-month="' + month + '" onclick="selectReportMonth(' + month + ')">';
+                gridHtml += '<div class="text-xs font-black text-slate-500 mb-1">' + monthLabels[month - 1] + '</div>';
+                gridHtml += '<div class="text-xl font-black text-slate-800">' + doneCount + '명</div>';
+                gridHtml += '<div class="text-xs text-slate-500">1월~' + month + '월 누적 이수 / 총 ' + total + '명</div>';
+                gridHtml += '<div class="mt-1 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-emerald-500 rounded-full transition-all" style="width:' + rate + '%"></div></div>';
+                gridHtml += '<div class="text-sm font-bold text-slate-700 mt-1">' + rate + '%</div>';
+                gridHtml += '</div>';
+            }
+            if (tableBody) tableBody.innerHTML = tableHtml;
+            if (grid) grid.innerHTML = gridHtml;
+            if (listReportSelectedMonth >= 1 && listReportSelectedMonth <= 12) {
+                renderListReportMonthDetail(listReportSelectedMonth);
+            } else {
+                var detailEl = document.getElementById('list-report-month-detail');
+                if (detailEl) detailEl.classList.add('hidden');
+            }
+        }
+
+        function selectReportMonth(month) {
+            listReportSelectedMonth = (listReportSelectedMonth === month) ? 0 : month;
+            var detailEl = document.getElementById('list-report-month-detail');
+            if (detailEl) detailEl.classList.toggle('hidden', listReportSelectedMonth === 0);
+            if (listReportSelectedMonth >= 1 && listReportSelectedMonth <= 12) {
+                renderListReportMonthDetail(listReportSelectedMonth);
+            }
+            renderListReport();
+        }
+
+        function renderListReportMonthDetail(month) {
+            var titleEl = document.getElementById('list-report-month-detail-title');
+            var rateEl = document.getElementById('list-report-month-detail-rate');
+            var bodyEl = document.getElementById('list-report-month-detail-body');
+            var panelEl = document.getElementById('list-report-month-detail');
+            if (!panelEl || !bodyEl) return;
+            var monthLabels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+            var members = APP_DATA.members || [];
+            var intensive = members.filter(function (m) { return String(m.isIntensiveCare).toUpperCase() === 'TRUE'; });
+            var total = intensive.length;
+            var done = [];
+            for (var i = 0; i < intensive.length; i++) {
+                var c = intensive[i].counseling;
+                var allDone = true;
+                for (var k = 1; k <= month; k++) { if (!c || c[k] == null) { allDone = false; break; } }
+                if (allDone) done.push(intensive[i]);
+            }
+            var rate = total > 0 ? Math.round((done.length / total) * 100) : 0;
+            if (titleEl) titleEl.textContent = '1월~' + monthLabels[month - 1] + ' 누적 상담 이수 대상자 명단';
+            if (rateEl) rateEl.textContent = '1월~' + monthLabels[month - 1] + ' 누적 완료율: ' + rate + '% (' + done.length + '명 / 전체 ' + total + '명)';
+            var rows = '';
+            for (var j = 0; j < done.length; j++) {
+                var m = done[j];
+                var lastMonth = '';
+                for (var k = month; k >= 1; k--) { if (m.counseling && m.counseling[k]) { lastMonth = (m.counseling[k].date || monthLabels[k - 1]); break; } }
+                rows += '<tr class="border-b border-slate-100"><td class="p-2 font-medium">' + (m.name || '-') + '</td><td class="p-2 text-slate-600">' + (m.dept || '-') + '</td><td class="p-2">' + (m.risk || '-') + '</td><td class="p-2 text-center">' + (lastMonth || '-') + '</td></tr>';
+            }
+            if (done.length === 0) rows = '<tr><td colspan="4" class="p-4 text-center text-slate-500">1월~' + monthLabels[month - 1] + '까지 누적 이수한 대상자가 없습니다.</td></tr>';
+            bodyEl.innerHTML = rows;
+            panelEl.classList.remove('hidden');
         }
 
         function renderDashboard() {
