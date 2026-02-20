@@ -316,8 +316,8 @@
                     <div class="flex items-end justify-between">
                         <div>
                             <div class="text-3xl font-black text-slate-800" id="counseling-rate">0%</div>
-                            <p class="text-sm text-slate-500 mt-1"><span id="counseling-done">0</span>명 완료 / 총 대상 <span
-                                    id="counseling-total">0</span>명</p>
+                            <p class="text-sm text-slate-500 mt-1"><span id="counseling-done">0</span>건 완료 / 연간 총 예정 <span
+                                    id="counseling-total">0</span>건</p>
                         </div>
                         <div
                             class="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
@@ -330,6 +330,36 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <!-- 주말/휴일 당직 근무표 위젯 -->
+            <div class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-t-4 border-t-blue-500">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                        <i class="fas fa-calendar-alt text-blue-500"></i> 📅 주말/휴일 당직 근무표
+                    </h3>
+                </div>
+                <!-- 로테이션 순서 고정 표시 -->
+                <div class="bg-slate-50 rounded-xl p-3 mb-4">
+                    <p class="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <i class="fas fa-sync-alt text-teal-400 text-xs"></i> 당직 로테이션 순서
+                    </p>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="bg-white border border-slate-200 px-2 py-1 rounded-md text-sm font-bold text-slate-700 shadow-sm">박원석</span>
+                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                        <span class="bg-blue-50 border border-blue-200 px-2 py-1 rounded-md text-sm font-bold text-blue-700 shadow-sm">박기태</span>
+                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                        <span class="bg-white border border-slate-200 px-2 py-1 rounded-md text-sm font-bold text-slate-700 shadow-sm">김수민</span>
+                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                        <span class="bg-white border border-slate-200 px-2 py-1 rounded-md text-sm font-bold text-slate-700 shadow-sm">황강헌</span>
+                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                        <span class="bg-white border border-slate-200 px-2 py-1 rounded-md text-sm font-bold text-slate-700 shadow-sm">조철제</span>
+                    </div>
+                </div>
+                <!-- 확정 일정 리스트 -->
+                <p class="text-xs font-black text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1">
+                    <i class="fas fa-list-ul text-blue-400 text-xs"></i> 확정된 당직 일정
+                </p>
+                <ul id="duty-schedule-list" class="space-y-2"></ul>
             </div>
             <!-- 금월 건강상담 대상자 명단 -->
             <div class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-t-4 border-t-purple-500">
@@ -410,6 +440,13 @@
                     <i class="fas fa-chart-bar"></i> <span id="list-report-mode-label">보고 모드</span>
                 </button>
             </div>
+            <!-- 집중관찰자 기준 이미지 -->
+            <div class="mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <h3 class="text-sm font-black text-slate-800 mb-3 flex items-center gap-2">
+                    <i class="fas fa-info-circle text-teal-500"></i> 집중관찰자(High-Risk) 관리 기준
+                </h3>
+                <img src="images/intensive-guide.png" alt="집중관찰자 기준표" class="w-full max-w-3xl rounded-lg shadow-sm border border-slate-200" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p class=\'text-sm text-slate-500 mt-2\'>📌 images/intensive-guide.png 파일을 images 폴더에 넣어주세요.</p>');">
+            </div>
             <!-- 보고 모드: 월별 상담 현황 한눈에 -->
             <div id="list-report-view" class="hidden space-y-4">
                 <div class="gu-card p-6 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white">
@@ -461,28 +498,12 @@
                         <i class="fas fa-stethoscope text-emerald-500"></i> <span id="list-current-month-text">이번
                             달</span> 집중관리 상담 달성률
                     </h3>
-                    <select id="stats-month-select"
-                        class="text-xs font-bold text-slate-600 bg-slate-100 rounded-lg px-2 py-1 border-0 focus:ring-2 focus:ring-emerald-500"
-                        onchange="updateCounselingStats(this.value)">
-                        <option value="1">1월</option>
-                        <option value="2">2월</option>
-                        <option value="3">3월</option>
-                        <option value="4">4월</option>
-                        <option value="5">5월</option>
-                        <option value="6">6월</option>
-                        <option value="7">7월</option>
-                        <option value="8">8월</option>
-                        <option value="9">9월</option>
-                        <option value="10">10월</option>
-                        <option value="11">11월</option>
-                        <option value="12">12월</option>
-                    </select>
                 </div>
                 <div class="flex items-end justify-between">
                     <div>
                         <div class="text-3xl font-black text-slate-800" id="list-counseling-rate">0%</div>
-                        <p class="text-sm text-slate-500 mt-1"><span id="list-counseling-done">0</span>명 완료 / 총 대상 <span
-                                id="list-counseling-total">0</span>명</p>
+                        <p class="text-sm text-slate-500 mt-1"><span id="list-counseling-done">0</span>건 완료 / 연간 총 예정 <span
+                                id="list-counseling-total">0</span>건</p>
                     </div>
                     <div
                         class="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
@@ -1099,10 +1120,10 @@
             { name: "권유겸", dept: "생산팀 용접", risk: "High", note: "고혈압-치료중,당뇨-치료중", counseling: {} },
             { name: "박세봉", dept: "스폿용접", risk: "High", note: "고혈압의심,당뇨의심,비만의심,청각장애", counseling: {} },
             { name: "서길섭", dept: "CO2 용접", risk: "High", note: "소음성난청 요관찰자,간질환,고혈압 의심", counseling: { 1: { date: "01/01", count: 1 } } },
-            { name: "서용철", dept: "사무실", risk: "High", note: "간질환의심,고혈압-치료중,당뇨-치료중", counseling: { 1: { date: "01/01", count: 1 } } },
+            { name: "서용철", dept: "품질경영팀(1공장)", risk: "High", note: "간질환의심,고혈압-치료중,당뇨-치료중", counseling: { 1: { date: "01/01", count: 1 } } },
             { name: "유호성", dept: "개발2팀", risk: "High", note: "간질환의심,고혈압의심,단백뇨주의", counseling: { 1: { date: "01/01", count: 1 } } },
             { name: "장재혁", dept: "CO2 용접", risk: "High", note: "고혈압,당뇨병 유질환자,폐기능 저하", counseling: {} },
-            { name: "정창현", dept: "사무실", risk: "High", note: "간질환의심,고혈압,당뇨,이상지질-치료중", counseling: {} },
+            { name: "정창현", dept: "개발 1팀", risk: "High", note: "간질환의심,고혈압,당뇨,이상지질-치료중", counseling: {} },
             { name: "최은탁", dept: "물류팀", risk: "High", note: "간질환의심,고혈압의심,이상지질혈증주의", counseling: {} },
             { name: "문정재", dept: "2공장 공무", risk: "High", note: "간질환의심,비만의심", counseling: { 1: { date: "01/01", count: 1 } } },
             { name: "전성호", dept: "2공장 자재팀", risk: "High", note: "간질환의심,고혈압의심,비만의심", counseling: {} },
@@ -1226,6 +1247,12 @@
             if (Array.isArray(data.innovations)) APP_DATA.innovations = data.innovations;
             if (Array.isArray(data.expenses_2025)) APP_DATA.expenses_2025 = data.expenses_2025;
             if (Array.isArray(data.expenses_2026)) APP_DATA.expenses_2026 = data.expenses_2026;
+            // 당직 근무표
+            if (data && Array.isArray(data.duty)) {
+                APP_DATA.duty = data.duty;
+            } else {
+                APP_DATA.duty = [];
+            }
             // 배치도 데이터 처리 (Google Sheets 우선, localStorage fallback)
             if (data.floorplans && typeof data.floorplans === 'object') {
                 const floorplansFromServer = data.floorplans;
@@ -2611,74 +2638,36 @@
         }
 
         function updateListCurrentCumulativeBar() {
-            var monthEl = document.getElementById('list-current-rate-month');
-            var valueEl = document.getElementById('list-current-rate-value');
-            var countEl = document.getElementById('list-current-rate-count');
-            var fillEl = document.getElementById('list-current-rate-fill');
-            if (!valueEl || !countEl || !fillEl) return;
-            var members = APP_DATA.members || [];
-            var intensive = members.filter(function (m) { return String(m.isIntensiveCare).toUpperCase() === 'TRUE'; });
-            var total = intensive.length;
-            var currentMonth = new Date().getMonth() + 1;
-            var monthLabels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
-            var doneCount = 0;
-            for (var i = 0; i < intensive.length; i++) {
-                var c = intensive[i].counseling;
-                var allDone = true;
-                for (var k = 1; k <= currentMonth; k++) { if (!c || c[k] == null) { allDone = false; break; } }
-                if (allDone) doneCount++;
-            }
-            var rate = total > 0 ? Math.round((doneCount / total) * 100) : 0;
-            if (monthEl) monthEl.textContent = '(' + (monthLabels[currentMonth - 1] || '') + ' 기준)';
-            valueEl.textContent = rate + '%';
-            countEl.textContent = doneCount + '명/' + total + '명';
-            if (fillEl) fillEl.style.width = rate + '%';
+            updateCounselingStats();
         }
 
-        function updateCounselingStats(targetMonth) {
-            var currentMonth = targetMonth ? parseInt(targetMonth) : (new Date().getMonth() + 1);
-
-            // 셀렉트 박스 값 동기화 (초기 로드 시)
-            var selectEl = document.getElementById('stats-month-select');
-            if (selectEl && !targetMonth) selectEl.value = currentMonth;
-
+        function updateCounselingStats() {
             var members = APP_DATA.members || [];
             var intensive = members.filter(function (m) { return String(m.isIntensiveCare).toUpperCase() === 'TRUE'; });
-            var total = intensive.length;
-            var doneCount = 0;
+
+            var totalPeople = intensive.length;
+            var totalRequired = totalPeople * 12; // 연간 총 예정 상담 건수 (인원 × 12개월)
+            var totalDone = 0; // 현재까지 누적 완료된 상담 건수
+
             for (var i = 0; i < intensive.length; i++) {
                 var c = intensive[i].counseling;
-                if (c && c[currentMonth] != null) doneCount++;
-            }
-            var rate = total > 0 ? Math.round((doneCount / total) * 100) : 0;
-            var monthLabels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
-            var monthText = monthLabels[currentMonth - 1] || '이번 달';
-
-            // 대시보드 업데이트 (항상 현재 월 기준)
-            if (!targetMonth) {
-                var currentMonthEl = document.getElementById('current-month-text');
-                if (currentMonthEl) currentMonthEl.textContent = '이번 달';
-                var rateEl = document.getElementById('counseling-rate');
-                if (rateEl) rateEl.textContent = rate + '%';
-                var doneEl = document.getElementById('counseling-done');
-                if (doneEl) doneEl.textContent = doneCount;
-                var totalEl = document.getElementById('counseling-total');
-                if (totalEl) totalEl.textContent = total;
-                var barEl = document.getElementById('counseling-progress-bar');
-                if (barEl) barEl.style.width = rate + '%';
+                if (c) {
+                    for (var m = 1; m <= 12; m++) {
+                        if (c[m] != null) totalDone++;
+                    }
+                }
             }
 
-            // 리스트 뷰 업데이트 (선택된 월 기준)
-            var listMonthEl = document.getElementById('list-current-month-text');
-            if (listMonthEl) listMonthEl.textContent = monthText;
-            var listRateEl = document.getElementById('list-counseling-rate');
-            if (listRateEl) listRateEl.textContent = rate + '%';
-            var listDoneEl = document.getElementById('list-counseling-done');
-            if (listDoneEl) listDoneEl.textContent = doneCount;
-            var listTotalEl = document.getElementById('list-counseling-total');
-            if (listTotalEl) listTotalEl.textContent = total;
-            var listBarEl = document.getElementById('list-counseling-progress-bar');
-            if (listBarEl) listBarEl.style.width = rate + '%';
+            var rate = totalRequired > 0 ? Math.round((totalDone / totalRequired) * 100) : 0;
+
+            // 대시보드 및 리스트 카드 공통 업데이트
+            document.querySelectorAll('#counseling-rate, #list-counseling-rate').forEach(function(el) { el.textContent = rate + '%'; });
+            document.querySelectorAll('#counseling-done, #list-counseling-done').forEach(function(el) { el.textContent = totalDone; });
+            document.querySelectorAll('#counseling-total, #list-counseling-total').forEach(function(el) { el.textContent = totalRequired; });
+            document.querySelectorAll('#counseling-progress-bar, #list-counseling-progress-bar').forEach(function(el) { el.style.width = rate + '%'; });
+
+            // 텍스트 라벨: "이번 달" → "연간 총 누적"
+            document.querySelectorAll('#current-month-text, #list-current-month-text').forEach(function(el) { el.textContent = '연간 총 누적'; });
         }
 
         function toggleListReportMode() {
@@ -2790,6 +2779,55 @@
             if (listTotal) listTotal.textContent = total;
             updateDashboardCounselingRate();
             updateCounselingStats();
+            renderDutyWidget();
+        }
+
+        function renderDutyWidget() {
+            var list = document.getElementById('duty-schedule-list');
+            if (!list) return;
+            var duties = APP_DATA.duty || [];
+            if (duties.length === 0) {
+                list.innerHTML = '<li class="text-sm text-slate-400 text-center py-6 bg-slate-50 rounded-xl">현재 확정된 당직 일정이 없습니다.</li>';
+                return;
+            }
+            var dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            var html = '';
+            duties.forEach(function(d) {
+                var name  = d.name  || d.Name  || d['이름'] || '';
+                var dateRaw = d.date || d.Date || d['날짜'] || '';
+                var note  = d.note  || d.Note  || d['비고'] || '';
+                // 날짜 파싱 및 MM/DD (요일) 포맷
+                var dateStr = String(dateRaw);
+                var dayLabel = '';
+                try {
+                    var dt = new Date(dateRaw);
+                    if (!isNaN(dt.getTime())) {
+                        var mm = String(dt.getMonth() + 1).padStart(2, '0');
+                        var dd = String(dt.getDate()).padStart(2, '0');
+                        dateStr = mm + '/' + dd;
+                        dayLabel = '(' + dayNames[dt.getDay()] + ')';
+                    }
+                } catch(e) {}
+                var isMine = (name === '박기태');
+                var wrapClass = isMine
+                    ? 'flex justify-between items-center p-3 rounded-xl border border-blue-100 bg-blue-50'
+                    : 'flex justify-between items-center p-3 rounded-xl border border-slate-100 bg-white';
+                html += '<li class="' + wrapClass + '">';
+                html += '  <div class="flex items-center gap-3">';
+                html += '    <span class="text-xl leading-none">🗓️</span>';
+                html += '    <div>';
+                html += '      <span class="text-sm font-black text-slate-700">' + dateStr;
+                if (dayLabel) html += ' <span class="text-slate-400 font-semibold text-xs">' + dayLabel + '</span>';
+                html += '</span>';
+                if (note) html += '<p class="text-xs text-slate-400 mt-0.5">' + note + '</p>';
+                html += '    </div>';
+                html += '  </div>';
+                html += '  <span class="text-sm font-black ' + (isMine ? 'text-blue-600' : 'text-slate-700') + '">';
+                html += name + (isMine ? ' ⭐' : '');
+                html += '  </span>';
+                html += '</li>';
+            });
+            list.innerHTML = html;
         }
 
         function toggleCounselingByBtn(btn) {
@@ -2914,10 +2952,10 @@
                 { name: "권유겸", dept: "생산팀 용접", risk: "High", note: "고혈압-치료중,당뇨-치료중", counseling: {} },
                 { name: "박세봉", dept: "스폿용접", risk: "High", note: "고혈압의심,당뇨의심,비만의심,청각장애", counseling: {} },
                 { name: "서길섭", dept: "CO2 용접", risk: "High", note: "소음성난청 요관찰자,간질환,고혈압 의심", counseling: { 1: { date: "01/01", count: 1 } } },
-                { name: "서용철", dept: "사무실", risk: "High", note: "간질환의심,고혈압-치료중,당뇨-치료중", counseling: { 1: { date: "01/01", count: 1 } } },
+                { name: "서용철", dept: "품질경영팀(1공장)", risk: "High", note: "간질환의심,고혈압-치료중,당뇨-치료중", counseling: { 1: { date: "01/01", count: 1 } } },
                 { name: "유호성", dept: "개발2팀", risk: "High", note: "간질환의심,고혈압의심,단백뇨주의", counseling: { 1: { date: "01/01", count: 1 } } },
                 { name: "장재혁", dept: "CO2 용접", risk: "High", note: "고혈압,당뇨병 유질환자,폐기능 저하", counseling: {} },
-                { name: "정창현", dept: "사무실", risk: "High", note: "간질환의심,고혈압,당뇨,이상지질-치료중", counseling: {} },
+                { name: "정창현", dept: "개발 1팀", risk: "High", note: "간질환의심,고혈압,당뇨,이상지질-치료중", counseling: {} },
                 { name: "최은탁", dept: "물류팀", risk: "High", note: "간질환의심,고혈압의심,이상지질혈증주의", counseling: {} },
                 { name: "문정재", dept: "2공장 공무", risk: "High", note: "간질환의심,비만의심", counseling: { 1: { date: "01/01", count: 1 } } },
                 { name: "전성호", dept: "2공장 자재팀", risk: "High", note: "간질환의심,고혈압의심,비만의심", counseling: {} },

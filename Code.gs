@@ -17,7 +17,8 @@ const SHEET_NAMES = {
   INNOVATIONS: 'Innovations',// 혁신성과
   EXPENSES: 'Expenses',      // 병원비
   RANKINGS: 'Rankings',      // 게임 랭킹
-  CONFIG: 'Config'           // 설정 (영상, 도면, URL 등)
+  CONFIG: 'Config',          // 설정 (영상, 도면, URL 등)
+  DUTY: 'Duty'               // 주말/휴일 당직 근무표
 };
 
 /**
@@ -80,6 +81,9 @@ function doGet(e) {
     
     // 7. Rankings (게임별 분류는 프론트에서 처리하거나 여기서 분류 가능. 일단 전체 전달)
     result.data.rankings = getSheetData(doc, SHEET_NAMES.RANKINGS);
+
+    // 8. Duty (주말/휴일 당직 근무표)
+    result.data.duty = getSheetData(doc, SHEET_NAMES.DUTY);
 
     
     // 8. Stretching (Config 시트에 JSON string으로 저장하거나 별도 시트로 관리할 수 있음. 
