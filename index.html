@@ -135,6 +135,13 @@
                     <button onclick="changeTab('risk-factors')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-risk-factors"><i class="fas fa-hard-hat w-5 text-center"></i> 핵심 유해인자</button>
                     <button onclick="changeTab('msds')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-msds"><i class="fas fa-flask w-5 text-center"></i> MSDS 관리</button>
                 </div>
+                <div class="mt-6 mb-2 px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    📅 일정 및 당직 관리
+                </div>
+                <button onclick="changeTab('duty')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors" id="nav-duty">
+                    <i class="fas fa-calendar-alt w-5 text-center"></i>
+                    <span class="font-bold">주말 당직 근무표</span>
+                </button>
                 <p class="text-xs uppercase text-slate-400 font-bold mt-6 mb-2">현장 지원 서비스</p>
                 <div class="space-y-0.5 mb-2">
                     <button onclick="changeTab('medicine-survey')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-medicine-survey"><i class="fas fa-medkit w-5 text-center"></i> 의약품 수요조사</button>
@@ -331,35 +338,21 @@
                     </div>
                 </div>
             </div>
-            <!-- 주말/휴일 당직 근무표 위젯 -->
-            <div class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-t-4 border-t-blue-500">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
-                        <i class="fas fa-calendar-alt text-blue-500"></i> 📅 주말/휴일 당직 근무표
-                    </h3>
-                </div>
-                <!-- 로테이션 순서 고정 표시 -->
-                <div class="bg-slate-50 rounded-xl p-3 mb-4">
-                    <p class="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <i class="fas fa-sync-alt text-teal-400 text-xs"></i> 당직 로테이션 순서
-                    </p>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <span class="bg-white border border-slate-200 px-2 py-1 rounded-md text-sm font-bold text-slate-700 shadow-sm">박원석</span>
-                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-                        <span class="bg-blue-50 border border-blue-200 px-2 py-1 rounded-md text-sm font-bold text-blue-700 shadow-sm">박기태</span>
-                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-                        <span class="bg-white border border-slate-200 px-2 py-1 rounded-md text-sm font-bold text-slate-700 shadow-sm">김수민</span>
-                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-                        <span class="bg-white border border-slate-200 px-2 py-1 rounded-md text-sm font-bold text-slate-700 shadow-sm">황강헌</span>
-                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-                        <span class="bg-white border border-slate-200 px-2 py-1 rounded-md text-sm font-bold text-slate-700 shadow-sm">조철제</span>
+            <!-- 주말 당직 근무표 바로가기 카드 -->
+            <div class="gu-card p-4 border border-blue-100 shadow-sm rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center text-white text-lg flex-shrink-0">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-blue-400 uppercase tracking-wider">일정 및 당직 관리</p>
+                        <h3 class="text-base font-black text-slate-800">📅 주말/휴일 당직 근무표</h3>
                     </div>
                 </div>
-                <!-- 확정 일정 리스트 -->
-                <p class="text-xs font-black text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1">
-                    <i class="fas fa-list-ul text-blue-400 text-xs"></i> 확정된 당직 일정
-                </p>
-                <ul id="duty-schedule-list" class="space-y-2"></ul>
+                <button type="button" onclick="changeTab('duty')"
+                    class="flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors flex items-center gap-2">
+                    <i class="fas fa-arrow-right"></i> 바로가기
+                </button>
             </div>
             <!-- 금월 건강상담 대상자 명단 -->
             <div class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-t-4 border-t-purple-500">
@@ -924,6 +917,46 @@
             </div>
         </section>
 
+
+        <!-- ==================== 주말/휴일 당직 근무표 전용 탭 ==================== -->
+        <section id="duty" class="admin-only hidden tab-content max-w-5xl mx-auto space-y-6">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800">주말 당직 근무표</h2>
+                    <p class="text-sm text-slate-500">정식 로테이션 및 과거 근무 이력을 확인합니다.</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200 p-5 rounded-2xl mb-6">
+                <h3 class="text-sm font-bold text-slate-700 mb-3"><i class="fas fa-sync-alt text-teal-500"></i> 현재 정식 로테이션 순서</h3>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">박원석</span>
+                    <i class="fas fa-chevron-right text-slate-300"></i>
+                    <span class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">박기태</span>
+                    <i class="fas fa-chevron-right text-slate-300"></i>
+                    <span class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">김수민</span>
+                    <i class="fas fa-chevron-right text-slate-300"></i>
+                    <span class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">황강헌</span>
+                    <i class="fas fa-chevron-right text-slate-300"></i>
+                    <span class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">조철제</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">* 이전에는 유동적으로 운영되었으나, 현재는 위 순서를 기준으로 당직이 편성됩니다.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="gu-card p-5 rounded-2xl border border-emerald-200 bg-white">
+                    <h3 class="text-lg font-black text-slate-800 mb-4 border-b border-slate-100 pb-2">🚀 다가오는 당직 (확정)</h3>
+                    <ul id="duty-upcoming-list" class="space-y-2"></ul>
+                </div>
+                <div class="gu-card p-5 rounded-2xl border border-slate-200 bg-slate-50">
+                    <h3 class="text-lg font-black text-slate-600 mb-4 border-b border-slate-200 pb-2">🕒 과거 근무 이력</h3>
+                    <ul id="duty-past-list" class="space-y-2"></ul>
+                </div>
+            </div>
+        </section>
         <section id="stretching" class="tab-content max-w-7xl mx-auto space-y-6">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
@@ -984,7 +1017,7 @@
 
     <script>
         // ========== 0. 구글 시트 백엔드 URL ==========
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyJwKPCt8ux0G27yPMXXP7XQ_nVzXXnP7uqZXaw3EFxZGkXj3YcPiKREUUfMIsSDJLeiw/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz0mVUDkpxzt0zyPfeE0HID0RYWIICY-W7E-RWQIk6oNlxyby298NHIGDEwTOjcIKeaCA/exec';
 
         function goToGame() {
             window.location.href = 'immunity-war.html';
@@ -1184,10 +1217,14 @@
             if (tabId === 'emergency') {
                 renderEmergencyContacts();
             }
-            // 집중관리 탭: 보고 모드일 때 월별 현황 갱신, 명단 위 현재 이수율 바 갱신
+            // 집중관리 탭: 보고 모드일 때 월별 현황 갱신, 이수율 바 갱신
             if (tabId === 'list') {
-                if (typeof updateListCurrentCumulativeBar === 'function') updateListCurrentCumulativeBar();
+                updateCounselingStats();
                 if (typeof listReportModeOn !== 'undefined' && listReportModeOn) renderListReport();
+            }
+            // 당직 근무표 탭: 일정 렌더링
+            if (tabId === 'duty') {
+                renderDutyWidget();
             }
             if (tabId === 'dashboard') updateDashboardDate();
         }
@@ -2651,9 +2688,14 @@
 
             for (var i = 0; i < intensive.length; i++) {
                 var c = intensive[i].counseling;
-                if (c) {
+                // 서버에서 JSON 문자열로 올 경우 안전하게 파싱
+                if (typeof c === 'string') {
+                    try { c = JSON.parse(c); } catch(e) { c = {}; }
+                }
+                if (c && typeof c === 'object' && !Array.isArray(c)) {
                     for (var m = 1; m <= 12; m++) {
-                        if (c[m] != null) totalDone++;
+                        // 숫자 키와 문자열 키 모두 대응
+                        if (c[m] != null || c[String(m)] != null) totalDone++;
                     }
                 }
             }
@@ -2687,6 +2729,7 @@
             var grid = document.getElementById('list-report-grid');
             var tableBody = document.getElementById('list-report-table-body');
             if (!grid && !tableBody) return;
+            try {
             var members = APP_DATA.members || [];
             var intensive = members.filter(function (m) { return String(m.isIntensiveCare).toUpperCase() === 'TRUE'; });
             var total = intensive.length;
@@ -2697,8 +2740,9 @@
                 var doneCount = 0;
                 for (var i = 0; i < intensive.length; i++) {
                     var c = intensive[i].counseling;
+                    if (!c || typeof c !== 'object') continue;
                     var allDone = true;
-                    for (var k = 1; k <= month; k++) { if (!c || c[k] == null) { allDone = false; break; } }
+                    for (var k = 1; k <= month; k++) { if (c[k] == null) { allDone = false; break; } }
                     if (allDone) doneCount++;
                 }
                 var rate = total > 0 ? Math.round((doneCount / total) * 100) : 0;
@@ -2727,6 +2771,7 @@
                 var detailEl = document.getElementById('list-report-month-detail');
                 if (detailEl) detailEl.classList.add('hidden');
             }
+            } catch(err) { console.error('[renderListReport 오류]', err); }
         }
 
         function selectReportMonth(month) {
@@ -2752,8 +2797,9 @@
             var done = [];
             for (var i = 0; i < intensive.length; i++) {
                 var c = intensive[i].counseling;
+                if (!c || typeof c !== 'object') continue;
                 var allDone = true;
-                for (var k = 1; k <= month; k++) { if (!c || c[k] == null) { allDone = false; break; } }
+                for (var k = 1; k <= month; k++) { if (c[k] == null) { allDone = false; break; } }
                 if (allDone) done.push(intensive[i]);
             }
             var rate = total > 0 ? Math.round((done.length / total) * 100) : 0;
@@ -2783,51 +2829,69 @@
         }
 
         function renderDutyWidget() {
-            var list = document.getElementById('duty-schedule-list');
-            if (!list) return;
-            var duties = APP_DATA.duty || [];
-            if (duties.length === 0) {
-                list.innerHTML = '<li class="text-sm text-slate-400 text-center py-6 bg-slate-50 rounded-xl">현재 확정된 당직 일정이 없습니다.</li>';
-                return;
-            }
-            var dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-            var html = '';
-            duties.forEach(function(d) {
-                var name  = d.name  || d.Name  || d['이름'] || '';
-                var dateRaw = d.date || d.Date || d['날짜'] || '';
-                var note  = d.note  || d.Note  || d['비고'] || '';
-                // 날짜 파싱 및 MM/DD (요일) 포맷
-                var dateStr = String(dateRaw);
-                var dayLabel = '';
-                try {
-                    var dt = new Date(dateRaw);
-                    if (!isNaN(dt.getTime())) {
-                        var mm = String(dt.getMonth() + 1).padStart(2, '0');
-                        var dd = String(dt.getDate()).padStart(2, '0');
-                        dateStr = mm + '/' + dd;
-                        dayLabel = '(' + dayNames[dt.getDay()] + ')';
-                    }
-                } catch(e) {}
-                var isMine = (name === '박기태');
-                var wrapClass = isMine
-                    ? 'flex justify-between items-center p-3 rounded-xl border border-blue-100 bg-blue-50'
-                    : 'flex justify-between items-center p-3 rounded-xl border border-slate-100 bg-white';
-                html += '<li class="' + wrapClass + '">';
-                html += '  <div class="flex items-center gap-3">';
-                html += '    <span class="text-xl leading-none">🗓️</span>';
-                html += '    <div>';
-                html += '      <span class="text-sm font-black text-slate-700">' + dateStr;
-                if (dayLabel) html += ' <span class="text-slate-400 font-semibold text-xs">' + dayLabel + '</span>';
-                html += '</span>';
-                if (note) html += '<p class="text-xs text-slate-400 mt-0.5">' + note + '</p>';
-                html += '    </div>';
-                html += '  </div>';
-                html += '  <span class="text-sm font-black ' + (isMine ? 'text-blue-600' : 'text-slate-700') + '">';
-                html += name + (isMine ? ' ⭐' : '');
-                html += '  </span>';
-                html += '</li>';
+            var upcomingList = document.getElementById('duty-upcoming-list');
+            var pastList = document.getElementById('duty-past-list');
+            if (!upcomingList || !pastList) return;
+
+            var dutyData = APP_DATA.duty || [];
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            var upcomingItems = [];
+            var pastItems = [];
+
+            dutyData.forEach(function(d) {
+                if (!d.date) return;
+                // ISO 문자열(UTC) 전체를 파싱 → 브라우저가 KST(+9h)로 자동 변환
+                var dutyDate = new Date(d.date);
+                if (isNaN(dutyDate.getTime())) return;
+
+                // KST 기준 연/월/일 추출
+                var yyyy = dutyDate.getFullYear();
+                var mm   = String(dutyDate.getMonth() + 1).padStart(2, '0');
+                var dd   = String(dutyDate.getDate()).padStart(2, '0');
+                var dateStr = yyyy + '/' + mm + '/' + dd;
+
+                // 비교용 시간 초기화
+                dutyDate.setHours(0, 0, 0, 0);
+
+                var name     = d.name || d.Name || d['이름'] || '';
+                var note     = d.note || d.Note || d['비고'] || '';
+                var dayField = d.day  || '';
+
+                if (dutyDate >= today) {
+                    upcomingItems.push({ dutyDate: dutyDate, dateStr: dateStr, name: name, note: note, dayField: dayField });
+                } else {
+                    pastItems.push({ dutyDate: dutyDate, dateStr: dateStr, name: name, note: note, dayField: dayField });
+                }
             });
-            list.innerHTML = html;
+
+            // 미래: 날짜 빠른 순(오름차순)
+            upcomingItems.sort(function(a, b) { return a.dutyDate - b.dutyDate; });
+            // 과거: 가장 최근이 위(내림차순)
+            pastItems.sort(function(a, b) { return b.dutyDate - a.dutyDate; });
+
+            function buildLi(item) {
+                var isMe = item.name.indexOf('박기태') !== -1;
+                var nameStyle = isMe
+                    ? 'text-blue-600 font-black bg-blue-50 px-2 py-1 rounded'
+                    : 'text-slate-700 font-bold';
+                return '<li class="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border border-slate-100">' +
+                    '<div class="flex items-center gap-3">' +
+                    '<span class="text-sm text-slate-500 font-medium">' + item.dateStr + (item.dayField ? ' (' + item.dayField + ')' : '') + '</span>' +
+                    (item.note ? '<span class="text-xs text-slate-400">' + item.note + '</span>' : '') +
+                    '</div>' +
+                    '<span class="' + nameStyle + '">' + item.name + '</span>' +
+                    '</li>';
+            }
+
+            upcomingList.innerHTML = upcomingItems.length
+                ? upcomingItems.map(buildLi).join('')
+                : '<li class="text-sm text-slate-500 p-3">확정된 다가오는 일정이 없습니다.</li>';
+
+            pastList.innerHTML = pastItems.length
+                ? pastItems.map(buildLi).join('')
+                : '<li class="text-sm text-slate-500 p-3">과거 근무 이력이 없습니다.</li>';
         }
 
         function toggleCounselingByBtn(btn) {
@@ -3065,9 +3129,19 @@
 
         // 집중관리 명단 counseling 객체에 1~12월 키 보장
         function normalizeMemberCounseling(m) {
-            var c = m.counseling || {};
-            for (var mon = 1; mon <= 12; mon++) { if (c[mon] === undefined) c[mon] = null; }
-            m.counseling = c;
+            var c = m.counseling;
+            // 구글 시트에서 JSON 문자열로 온 경우 파싱
+            if (typeof c === 'string') {
+                try { c = JSON.parse(c); } catch(e) { c = {}; }
+            }
+            if (!c || typeof c !== 'object' || Array.isArray(c)) c = {};
+            // 1~12월 키 정규화 (숫자 키로 통일)
+            var normalized = {};
+            for (var mon = 1; mon <= 12; mon++) {
+                var val = (c[mon] !== undefined) ? c[mon] : (c[String(mon)] !== undefined ? c[String(mon)] : null);
+                normalized[mon] = val;
+            }
+            m.counseling = normalized;
             return m;
         }
 
@@ -3207,11 +3281,6 @@
                     // 2. 구글 시트 로드 성공 후 로딩 종료·initApp은 loadDataFromSheets 내부에서 처리됨. 이어서 UI 초기화.
                     initializeDefaultData();
                     initViewMode();
-                    var resizeTimer;
-                    window.addEventListener('resize', function () {
-                        clearTimeout(resizeTimer);
-                        resizeTimer = setTimeout(initViewMode, 250);
-                    });
                     var savedUrl = localStorage.getItem('medicine_survey_url');
                     if (savedUrl && !medicineSurveyUrlFromServer) medicineSurveyUrlFromServer = savedUrl;
                     var savedVideos = localStorage.getItem('stretching_videos');
