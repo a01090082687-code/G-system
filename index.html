@@ -120,39 +120,66 @@
             <nav class="space-y-1 flex-1 overflow-y-auto">
                 <p class="text-xs uppercase text-slate-400 font-bold mt-6 mb-2 first:mt-0">📊 경영 성과 Report</p>
                 <div class="space-y-0.5 mb-2">
-                    <button onclick="changeTab('dashboard')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-dashboard"><i class="fas fa-chart-pie w-5 text-center"></i> 대시보드</button>
-                    <button onclick="changeTab('innovation')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-innovation"><i class="fas fa-award w-5 text-center"></i> 혁신 성과</button>
-                    <button onclick="changeTab('expense')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-expense"><i class="fas fa-won-sign w-5 text-center"></i> 병원비 지출</button>
+                    <button onclick="changeTab('dashboard')"
+                        class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50"
+                        id="nav-dashboard"><i class="fas fa-chart-pie w-5 text-center"></i> 대시보드</button>
+                    <button onclick="changeTab('innovation')"
+                        class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50"
+                        id="nav-innovation"><i class="fas fa-award w-5 text-center"></i> 혁신 성과</button>
+                    <button onclick="changeTab('expense')"
+                        class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50"
+                        id="nav-expense"><i class="fas fa-won-sign w-5 text-center"></i> 병원비 지출</button>
                 </div>
                 <p class="text-xs uppercase text-slate-400 font-bold mt-6 mb-2">🩺 임직원 건강 관리</p>
                 <div class="space-y-0.5 mb-2">
-                    <button onclick="changeTab('list')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-list"><i class="fas fa-users w-5 text-center"></i> 보건 집중관리</button>
-                    <button onclick="changeTab('health-checkup')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-health-checkup"><i class="fas fa-user-check w-5 text-center"></i> 건강검진 관리</button>
+                    <button onclick="changeTab('list')"
+                        class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50"
+                        id="nav-list"><i class="fas fa-users w-5 text-center"></i> 보건 집중관리</button>
+                    <button onclick="changeTab('health-checkup')"
+                        class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50"
+                        id="nav-health-checkup"><i class="fas fa-user-check w-5 text-center"></i> 건강검진 관리</button>
                 </div>
                 <p class="text-xs uppercase text-slate-400 font-bold mt-6 mb-2">🏭 작업환경 및 안전</p>
                 <div class="space-y-0.5 mb-2">
-                    <button onclick="changeTab('noise')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-noise"><i class="fas fa-volume-up w-5 text-center"></i> 소음 현황</button>
-                    <button onclick="changeTab('risk-factors')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-risk-factors"><i class="fas fa-hard-hat w-5 text-center"></i> 핵심 유해인자</button>
-                    <button onclick="changeTab('msds')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-msds"><i class="fas fa-flask w-5 text-center"></i> MSDS 관리</button>
+                    <button onclick="changeTab('noise')"
+                        class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50"
+                        id="nav-noise"><i class="fas fa-volume-up w-5 text-center"></i> 소음 현황</button>
+                    <button onclick="changeTab('risk-factors')"
+                        class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50"
+                        id="nav-risk-factors"><i class="fas fa-hard-hat w-5 text-center"></i> 핵심 유해인자</button>
+                    <button onclick="changeTab('msds')"
+                        class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50"
+                        id="nav-msds"><i class="fas fa-flask w-5 text-center"></i> MSDS 관리</button>
                 </div>
                 <div class="mt-6 mb-2 px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     📅 일정 및 당직 관리
                 </div>
-                <button onclick="changeTab('duty')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors" id="nav-duty">
+                <button onclick="changeTab('duty')"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors"
+                    id="nav-duty">
                     <i class="fas fa-calendar-alt w-5 text-center"></i>
                     <span class="font-bold">주말 당직 근무표</span>
                 </button>
                 <p class="text-xs uppercase text-slate-400 font-bold mt-6 mb-2">현장 지원 서비스</p>
                 <div class="space-y-0.5 mb-2">
-                    <button onclick="changeTab('medicine-survey')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-medicine-survey"><i class="fas fa-medkit w-5 text-center"></i> 의약품 수요조사</button>
-                    <button onclick="changeTab('emergency')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-emergency"><i class="fas fa-phone-volume w-5 text-center"></i> 응급연락망</button>
-                    <button onclick="changeTab('stretching')" class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50" id="nav-stretching"><i class="fas fa-running w-5 text-center"></i> 스트레칭 영상</button>
+                    <button onclick="changeTab('medicine-survey')"
+                        class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50"
+                        id="nav-medicine-survey"><i class="fas fa-medkit w-5 text-center"></i> 의약품 수요조사</button>
+                    <button onclick="changeTab('emergency')"
+                        class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50"
+                        id="nav-emergency"><i class="fas fa-phone-volume w-5 text-center"></i> 응급연락망</button>
+                    <button onclick="changeTab('stretching')"
+                        class="nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50"
+                        id="nav-stretching"><i class="fas fa-running w-5 text-center"></i> 스트레칭 영상</button>
                 </div>
-                <button onclick="changeTab('survey-results')" class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50 mt-2" id="nav-survey-results"><i class="fas fa-chart-bar w-5 text-center"></i> 설문결과</button>
+                <button onclick="changeTab('survey-results')"
+                    class="admin-only hidden nav-item w-full flex items-center gap-3 px-4 py-3 font-bold text-sm text-slate-500 rounded-lg hover:bg-slate-50 mt-2"
+                    id="nav-survey-results"><i class="fas fa-chart-bar w-5 text-center"></i> 설문결과</button>
             </nav>
         </div>
         <div class="mt-auto p-4 border-t border-slate-200 bg-slate-50 flex-shrink-0">
-            <button type="button" id="pt-mode-btn" onclick="togglePTMode()" class="w-full mb-4 px-4 py-3 rounded-xl font-bold text-sm bg-slate-800 text-white hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 border border-slate-600">
+            <button type="button" id="pt-mode-btn" onclick="togglePTMode()"
+                class="w-full mb-4 px-4 py-3 rounded-xl font-bold text-sm bg-slate-800 text-white hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 border border-slate-600">
                 <i class="fas fa-tv"></i> 📺 경영진 보고 모드 (PT)
             </button>
             <div class="flex items-center gap-3 mb-4">
@@ -256,7 +283,8 @@
 
     <main class="flex-1 overflow-y-auto h-full p-4 md:p-8 pt-20 md:pt-8 bg-[#F1F5F9]">
         <!-- 근로자 홈 화면 (모바일 기본 화면) -->
-        <section id="worker-home" class="tab-content mobile-only max-w-4xl mx-auto space-y-4 flex flex-col min-h-[70vh]">
+        <section id="worker-home"
+            class="tab-content mobile-only max-w-4xl mx-auto space-y-4 flex flex-col min-h-[70vh]">
             <div class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white">
                 <div class="p-6 relative z-10 text-center">
                     <h2 class="text-xl font-black mb-1">구영테크 보건시스템</h2>
@@ -282,11 +310,14 @@
             <!-- 보고용 헤더: 타이틀 + 기준일 -->
             <div class="flex flex-wrap items-center justify-between gap-4 mb-2">
                 <h2 class="text-2xl md:text-3xl font-black text-slate-800">실시간 보건 경영 지표</h2>
-                <p id="dashboard-report-date" class="text-sm font-bold text-slate-500">기준일: <span id="dashboard-date-text"></span></p>
+                <p id="dashboard-report-date" class="text-sm font-bold text-slate-500">기준일: <span
+                        id="dashboard-date-text"></span></p>
             </div>
-            <div class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white shadow-sm border border-slate-200">
+            <div
+                class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white shadow-sm border border-slate-200">
                 <div class="p-6 md:p-8 relative z-10">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/30 text-[10px] font-black uppercase tracking-widest mb-2">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/30 text-[10px] font-black uppercase tracking-widest mb-2">
                         <span class="w-2 h-2 rounded-full bg-yellow-400"></span> 실시간 운영중
                     </div>
                     <h2 id="announcement-title" class="text-2xl md:text-3xl font-black mb-1">구영테크 보건시스템</h2>
@@ -307,7 +338,8 @@
                         <div id="dashboard-counseling-rate-bar" class="bg-red-500 h-full" style="width: 0%"></div>
                     </div>
                 </div>
-                <div class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-t-4 border-t-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
+                <div
+                    class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-t-4 border-t-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">누적 예산 절감액</p>
                     <h3 class="text-3xl font-black text-amber-700 mt-1"><span id="dashboard-total-savings">₩ 0</span>
                     </h3>
@@ -323,8 +355,8 @@
                     <div class="flex items-end justify-between">
                         <div>
                             <div class="text-3xl font-black text-slate-800" id="counseling-rate">0%</div>
-                            <p class="text-sm text-slate-500 mt-1"><span id="counseling-done">0</span>건 완료 / 연간 총 예정 <span
-                                    id="counseling-total">0</span>건</p>
+                            <p class="text-sm text-slate-500 mt-1"><span id="counseling-done">0</span>건 완료 / 연간 총 예정
+                                <span id="counseling-total">0</span>건</p>
                         </div>
                         <div
                             class="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
@@ -339,9 +371,11 @@
                 </div>
             </div>
             <!-- 주말 당직 근무표 바로가기 카드 -->
-            <div class="gu-card p-4 border border-blue-100 shadow-sm rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-between gap-4">
+            <div
+                class="gu-card p-4 border border-blue-100 shadow-sm rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center text-white text-lg flex-shrink-0">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center text-white text-lg flex-shrink-0">
                         <i class="fas fa-calendar-alt"></i>
                     </div>
                     <div>
@@ -395,7 +429,8 @@
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- 오늘의 안전 명언 카드 -->
-                <div class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
+                <div
+                    class="gu-card p-6 border border-slate-200 shadow-sm rounded-xl border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
                     <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2"><i
                             class="fas fa-quote-left text-amber-500"></i> 오늘의 안전 명언</h3>
                     <p id="safety-quote-text" class="text-lg md:text-xl font-black text-slate-800 leading-relaxed">안전은
@@ -427,7 +462,8 @@
 
         <section id="list" class="admin-only hidden tab-content max-w-7xl mx-auto space-y-6">
             <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <h2 class="text-2xl font-black text-slate-800">보건 집중관리 대상자 (<span id="list-total-members">0</span>명)</h2>
+                <h2 class="text-2xl font-black text-slate-800">보건 집중관리 대상자 (<span id="list-total-members">0</span>명)
+                </h2>
                 <button type="button" onclick="toggleListReportMode()" id="list-report-mode-btn"
                     class="px-4 py-2 rounded-xl font-bold text-sm bg-slate-600 text-white hover:bg-slate-700 transition-colors flex items-center gap-2">
                     <i class="fas fa-chart-bar"></i> <span id="list-report-mode-label">보고 모드</span>
@@ -438,16 +474,22 @@
                 <h3 class="text-sm font-black text-slate-800 mb-3 flex items-center gap-2">
                     <i class="fas fa-info-circle text-teal-500"></i> 집중관찰자(High-Risk) 관리 기준
                 </h3>
-                <img src="images/intensive-guide.png" alt="집중관찰자 기준표" class="w-full max-w-3xl rounded-lg shadow-sm border border-slate-200" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p class=\'text-sm text-slate-500 mt-2\'>📌 images/intensive-guide.png 파일을 images 폴더에 넣어주세요.</p>');">
+                <img src="images/intensive-guide.png" alt="집중관찰자 기준표"
+                    class="w-full max-w-3xl rounded-lg shadow-sm border border-slate-200"
+                    onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p class=\'text-sm text-slate-500 mt-2\'>📌 images/intensive-guide.png 파일을 images 폴더에 넣어주세요.</p>');">
             </div>
             <!-- 보고 모드: 월별 상담 현황 한눈에 -->
             <div id="list-report-view" class="hidden space-y-4">
-                <div class="gu-card p-6 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white">
-                    <h3 class="text-lg font-black text-slate-800 mb-2 flex items-center gap-2"><i class="fas fa-calendar-alt text-emerald-600"></i> 집중관리 월별 상담 이수 현황</h3>
-                    <p class="text-sm text-slate-500 mb-4">1월부터 해당 월까지 <strong>누적</strong>으로 상담을 모두 이수한 인원·완료율입니다. (해당 월까지 매월 상담 이수한 사람)</p>
+                <div
+                    class="gu-card p-6 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white">
+                    <h3 class="text-lg font-black text-slate-800 mb-2 flex items-center gap-2"><i
+                            class="fas fa-calendar-alt text-emerald-600"></i> 집중관리 월별 상담 이수 현황</h3>
+                    <p class="text-sm text-slate-500 mb-4">1월부터 해당 월까지 <strong>누적</strong>으로 상담을 모두 이수한 인원·완료율입니다. (해당
+                        월까지 매월 상담 이수한 사람)</p>
                     <!-- 한눈에 보는 월별 테이블 -->
                     <div class="overflow-x-auto mb-6">
-                        <table class="w-full text-left border-collapse rounded-xl overflow-hidden border border-slate-200">
+                        <table
+                            class="w-full text-left border-collapse rounded-xl overflow-hidden border border-slate-200">
                             <thead>
                                 <tr class="bg-emerald-600 text-white">
                                     <th class="p-3 text-sm font-black">월</th>
@@ -456,14 +498,18 @@
                                     <th class="p-3 text-sm font-black text-center">완료율</th>
                                 </tr>
                             </thead>
-                            <tbody id="list-report-table-body" class="divide-y divide-slate-100 text-sm font-medium text-slate-700 cursor-pointer"></tbody>
+                            <tbody id="list-report-table-body"
+                                class="divide-y divide-slate-100 text-sm font-medium text-slate-700 cursor-pointer">
+                            </tbody>
                         </table>
                     </div>
                     <!-- 월별 카드 그리드 (클릭 시 해당 월 상세 명단 표시) -->
                     <div class="text-sm font-bold text-slate-600 mb-2">월별 요약 카드 · 클릭하면 해당 월 상담 이수 명단을 볼 수 있습니다</div>
-                    <div id="list-report-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
+                    <div id="list-report-grid"
+                        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
                     <!-- 선택한 월 상담 이수 대상자 명단 + 완료율 -->
-                    <div id="list-report-month-detail" class="hidden mt-6 p-6 rounded-2xl border-2 border-emerald-300 bg-white">
+                    <div id="list-report-month-detail"
+                        class="hidden mt-6 p-6 rounded-2xl border-2 border-emerald-300 bg-white">
                         <h4 id="list-report-month-detail-title" class="text-lg font-black text-slate-800 mb-2"></h4>
                         <p id="list-report-month-detail-rate" class="text-sm text-slate-600 mb-4"></p>
                         <div class="overflow-x-auto">
@@ -484,103 +530,115 @@
             </div>
             <!-- 명단 모드 (기본) -->
             <div id="list-list-view">
-            <!-- 집중관리 상담 달성률 카드 (리스트 뷰용) -->
-            <div class="gu-card p-6 mb-6 rounded-2xl shadow-sm border border-slate-200 bg-white">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-bold text-slate-500 flex items-center gap-2">
-                        <i class="fas fa-stethoscope text-emerald-500"></i> <span id="list-current-month-text">이번
-                            달</span> 집중관리 상담 달성률
-                    </h3>
-                </div>
-                <div class="flex items-end justify-between">
-                    <div>
-                        <div class="text-3xl font-black text-slate-800" id="list-counseling-rate">0%</div>
-                        <p class="text-sm text-slate-500 mt-1"><span id="list-counseling-done">0</span>건 완료 / 연간 총 예정 <span
-                                id="list-counseling-total">0</span>건</p>
+                <!-- 집중관리 상담 달성률 카드 (리스트 뷰용) -->
+                <div class="gu-card p-6 mb-6 rounded-2xl shadow-sm border border-slate-200 bg-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold text-slate-500 flex items-center gap-2">
+                            <i class="fas fa-stethoscope text-emerald-500"></i> <span id="list-current-month-text">이번
+                                달</span> 집중관리 상담 달성률
+                        </h3>
                     </div>
-                    <div
-                        class="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
-                        <i class="fas fa-clipboard-check"></i>
+                    <div class="flex items-end justify-between">
+                        <div>
+                            <div class="text-3xl font-black text-slate-800" id="list-counseling-rate">0%</div>
+                            <p class="text-sm text-slate-500 mt-1"><span id="list-counseling-done">0</span>건 완료 / 연간 총
+                                예정 <span id="list-counseling-total">0</span>건</p>
+                        </div>
+                        <div
+                            class="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
                     </div>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-2 mt-4 overflow-hidden">
-                    <div id="list-counseling-progress-bar"
-                        class="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
-                </div>
-            </div>
-            <div class="gu-card p-4 mb-4 flex flex-wrap items-end gap-3">
-                <div class="flex-1 min-w-0 md:max-w-md">
-                    <label class="block text-sm font-bold text-slate-700 mb-2">이름 검색</label>
-                    <input type="text" id="list-search" placeholder="이름으로 검색..." oninput="searchMembers(this.value)"
-                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-teal-500">
-                </div>
-                <button type="button" onclick="addMember()"
-                    class="admin-only px-4 py-3 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600 transition-colors flex items-center gap-2">
-                    <i class="fas fa-plus"></i> 대상자 추가
-                </button>
-                <button type="button" onclick="forceResetDB()"
-                    class="admin-only px-4 py-3 rounded-xl font-bold text-sm bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2 ml-2">
-                    <i class="fas fa-exclamation-triangle"></i> DB 실데이터 덮어쓰기
-                </button>
-            </div>
-            <div class="flex flex-wrap gap-2 mb-4">
-                <button onclick="filterList('All')"
-                    class="filter-btn active px-4 py-2 rounded-xl bg-slate-200 text-slate-600 font-bold text-xs"
-                    data-filter="All">전체</button>
-                <button onclick="filterList('Highest')"
-                    class="filter-btn px-4 py-2 rounded-xl bg-red-50 text-red-600 font-bold text-xs"
-                    data-filter="Highest">최고위험</button>
-                <button onclick="filterList('Pending')"
-                    class="filter-btn px-4 py-2 rounded-xl bg-orange-50 text-orange-600 font-bold text-xs"
-                    data-filter="Pending">미상담</button>
-            </div>
-            <!-- 명단 위 현재 누적 이수율 한눈에 -->
-            <div id="list-current-rate-bar" class="gu-card px-4 py-3 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white flex flex-wrap items-center gap-4 mb-4">
-                <div class="flex items-center gap-2">
-                    <span class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-sm"><i class="fas fa-chart-pie"></i></span>
-                    <div>
-                        <span class="text-xs font-bold text-slate-500">현재 누적 이수율</span>
-                        <span id="list-current-rate-month" class="text-xs text-slate-400 ml-1">(이번 달 기준)</span>
+                    <div class="w-full bg-slate-100 rounded-full h-2 mt-4 overflow-hidden">
+                        <div id="list-counseling-progress-bar"
+                            class="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style="width: 0%">
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-3 flex-1 min-w-0">
-                    <span id="list-current-rate-value" class="text-2xl font-black text-emerald-600 whitespace-nowrap">0%</span>
-                    <span id="list-current-rate-count" class="text-sm text-slate-500">0명/0명</span>
-                    <div class="flex-1 min-w-[80px] h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div id="list-current-rate-fill" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width:0%"></div>
+                <div class="gu-card p-4 mb-4 flex flex-wrap items-end gap-3">
+                    <div class="flex-1 min-w-0 md:max-w-md">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">이름 검색</label>
+                        <input type="text" id="list-search" placeholder="이름으로 검색..." oninput="searchMembers(this.value)"
+                            class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-teal-500">
+                    </div>
+                    <button type="button" onclick="addMember()"
+                        class="admin-only px-4 py-3 rounded-xl font-bold text-sm bg-teal-500 text-white hover:bg-teal-600 transition-colors flex items-center gap-2">
+                        <i class="fas fa-plus"></i> 대상자 추가
+                    </button>
+                    <button type="button" onclick="forceResetDB()"
+                        class="admin-only px-4 py-3 rounded-xl font-bold text-sm bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2 ml-2">
+                        <i class="fas fa-exclamation-triangle"></i> DB 실데이터 덮어쓰기
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button onclick="filterList('All')"
+                        class="filter-btn active px-4 py-2 rounded-xl bg-slate-200 text-slate-600 font-bold text-xs"
+                        data-filter="All">전체</button>
+                    <button onclick="filterList('Highest')"
+                        class="filter-btn px-4 py-2 rounded-xl bg-red-50 text-red-600 font-bold text-xs"
+                        data-filter="Highest">최고위험</button>
+                    <button onclick="filterList('Pending')"
+                        class="filter-btn px-4 py-2 rounded-xl bg-orange-50 text-orange-600 font-bold text-xs"
+                        data-filter="Pending">미상담</button>
+                </div>
+                <!-- 명단 위 현재 누적 이수율 한눈에 -->
+                <div id="list-current-rate-bar"
+                    class="gu-card px-4 py-3 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white flex flex-wrap items-center gap-4 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span
+                            class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-sm"><i
+                                class="fas fa-chart-pie"></i></span>
+                        <div>
+                            <span class="text-xs font-bold text-slate-500">현재 누적 이수율</span>
+                            <span id="list-current-rate-month" class="text-xs text-slate-400 ml-1">(이번 달 기준)</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <span id="list-current-rate-value"
+                            class="text-2xl font-black text-emerald-600 whitespace-nowrap">0%</span>
+                        <span id="list-current-rate-count" class="text-sm text-slate-500">0명/0명</span>
+                        <div class="flex-1 min-w-[80px] h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div id="list-current-rate-fill"
+                                class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width:0%">
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="gu-card overflow-hidden">
-                <div class="mobile-scroll overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200">
-                                <th class="p-3 text-xs font-black text-slate-500 uppercase whitespace-nowrap">성명</th>
-                                <th class="p-3 text-xs font-black text-slate-500 uppercase whitespace-nowrap">부서</th>
-                                <th class="p-3 text-xs font-black text-slate-500 uppercase whitespace-nowrap">위험등급</th>
-                                <th class="p-3 text-xs font-black text-slate-500 uppercase whitespace-nowrap">관리 소견</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">1월</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">2월</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">3월</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">4월</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">5월</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">6월</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">7월</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">8월</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">9월</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">10월</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">11월</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">12월</th>
-                                <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center admin-only">
-                                    관리</th>
-                            </tr>
-                        </thead>
-                        <tbody id="member-table-body"
-                            class="divide-y divide-slate-100 text-sm font-medium text-slate-700"></tbody>
-                    </table>
+                <div class="gu-card overflow-hidden">
+                    <div class="mobile-scroll overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200">
+                                    <th class="p-3 text-xs font-black text-slate-500 uppercase whitespace-nowrap">성명
+                                    </th>
+                                    <th class="p-3 text-xs font-black text-slate-500 uppercase whitespace-nowrap">부서
+                                    </th>
+                                    <th class="p-3 text-xs font-black text-slate-500 uppercase whitespace-nowrap">위험등급
+                                    </th>
+                                    <th class="p-3 text-xs font-black text-slate-500 uppercase whitespace-nowrap">관리 소견
+                                    </th>
+                                    <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">1월</th>
+                                    <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">2월</th>
+                                    <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">3월</th>
+                                    <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">4월</th>
+                                    <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">5월</th>
+                                    <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">6월</th>
+                                    <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">7월</th>
+                                    <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">8월</th>
+                                    <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">9월</th>
+                                    <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">10월</th>
+                                    <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">11월</th>
+                                    <th class="p-2 text-[10px] font-black text-slate-500 uppercase text-center">12월</th>
+                                    <th
+                                        class="p-2 text-[10px] font-black text-slate-500 uppercase text-center admin-only">
+                                        관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="member-table-body"
+                                class="divide-y divide-slate-100 text-sm font-medium text-slate-700"></tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
             </div>
             <!-- // list-list-view -->
         </section>
@@ -921,7 +979,8 @@
         <!-- ==================== 주말/휴일 당직 근무표 전용 탭 ==================== -->
         <section id="duty" class="admin-only hidden tab-content max-w-5xl mx-auto space-y-6">
             <div class="flex items-center gap-3 mb-6">
-                <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
+                <div
+                    class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
                     <i class="fas fa-calendar-check"></i>
                 </div>
                 <div>
@@ -931,24 +990,31 @@
             </div>
 
             <div class="bg-slate-50 border border-slate-200 p-5 rounded-2xl mb-6">
-                <h3 class="text-sm font-bold text-slate-700 mb-3"><i class="fas fa-sync-alt text-teal-500"></i> 현재 정식 로테이션 순서</h3>
+                <h3 class="text-sm font-bold text-slate-700 mb-3"><i class="fas fa-sync-alt text-teal-500"></i> 현재 정식
+                    로테이션 순서</h3>
                 <div class="flex flex-wrap items-center gap-2">
-                    <span class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">박원석</span>
+                    <span
+                        class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">박원석</span>
                     <i class="fas fa-chevron-right text-slate-300"></i>
-                    <span class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">박기태</span>
+                    <span
+                        class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">박기태</span>
                     <i class="fas fa-chevron-right text-slate-300"></i>
-                    <span class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">김수민</span>
+                    <span
+                        class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">김수민</span>
                     <i class="fas fa-chevron-right text-slate-300"></i>
-                    <span class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">황강헌</span>
+                    <span
+                        class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">황강헌</span>
                     <i class="fas fa-chevron-right text-slate-300"></i>
-                    <span class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">조철제</span>
+                    <span
+                        class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">조철제</span>
                 </div>
                 <p class="text-xs text-slate-500 mt-2">* 이전에는 유동적으로 운영되었으나, 현재는 위 순서를 기준으로 당직이 편성됩니다.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="gu-card p-5 rounded-2xl border border-emerald-200 bg-white">
-                    <h3 class="text-lg font-black text-slate-800 mb-4 border-b border-slate-100 pb-2">🚀 다가오는 당직 (확정)</h3>
+                    <h3 class="text-lg font-black text-slate-800 mb-4 border-b border-slate-100 pb-2">🚀 다가오는 당직 (확정)
+                    </h3>
                     <ul id="duty-upcoming-list" class="space-y-2"></ul>
                 </div>
                 <div class="gu-card p-5 rounded-2xl border border-slate-200 bg-slate-50">
@@ -2671,12 +2737,10 @@
             if (listSearchQuery) filtered = filtered.filter(m => (m.name || '').toLowerCase().includes(listSearchQuery.toLowerCase()));
             renderMemberTable(filtered);
             if (listReportModeOn) renderListReport();
-            updateListCurrentCumulativeBar();
+            if (listReportModeOn) renderListReport();
         }
 
-        function updateListCurrentCumulativeBar() {
-            updateCounselingStats();
-        }
+
 
         function updateCounselingStats() {
             var members = APP_DATA.members || [];
@@ -2690,7 +2754,7 @@
                 var c = intensive[i].counseling;
                 // 서버에서 JSON 문자열로 올 경우 안전하게 파싱
                 if (typeof c === 'string') {
-                    try { c = JSON.parse(c); } catch(e) { c = {}; }
+                    try { c = JSON.parse(c); } catch (e) { c = {}; }
                 }
                 if (c && typeof c === 'object' && !Array.isArray(c)) {
                     for (var m = 1; m <= 12; m++) {
@@ -2703,13 +2767,13 @@
             var rate = totalRequired > 0 ? Math.round((totalDone / totalRequired) * 100) : 0;
 
             // 대시보드 및 리스트 카드 공통 업데이트
-            document.querySelectorAll('#counseling-rate, #list-counseling-rate').forEach(function(el) { el.textContent = rate + '%'; });
-            document.querySelectorAll('#counseling-done, #list-counseling-done').forEach(function(el) { el.textContent = totalDone; });
-            document.querySelectorAll('#counseling-total, #list-counseling-total').forEach(function(el) { el.textContent = totalRequired; });
-            document.querySelectorAll('#counseling-progress-bar, #list-counseling-progress-bar').forEach(function(el) { el.style.width = rate + '%'; });
+            document.querySelectorAll('#counseling-rate, #list-counseling-rate').forEach(function (el) { el.textContent = rate + '%'; });
+            document.querySelectorAll('#counseling-done, #list-counseling-done').forEach(function (el) { el.textContent = totalDone; });
+            document.querySelectorAll('#counseling-total, #list-counseling-total').forEach(function (el) { el.textContent = totalRequired; });
+            document.querySelectorAll('#counseling-progress-bar, #list-counseling-progress-bar').forEach(function (el) { el.style.width = rate + '%'; });
 
             // 텍스트 라벨: "이번 달" → "연간 총 누적"
-            document.querySelectorAll('#current-month-text, #list-current-month-text').forEach(function(el) { el.textContent = '연간 총 누적'; });
+            document.querySelectorAll('#current-month-text, #list-current-month-text').forEach(function (el) { el.textContent = '연간 총 누적'; });
         }
 
         function toggleListReportMode() {
@@ -2730,48 +2794,48 @@
             var tableBody = document.getElementById('list-report-table-body');
             if (!grid && !tableBody) return;
             try {
-            var members = APP_DATA.members || [];
-            var intensive = members.filter(function (m) { return String(m.isIntensiveCare).toUpperCase() === 'TRUE'; });
-            var total = intensive.length;
-            var monthLabels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
-            var tableHtml = '';
-            var gridHtml = '';
-            for (var month = 1; month <= 12; month++) {
-                var doneCount = 0;
-                for (var i = 0; i < intensive.length; i++) {
-                    var c = intensive[i].counseling;
-                    if (!c || typeof c !== 'object') continue;
-                    var allDone = true;
-                    for (var k = 1; k <= month; k++) { if (c[k] == null) { allDone = false; break; } }
-                    if (allDone) doneCount++;
+                var members = APP_DATA.members || [];
+                var intensive = members.filter(function (m) { return String(m.isIntensiveCare).toUpperCase() === 'TRUE'; });
+                var total = intensive.length;
+                var monthLabels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+                var tableHtml = '';
+                var gridHtml = '';
+                for (var month = 1; month <= 12; month++) {
+                    var doneCount = 0;
+                    for (var i = 0; i < intensive.length; i++) {
+                        var c = intensive[i].counseling;
+                        if (!c || typeof c !== 'object') continue;
+                        var allDone = true;
+                        for (var k = 1; k <= month; k++) { if (c[k] == null) { allDone = false; break; } }
+                        if (allDone) doneCount++;
+                    }
+                    var rate = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+                    var isSelected = month === listReportSelectedMonth;
+                    var rowClass = (isSelected ? 'bg-emerald-200 ring-2 ring-emerald-500 ' : '') + 'hover:bg-emerald-100 cursor-pointer';
+                    tableHtml += '<tr class="' + rowClass + '" data-month="' + month + '" onclick="selectReportMonth(' + month + ')">';
+                    tableHtml += '<td class="p-3">' + monthLabels[month - 1] + '</td>';
+                    tableHtml += '<td class="p-3 text-center font-black text-slate-800">' + doneCount + '명</td>';
+                    tableHtml += '<td class="p-3 text-center text-slate-600">' + total + '명</td>';
+                    tableHtml += '<td class="p-3 text-center"><span class="font-black text-emerald-600">' + rate + '%</span></td>';
+                    tableHtml += '</tr>';
+                    var cardClass = 'rounded-xl border-2 p-3 text-center cursor-pointer border-slate-200 bg-white ' + (isSelected ? 'ring-2 ring-emerald-500 bg-emerald-100 border-emerald-500' : 'hover:bg-slate-50');
+                    gridHtml += '<div class="' + cardClass + '" data-month="' + month + '" onclick="selectReportMonth(' + month + ')">';
+                    gridHtml += '<div class="text-xs font-black text-slate-500 mb-1">' + monthLabels[month - 1] + '</div>';
+                    gridHtml += '<div class="text-xl font-black text-slate-800">' + doneCount + '명</div>';
+                    gridHtml += '<div class="text-xs text-slate-500">1월~' + month + '월 누적 이수 / 총 ' + total + '명</div>';
+                    gridHtml += '<div class="mt-1 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-emerald-500 rounded-full transition-all" style="width:' + rate + '%"></div></div>';
+                    gridHtml += '<div class="text-sm font-bold text-slate-700 mt-1">' + rate + '%</div>';
+                    gridHtml += '</div>';
                 }
-                var rate = total > 0 ? Math.round((doneCount / total) * 100) : 0;
-                var isSelected = month === listReportSelectedMonth;
-                var rowClass = (isSelected ? 'bg-emerald-200 ring-2 ring-emerald-500 ' : '') + 'hover:bg-emerald-100 cursor-pointer';
-                tableHtml += '<tr class="' + rowClass + '" data-month="' + month + '" onclick="selectReportMonth(' + month + ')">';
-                tableHtml += '<td class="p-3">' + monthLabels[month - 1] + '</td>';
-                tableHtml += '<td class="p-3 text-center font-black text-slate-800">' + doneCount + '명</td>';
-                tableHtml += '<td class="p-3 text-center text-slate-600">' + total + '명</td>';
-                tableHtml += '<td class="p-3 text-center"><span class="font-black text-emerald-600">' + rate + '%</span></td>';
-                tableHtml += '</tr>';
-                var cardClass = 'rounded-xl border-2 p-3 text-center cursor-pointer border-slate-200 bg-white ' + (isSelected ? 'ring-2 ring-emerald-500 bg-emerald-100 border-emerald-500' : 'hover:bg-slate-50');
-                gridHtml += '<div class="' + cardClass + '" data-month="' + month + '" onclick="selectReportMonth(' + month + ')">';
-                gridHtml += '<div class="text-xs font-black text-slate-500 mb-1">' + monthLabels[month - 1] + '</div>';
-                gridHtml += '<div class="text-xl font-black text-slate-800">' + doneCount + '명</div>';
-                gridHtml += '<div class="text-xs text-slate-500">1월~' + month + '월 누적 이수 / 총 ' + total + '명</div>';
-                gridHtml += '<div class="mt-1 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-emerald-500 rounded-full transition-all" style="width:' + rate + '%"></div></div>';
-                gridHtml += '<div class="text-sm font-bold text-slate-700 mt-1">' + rate + '%</div>';
-                gridHtml += '</div>';
-            }
-            if (tableBody) tableBody.innerHTML = tableHtml;
-            if (grid) grid.innerHTML = gridHtml;
-            if (listReportSelectedMonth >= 1 && listReportSelectedMonth <= 12) {
-                renderListReportMonthDetail(listReportSelectedMonth);
-            } else {
-                var detailEl = document.getElementById('list-report-month-detail');
-                if (detailEl) detailEl.classList.add('hidden');
-            }
-            } catch(err) { console.error('[renderListReport 오류]', err); }
+                if (tableBody) tableBody.innerHTML = tableHtml;
+                if (grid) grid.innerHTML = gridHtml;
+                if (listReportSelectedMonth >= 1 && listReportSelectedMonth <= 12) {
+                    renderListReportMonthDetail(listReportSelectedMonth);
+                } else {
+                    var detailEl = document.getElementById('list-report-month-detail');
+                    if (detailEl) detailEl.classList.add('hidden');
+                }
+            } catch (err) { console.error('[renderListReport 오류]', err); }
         }
 
         function selectReportMonth(month) {
@@ -2834,64 +2898,68 @@
             if (!upcomingList || !pastList) return;
 
             var dutyData = APP_DATA.duty || [];
-            var today = new Date();
-            today.setHours(0, 0, 0, 0);
 
-            var upcomingItems = [];
-            var pastItems = [];
+            // 오늘 YYYYMMDD 문자열 (문자열 비교로 타임존 오류 원천 차단)
+            var nowLocal = new Date();
+            var todayStr = String(nowLocal.getFullYear()) +
+                String(nowLocal.getMonth() + 1).padStart(2, '0') +
+                String(nowLocal.getDate()).padStart(2, '0'); // YYYYMMDD
 
-            dutyData.forEach(function(d) {
-                if (!d.date) return;
-                // ISO 문자열(UTC) 전체를 파싱 → 브라우저가 KST(+9h)로 자동 변환
-                var dutyDate = new Date(d.date);
-                if (isNaN(dutyDate.getTime())) return;
+            var upcomingHtml = '';
+            var pastHtml = '';
 
-                // KST 기준 연/월/일 추출
-                var yyyy = dutyDate.getFullYear();
-                var mm   = String(dutyDate.getMonth() + 1).padStart(2, '0');
-                var dd   = String(dutyDate.getDate()).padStart(2, '0');
-                var dateStr = yyyy + '/' + mm + '/' + dd;
-
-                // 비교용 시간 초기화
-                dutyDate.setHours(0, 0, 0, 0);
-
-                var name     = d.name || d.Name || d['이름'] || '';
-                var note     = d.note || d.Note || d['비고'] || '';
-                var dayField = d.day  || '';
-
-                if (dutyDate >= today) {
-                    upcomingItems.push({ dutyDate: dutyDate, dateStr: dateStr, name: name, note: note, dayField: dayField });
-                } else {
-                    pastItems.push({ dutyDate: dutyDate, dateStr: dateStr, name: name, note: note, dayField: dayField });
-                }
+            // 날짜 오름차순 정렬
+            var sortedData = dutyData.slice().sort(function (a, b) {
+                return String(a.date || '') > String(b.date || '') ? 1 : -1;
             });
 
-            // 미래: 날짜 빠른 순(오름차순)
-            upcomingItems.sort(function(a, b) { return a.dutyDate - b.dutyDate; });
-            // 과거: 가장 최근이 위(내림차순)
-            pastItems.sort(function(a, b) { return b.dutyDate - a.dutyDate; });
+            sortedData.forEach(function (d) {
+                if (!d || !d.date) return;
 
-            function buildLi(item) {
-                var isMe = item.name.indexOf('박기태') !== -1;
+                var rawStr = String(d.date);
+                var yyyy, mm, dd;
+
+                if (rawStr.indexOf('T') !== -1) {
+                    // UTC ISO datetime (e.g. "2025-12-19T15:00:00.000Z")
+                    // → 브라우저 KST 자동 변환 후 로컬 연/월/일 추출
+                    var dt = new Date(rawStr);
+                    if (isNaN(dt.getTime())) return;
+                    yyyy = String(dt.getFullYear());
+                    mm = String(dt.getMonth() + 1).padStart(2, '0');
+                    dd = String(dt.getDate()).padStart(2, '0');
+                } else {
+                    // 평문 날짜 문자열 (e.g. "2025-12-20")
+                    // → 타임존 개입 없이 문자열 그대로 분리
+                    var parts = rawStr.substring(0, 10).split('-');
+                    if (parts.length !== 3) return;
+                    yyyy = parts[0]; mm = parts[1]; dd = parts[2];
+                }
+
+                var dateDisplay = yyyy + '/' + mm + '/' + dd;
+                var compareDateStr = yyyy + mm + dd; // YYYYMMDD 문자열 비교
+
+                var isMe = (d.name || '').indexOf('박기태') !== -1;
                 var nameStyle = isMe
                     ? 'text-blue-600 font-black bg-blue-50 px-2 py-1 rounded'
                     : 'text-slate-700 font-bold';
-                return '<li class="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border border-slate-100">' +
+
+                var li = '<li class="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border border-slate-100">' +
                     '<div class="flex items-center gap-3">' +
-                    '<span class="text-sm text-slate-500 font-medium">' + item.dateStr + (item.dayField ? ' (' + item.dayField + ')' : '') + '</span>' +
-                    (item.note ? '<span class="text-xs text-slate-400">' + item.note + '</span>' : '') +
+                    '<span class="text-sm text-slate-500 font-medium">' + dateDisplay +
+                    (d.day ? ' (' + d.day + ')' : '') + '</span>' +
                     '</div>' +
-                    '<span class="' + nameStyle + '">' + item.name + '</span>' +
+                    '<span class="' + nameStyle + '">' + (d.name || '') + '</span>' +
                     '</li>';
-            }
 
-            upcomingList.innerHTML = upcomingItems.length
-                ? upcomingItems.map(buildLi).join('')
-                : '<li class="text-sm text-slate-500 p-3">확정된 다가오는 일정이 없습니다.</li>';
+                if (compareDateStr >= todayStr) {
+                    upcomingHtml += li;         // 미래: 오름차순
+                } else {
+                    pastHtml = li + pastHtml;   // 과거: 최신이 위(역순)
+                }
+            });
 
-            pastList.innerHTML = pastItems.length
-                ? pastItems.map(buildLi).join('')
-                : '<li class="text-sm text-slate-500 p-3">과거 근무 이력이 없습니다.</li>';
+            upcomingList.innerHTML = upcomingHtml || '<li class="text-sm text-slate-500 p-3">확정된 다가오는 일정이 없습니다.</li>';
+            pastList.innerHTML = pastHtml || '<li class="text-sm text-slate-500 p-3">과거 근무 이력이 없습니다.</li>';
         }
 
         function toggleCounselingByBtn(btn) {
@@ -3132,7 +3200,7 @@
             var c = m.counseling;
             // 구글 시트에서 JSON 문자열로 온 경우 파싱
             if (typeof c === 'string') {
-                try { c = JSON.parse(c); } catch(e) { c = {}; }
+                try { c = JSON.parse(c); } catch (e) { c = {}; }
             }
             if (!c || typeof c !== 'object' || Array.isArray(c)) c = {};
             // 1~12월 키 정규화 (숫자 키로 통일)
