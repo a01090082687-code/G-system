@@ -1324,17 +1324,32 @@
 
         function applyDataFromServer(data) {
             if (!data) return;
-            if (data && Array.isArray(data.members) && data.members.length > 0) {
-                APP_DATA.members = data.members.map(normalizeMemberCounseling);
+            // 집중관리 명단: 서버 데이터가 있으면 사용, 없거나 비면 초기 명단으로 복구
+            var rawMembers = data.members;
+            if (Array.isArray(rawMembers) && rawMembers.length > 0) {
+                try {
+                    APP_DATA.members = rawMembers.map(normalizeMemberCounseling);
+                } catch (e) {
+                    console.error('집중관리 명단 파싱 오류, 초기 명단으로 복구:', e);
+                    if (typeof INITIAL_MEMBERS !== 'undefined' && INITIAL_MEMBERS.length > 0) {
+                        APP_DATA.members = INITIAL_MEMBERS.map(function (m) {
+                            return normalizeMemberCounseling(JSON.parse(JSON.stringify(m)));
+                        });
+                    } else {
+                        APP_DATA.members = [];
+                    }
+                }
             } else {
-                // 구글 시트가 비어 있으면(0명이면) 강제로 15명 실데이터 주입 후 즉시 저장 (새로고침 시 증발 방지)
-                if (typeof INITIAL_MEMBERS !== 'undefined') {
+                // 구글 시트가 비어 있거나 members 없음 → 초기 명단으로 복구
+                if (typeof INITIAL_MEMBERS !== 'undefined' && INITIAL_MEMBERS.length > 0) {
                     APP_DATA.members = INITIAL_MEMBERS.map(function (m) {
                         return normalizeMemberCounseling(JSON.parse(JSON.stringify(m)));
                     });
                     apiPost('saveMembers', APP_DATA.members).then(function () {
                         console.log('✅ 집중관리 명단 초기 데이터 자동 복구 및 구글 시트 저장 완료');
                     }).catch(function (err) { console.error('초기 명단 저장 실패:', err); });
+                } else {
+                    APP_DATA.members = [];
                 }
             }
             if (Array.isArray(data.risks)) APP_DATA.risks = data.risks;
@@ -2744,7 +2759,7 @@
 
         function updateCounselingStats() {
             var members = APP_DATA.members || [];
-            var intensive = members.filter(function (m) { return String(m.isIntensiveCare).toUpperCase() === 'TRUE'; });
+            var intensive = members; // 명단 전체가 집중관리 대상자
 
             var totalPeople = intensive.length;
             var totalRequired = totalPeople * 12; // 연간 총 예정 상담 건수 (인원 × 12개월)
@@ -2752,11 +2767,11 @@
 
             for (var i = 0; i < intensive.length; i++) {
                 var c = intensive[i].counseling;
-                // 서버에서 JSON 문자열로 올 경우 안전하게 파싱
                 if (typeof c === 'string') {
                     try { c = JSON.parse(c); } catch (e) { c = {}; }
                 }
-                if (c && typeof c === 'object' && !Array.isArray(c)) {
+                if (!c || typeof c !== 'object') c = {};
+                if (!Array.isArray(c)) {
                     for (var m = 1; m <= 12; m++) {
                         // 숫자 키와 문자열 키 모두 대응
                         if (c[m] != null || c[String(m)] != null) totalDone++;
@@ -2795,7 +2810,7 @@
             if (!grid && !tableBody) return;
             try {
                 var members = APP_DATA.members || [];
-                var intensive = members.filter(function (m) { return String(m.isIntensiveCare).toUpperCase() === 'TRUE'; });
+                var intensive = members; // 명단 전체가 집중관리 대상자
                 var total = intensive.length;
                 var monthLabels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
                 var tableHtml = '';
@@ -2804,7 +2819,10 @@
                     var doneCount = 0;
                     for (var i = 0; i < intensive.length; i++) {
                         var c = intensive[i].counseling;
-                        if (!c || typeof c !== 'object') continue;
+                        if (typeof c === 'string') {
+                            try { c = JSON.parse(c); } catch (e) { c = {}; }
+                        }
+                        if (!c || typeof c !== 'object') c = {};
                         var allDone = true;
                         for (var k = 1; k <= month; k++) { if (c[k] == null) { allDone = false; break; } }
                         if (allDone) doneCount++;
@@ -2856,12 +2874,15 @@
             if (!panelEl || !bodyEl) return;
             var monthLabels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
             var members = APP_DATA.members || [];
-            var intensive = members.filter(function (m) { return String(m.isIntensiveCare).toUpperCase() === 'TRUE'; });
+            var intensive = members; // 명단 전체가 집중관리 대상자
             var total = intensive.length;
             var done = [];
             for (var i = 0; i < intensive.length; i++) {
                 var c = intensive[i].counseling;
-                if (!c || typeof c !== 'object') continue;
+                if (typeof c === 'string') {
+                    try { c = JSON.parse(c); } catch (e) { c = {}; }
+                }
+                if (!c || typeof c !== 'object') c = {};
                 var allDone = true;
                 for (var k = 1; k <= month; k++) { if (c[k] == null) { allDone = false; break; } }
                 if (allDone) done.push(intensive[i]);
@@ -2898,63 +2919,55 @@
             if (!upcomingList || !pastList) return;
 
             var dutyData = APP_DATA.duty || [];
+            // 연동 지연 시 UI 확인용 테스트 데이터 2건
+            if (dutyData.length === 0) {
+                var t = new Date();
+                var nextSat = new Date(t);
+                nextSat.setDate(t.getDate() + (6 - t.getDay() + 7) % 7 || 7);
+                dutyData = [
+                    { date: (t.getFullYear() - 1) + '-12-20T15:00:00.000Z', name: '조철제', day: '토' },
+                    { date: nextSat.getFullYear() + '-' + String(nextSat.getMonth() + 1).padStart(2, '0') + '-' + String(nextSat.getDate()).padStart(2, '0'), name: '박기태', day: '토' }
+                ];
+            }
 
-            // 오늘 YYYYMMDD 문자열 (문자열 비교로 타임존 오류 원천 차단)
-            var nowLocal = new Date();
-            var todayStr = String(nowLocal.getFullYear()) +
-                String(nowLocal.getMonth() + 1).padStart(2, '0') +
-                String(nowLocal.getDate()).padStart(2, '0'); // YYYYMMDD
+            var now = new Date();
+            var todayStr = String(now.getFullYear()) + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
 
             var upcomingHtml = '';
             var pastHtml = '';
 
-            // 날짜 오름차순 정렬
+            function toYYYYMMDD(val) {
+                var raw = String(val || '');
+                var match = raw.match(/\d{4}-\d{2}-\d{2}/);
+                return match ? match[0].replace(/-/g, '') : '0';
+            }
+
             var sortedData = dutyData.slice().sort(function (a, b) {
-                return String(a.date || '') > String(b.date || '') ? 1 : -1;
+                return toYYYYMMDD(a.date).localeCompare(toYYYYMMDD(b.date));
             });
 
             sortedData.forEach(function (d) {
-                if (!d || !d.date) return;
-
-                var rawStr = String(d.date);
-                var yyyy, mm, dd;
-
-                if (rawStr.indexOf('T') !== -1) {
-                    // UTC ISO datetime (e.g. "2025-12-19T15:00:00.000Z")
-                    // → 브라우저 KST 자동 변환 후 로컬 연/월/일 추출
-                    var dt = new Date(rawStr);
-                    if (isNaN(dt.getTime())) return;
-                    yyyy = String(dt.getFullYear());
-                    mm = String(dt.getMonth() + 1).padStart(2, '0');
-                    dd = String(dt.getDate()).padStart(2, '0');
-                } else {
-                    // 평문 날짜 문자열 (e.g. "2025-12-20")
-                    // → 타임존 개입 없이 문자열 그대로 분리
-                    var parts = rawStr.substring(0, 10).split('-');
-                    if (parts.length !== 3) return;
-                    yyyy = parts[0]; mm = parts[1]; dd = parts[2];
-                }
-
-                var dateDisplay = yyyy + '/' + mm + '/' + dd;
-                var compareDateStr = yyyy + mm + dd; // YYYYMMDD 문자열 비교
+                var raw = String(d.date || '');
+                var match = raw.match(/\d{4}-\d{2}-\d{2}/);
+                if (!match) return;
+                var dateOnly = match[0];
+                var compareStr = dateOnly.replace(/-/g, '');
+                var displayStr = dateOnly.replace(/-/g, '/');
 
                 var isMe = (d.name || '').indexOf('박기태') !== -1;
-                var nameStyle = isMe
-                    ? 'text-blue-600 font-black bg-blue-50 px-2 py-1 rounded'
-                    : 'text-slate-700 font-bold';
+                var nameStyle = isMe ? 'text-blue-600 font-black bg-blue-50 px-2 py-1 rounded' : 'text-slate-700 font-bold';
 
                 var li = '<li class="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border border-slate-100">' +
                     '<div class="flex items-center gap-3">' +
-                    '<span class="text-sm text-slate-500 font-medium">' + dateDisplay +
-                    (d.day ? ' (' + d.day + ')' : '') + '</span>' +
+                    '<span class="text-sm text-slate-500 font-medium">' + displayStr + (d.day ? ' (' + (d.day || '') + ')' : '') + '</span>' +
                     '</div>' +
                     '<span class="' + nameStyle + '">' + (d.name || '') + '</span>' +
                     '</li>';
 
-                if (compareDateStr >= todayStr) {
-                    upcomingHtml += li;         // 미래: 오름차순
+                if (compareStr >= todayStr) {
+                    upcomingHtml += li;
                 } else {
-                    pastHtml = li + pastHtml;   // 과거: 최신이 위(역순)
+                    pastHtml = li + pastHtml;
                 }
             });
 
@@ -2997,6 +3010,11 @@
             if (!tbody) return;
             const isAdmin = isAdminLoggedIn();
             const list = members || [];
+            if (list.length === 0) {
+                const colCount = 17; // 성명, 부서, 위험등급, 관리소견, 1~12월, 관리
+                tbody.innerHTML = '<tr><td colspan="' + colCount + '" class="p-8 text-center text-slate-500 font-bold">등록된 집중관리 대상자가 없습니다.</td></tr>';
+                return;
+            }
             tbody.innerHTML = list.map(m => {
                 const fullIndex = APP_DATA.members.findIndex(mem => mem.name === m.name && mem.dept === m.dept);
                 const isIntensive = m.isIntensiveCare === true;
