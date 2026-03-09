@@ -484,6 +484,21 @@
             </div>
             <!-- 보고 모드: 월별 상담 현황 한눈에 -->
             <div id="list-report-view" class="hidden space-y-4">
+                <div class="gu-card p-6 mb-4 rounded-2xl border-2 border-teal-500 bg-gradient-to-r from-teal-50 to-white shadow-md">
+                    <h3 class="text-lg font-black text-slate-800 mb-1 flex items-center gap-2">
+                        <i class="fas fa-flag-checkered text-teal-600"></i> 연간 집중관리 전체 이수율 (인원 기준)
+                    </h3>
+                    <p class="text-sm text-slate-500 mb-4">연간 최소 1회 이상 상담을 완료한 대상자 비율입니다. (목표: 전원 연 1회 이상 상담)</p>
+                    <div class="flex items-end justify-between">
+                        <div class="flex items-baseline gap-3">
+                            <span id="report-yearly-rate-value" class="text-4xl font-black text-teal-600">0%</span>
+                            <span class="text-sm font-bold text-slate-500"><span id="report-yearly-done-count">0</span>명 완료 / 총 <span id="report-yearly-total-count">0</span>명</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 h-3 w-full bg-slate-200 rounded-full overflow-hidden">
+                        <div id="report-yearly-rate-bar" class="h-full bg-teal-500 rounded-full transition-all duration-1000" style="width:0%"></div>
+                    </div>
+                </div>
                 <div
                     class="gu-card p-6 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white">
                     <h3 class="text-lg font-black text-slate-800 mb-2 flex items-center gap-2"><i
@@ -2791,8 +2806,26 @@
             document.querySelectorAll('#counseling-total, #list-counseling-total').forEach(function (el) { el.textContent = totalRequired; });
             document.querySelectorAll('#counseling-progress-bar, #list-counseling-progress-bar').forEach(function (el) { el.style.width = rate + '%'; });
 
-            // 텍스트 라벨: "이번 달" → "연간 총 누적"
+            // 텍스트 라벨: "연간 총 누적"
             document.querySelectorAll('#current-month-text, #list-current-month-text').forEach(function (el) { el.textContent = '연간 총 누적'; });
+
+            // 명단 뷰: 현재 월(이번 달) 기준 당월 상담 이수율 초록색 바 실시간 갱신
+            var currentMonth = new Date().getMonth() + 1;
+            var currentMonthDone = 0;
+            for (var j = 0; j < intensive.length; j++) {
+                var cc = intensive[j].counseling;
+                if (typeof cc === 'string') { try { cc = JSON.parse(cc); } catch (e) { cc = {}; } }
+                if (cc && typeof cc === 'object' && (cc[currentMonth] != null || cc[String(currentMonth)] != null)) currentMonthDone++;
+            }
+            var currentMonthRate = totalPeople > 0 ? Math.round((currentMonthDone / totalPeople) * 100) : 0;
+            var listRateVal = document.getElementById('list-current-rate-value');
+            var listRateCount = document.getElementById('list-current-rate-count');
+            var listRateFill = document.getElementById('list-current-rate-fill');
+            var listRateMonth = document.getElementById('list-current-rate-month');
+            if (listRateVal) listRateVal.textContent = currentMonthRate + '%';
+            if (listRateCount) listRateCount.textContent = currentMonthDone + '명/' + totalPeople + '명';
+            if (listRateFill) listRateFill.style.width = currentMonthRate + '%';
+            if (listRateMonth) listRateMonth.textContent = '(' + currentMonth + '월 기준)';
         }
 
         function toggleListReportMode() {
@@ -2816,6 +2849,30 @@
                 var members = APP_DATA.members || [];
                 var intensive = members; // 명단 전체가 집중관리 대상자
                 var total = intensive.length;
+
+                // 연간 전체 대상자 상담 이수율 (인원 기준): 1~12월 중 1회 이상 이력 있으면 카운트
+                var totalPeople = members.length;
+                var yearlyDoneCount = 0;
+                for (var ii = 0; ii < members.length; ii++) {
+                    var cc = members[ii].counseling;
+                    if (typeof cc === 'string') { try { cc = JSON.parse(cc); } catch (e) { cc = {}; } }
+                    if (!cc || typeof cc !== 'object') continue;
+                    var hasAny = false;
+                    for (var mon = 1; mon <= 12; mon++) {
+                        if (cc[mon] != null || cc[String(mon)] != null) { hasAny = true; break; }
+                    }
+                    if (hasAny) yearlyDoneCount++;
+                }
+                var yearlyRate = totalPeople > 0 ? Math.round((yearlyDoneCount / totalPeople) * 100) : 0;
+                var rateValEl = document.getElementById('report-yearly-rate-value');
+                var doneCountEl = document.getElementById('report-yearly-done-count');
+                var totalCountEl = document.getElementById('report-yearly-total-count');
+                var rateBarEl = document.getElementById('report-yearly-rate-bar');
+                if (rateValEl) rateValEl.textContent = yearlyRate + '%';
+                if (doneCountEl) doneCountEl.textContent = yearlyDoneCount;
+                if (totalCountEl) totalCountEl.textContent = totalPeople;
+                if (rateBarEl) rateBarEl.style.width = yearlyRate + '%';
+
                 var monthLabels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
                 var tableHtml = '';
                 var gridHtml = '';
@@ -2827,9 +2884,7 @@
                             try { c = JSON.parse(c); } catch (e) { c = {}; }
                         }
                         if (!c || typeof c !== 'object') c = {};
-                        var allDone = true;
-                        for (var k = 1; k <= month; k++) { if (c[k] == null) { allDone = false; break; } }
-                        if (allDone) doneCount++;
+                        if (c[month] != null || c[String(month)] != null) doneCount++;
                     }
                     var rate = total > 0 ? Math.round((doneCount / total) * 100) : 0;
                     var isSelected = month === listReportSelectedMonth;
@@ -2844,7 +2899,7 @@
                     gridHtml += '<div class="' + cardClass + '" data-month="' + month + '" onclick="selectReportMonth(' + month + ')">';
                     gridHtml += '<div class="text-xs font-black text-slate-500 mb-1">' + monthLabels[month - 1] + '</div>';
                     gridHtml += '<div class="text-xl font-black text-slate-800">' + doneCount + '명</div>';
-                    gridHtml += '<div class="text-xs text-slate-500">1월~' + month + '월 누적 이수 / 총 ' + total + '명</div>';
+                    gridHtml += '<div class="text-xs text-slate-500">' + monthLabels[month - 1] + ' 해당 월 상담 이수 / 총 ' + total + '명</div>';
                     gridHtml += '<div class="mt-1 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-emerald-500 rounded-full transition-all" style="width:' + rate + '%"></div></div>';
                     gridHtml += '<div class="text-sm font-bold text-slate-700 mt-1">' + rate + '%</div>';
                     gridHtml += '</div>';
@@ -2887,21 +2942,19 @@
                     try { c = JSON.parse(c); } catch (e) { c = {}; }
                 }
                 if (!c || typeof c !== 'object') c = {};
-                var allDone = true;
-                for (var k = 1; k <= month; k++) { if (c[k] == null) { allDone = false; break; } }
-                if (allDone) done.push(intensive[i]);
+                if (c[month] != null || c[String(month)] != null) done.push(intensive[i]);
             }
             var rate = total > 0 ? Math.round((done.length / total) * 100) : 0;
-            if (titleEl) titleEl.textContent = '1월~' + monthLabels[month - 1] + ' 누적 상담 이수 대상자 명단';
-            if (rateEl) rateEl.textContent = '1월~' + monthLabels[month - 1] + ' 누적 완료율: ' + rate + '% (' + done.length + '명 / 전체 ' + total + '명)';
+            if (titleEl) titleEl.textContent = monthLabels[month - 1] + ' 해당 월 상담 이수 대상자 명단';
+            if (rateEl) rateEl.textContent = monthLabels[month - 1] + ' 해당 월 상담 이수율: ' + rate + '% (' + done.length + '명 / 전체 ' + total + '명)';
             var rows = '';
             for (var j = 0; j < done.length; j++) {
                 var m = done[j];
-                var lastMonth = '';
-                for (var k = month; k >= 1; k--) { if (m.counseling && m.counseling[k]) { lastMonth = (m.counseling[k].date || monthLabels[k - 1]); break; } }
-                rows += '<tr class="border-b border-slate-100"><td class="p-2 font-medium">' + (m.name || '-') + '</td><td class="p-2 text-slate-600">' + (m.dept || '-') + '</td><td class="p-2">' + (m.risk || '-') + '</td><td class="p-2 text-center">' + (lastMonth || '-') + '</td></tr>';
+                var info = m.counseling && (m.counseling[month] || m.counseling[String(month)]);
+                var dateStr = (info && info.date) ? info.date : '-';
+                rows += '<tr class="border-b border-slate-100"><td class="p-2 font-medium">' + (m.name || '-') + '</td><td class="p-2 text-slate-600">' + (m.dept || '-') + '</td><td class="p-2">' + (m.risk || '-') + '</td><td class="p-2 text-center">' + dateStr + '</td></tr>';
             }
-            if (done.length === 0) rows = '<tr><td colspan="4" class="p-4 text-center text-slate-500">1월~' + monthLabels[month - 1] + '까지 누적 이수한 대상자가 없습니다.</td></tr>';
+            if (done.length === 0) rows = '<tr><td colspan="4" class="p-4 text-center text-slate-500">' + monthLabels[month - 1] + ' 해당 월 상담 이수한 대상자가 없습니다.</td></tr>';
             bodyEl.innerHTML = rows;
             panelEl.classList.remove('hidden');
         }
@@ -3001,8 +3054,12 @@
             }
             applyListFilter();
             updateDashboardCounselingRate();
+            updateCounselingStats();
+            if (listReportModeOn) renderListReport();
             apiPost('saveMembers', APP_DATA.members).then(function () {
                 console.log('✅ 집중관리 명단이 Google Sheets에 저장되었습니다.');
+                updateCounselingStats();
+                if (listReportModeOn) renderListReport();
             }).catch(function (error) {
                 console.error('❌ 집중관리 명단 저장 실패:', error);
                 alert('⚠️ 저장 중 오류가 발생했습니다.\n\n' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
