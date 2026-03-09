@@ -310,8 +310,12 @@
             <!-- 보고용 헤더: 타이틀 + 기준일 -->
             <div class="flex flex-wrap items-center justify-between gap-4 mb-2">
                 <h2 class="text-2xl md:text-3xl font-black text-slate-800">실시간 보건 경영 지표</h2>
-                <p id="dashboard-report-date" class="text-sm font-bold text-slate-500">기준일: <span
-                        id="dashboard-date-text"></span></p>
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="manualDbRefresh(this)" class="px-3 py-1.5 rounded-lg font-bold text-xs bg-teal-100 text-teal-700 hover:bg-teal-200 transition-colors flex items-center gap-1.5 shadow-sm border border-teal-200">
+                        <i class="fas fa-sync-alt"></i> DB 최신화
+                    </button>
+                    <p id="dashboard-report-date" class="text-sm font-bold text-slate-500">기준일: <span id="dashboard-date-text"></span></p>
+                </div>
             </div>
             <div
                 class="gu-card p-0 relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#14B8A6] text-white shadow-sm border border-slate-200">
@@ -1083,7 +1087,7 @@
 
     <script>
         // ========== 0. 구글 시트 백엔드 URL ==========
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz0mVUDkpxzt0zyPfeE0HID0RYWIICY-W7E-RWQIk6oNlxyby298NHIGDEwTOjcIKeaCA/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyloi9JT6U0Ax3Ve06r7GArhkq6mxoquKF6ZHWW_oSCr4agQSTTvb70Xmamn6yURTm1vQ/exec';
 
         function goToGame() {
             window.location.href = 'immunity-war.html';
@@ -3358,6 +3362,21 @@
                     changeTab('dashboard'); // 비로그인 PC는 '대시보드'
                 }
             }
+        }
+
+        // ========== 수동 DB 최신화 버튼 기능 ==========
+        function manualDbRefresh(btnElement) {
+            var icon = btnElement.querySelector('i');
+            if (icon) icon.classList.add('fa-spin');
+            loadDataFromSheets(false)
+                .then(function () {
+                    if (icon) icon.classList.remove('fa-spin');
+                    alert('✅ 구글 시트의 최신 데이터를 성공적으로 불러왔습니다.');
+                })
+                .catch(function (err) {
+                    if (icon) icon.classList.remove('fa-spin');
+                    alert('❌ 업데이트 실패: ' + (err.message || '알 수 없는 오류가 발생했습니다.'));
+                });
         }
 
         window.addEventListener('DOMContentLoaded', function () {
