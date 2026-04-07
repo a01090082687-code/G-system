@@ -7,6 +7,7 @@
     <title>G-SYSTEM V4.0 | 구영테크 보건시스템</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css?v=4.1">
     <style>
@@ -1885,6 +1886,86 @@
             return total;
         }
 
+        // ========== 공상 비용 CSV 로드 및 테이블 렌더링 ==========
+        function loadExpenseCSV() {
+            var tbody = document.getElementById('expense-detail-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400">데이터를 불러오는 중...</td></tr>';
+
+            Papa.parse('expense_data.csv', {
+                download: true,
+                header: true,
+                dynamicTyping: true,
+                skipEmptyLines: true,
+                complete: function (results) {
+                    var data = results.data;
+                    if (!data || data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">데이터 파일을 찾을 수 없습니다. expense_data.csv 파일을 확인해주세요.</td></tr>';
+                        return;
+                    }
+
+                    var mouHospitals = ['w병원', '우리허브', '우리허브병원'];
+                    var totalDiscount = 0;
+                    var html = '';
+
+                    data.forEach(function (row) {
+                        var name = String(row['대상자명'] || '').trim();
+                        var hospital = String(row['이용병원'] || '').trim();
+                        var details = String(row['월별내역'] || '').trim();
+                        var totalAmount = Number(row['총금액']) || 0;
+
+                        if (!name) return;
+
+                        var isMou = false;
+                        var hospitalLower = hospital.toLowerCase();
+                        for (var i = 0; i < mouHospitals.length; i++) {
+                            if (hospitalLower.indexOf(mouHospitals[i]) >= 0) {
+                                isMou = true;
+                                break;
+                            }
+                        }
+
+                        var discount = isMou ? Math.round(totalAmount * 0.1) : 0;
+                        var finalAmount = totalAmount - discount;
+                        totalDiscount += discount;
+
+                        html += '<tr>';
+                        html += '<td class="px-4 py-3">' + name + '</td>';
+                        html += '<td class="px-4 py-3">' + hospital + '</td>';
+                        html += '<td class="px-4 py-3">' + details + '</td>';
+                        html += '<td class="px-4 py-3 text-right">₩' + totalAmount.toLocaleString() + '</td>';
+                        html += '<td class="px-4 py-3 text-right ' + (discount > 0 ? 'text-blue-600 font-bold' : 'text-slate-400') + '">' + (discount > 0 ? '▼ ₩' + discount.toLocaleString() : '-') + '</td>';
+                        html += '<td class="px-4 py-3 text-right text-red-600 font-bold">₩' + finalAmount.toLocaleString() + '</td>';
+                        html += '</tr>';
+                    });
+
+                    tbody.innerHTML = html || '<tr><td colspan="6" class="p-8 text-center text-slate-500">데이터가 없습니다.</td></tr>';
+
+                    // MOU 절감액 KPI 업데이트
+                    if (APP_DATA.innovations && Array.isArray(APP_DATA.innovations)) {
+                        var mouItem = APP_DATA.innovations.find(function (item) { return item.id === 'hospital_mou'; });
+                        if (mouItem) {
+                            mouItem.savings = totalDiscount;
+                        } else {
+                            APP_DATA.innovations.push({
+                                category: 'Cost',
+                                title: '협력병원(W병원, 우리허브) MOU 할인',
+                                desc: '임직원 진료비 10% 할인 혜택 적용 (자동 집계)',
+                                date: '2025.01',
+                                savings: totalDiscount,
+                                id: 'hospital_mou',
+                                imageUrl: ''
+                            });
+                        }
+                    }
+                    updateTotalSavingsUI();
+                },
+                error: function () {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">데이터 파일을 찾을 수 없습니다. expense_data.csv 파일을 확인해주세요.</td></tr>';
+                }
+            });
+        }
+
         function updateDashboardCounselingRate() {
             const highestTotal = APP_DATA.members.filter(m => m.risk === 'Highest').length;
             const highestCounseled = APP_DATA.members.filter(m => m.risk === 'Highest' && Object.values(m.counseling || {}).some(c => c !== null)).length;
@@ -3541,6 +3622,7 @@
                     renderMedicineSurveyUserArea();
                     renderStretchingVideos();
                     showNoiseFloorplan(1);
+                    loadExpenseCSV();
                     setInterval(function () { loadDataFromSheets(true); }, 10000);
                 })
                 .catch(function () {
@@ -3553,6 +3635,7 @@
                     renderMedicineSurveyUserArea();
                     renderStretchingVideos();
                     showNoiseFloorplan(1);
+                    loadExpenseCSV();
                     setInterval(function () { loadDataFromSheets(true); }, 10000);
                 });
         });
