@@ -675,6 +675,29 @@
                 </div>
                 <div class="h-64"><canvas id="expenseChart"></canvas></div>
             </div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                </div>
+            
+            <div class="gu-card overflow-hidden mt-6">
+                <h3 class="text-lg font-black text-slate-800 mb-4 p-4 pb-0">개인별 상세 지출 및 절감 내역</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 border-b-2 border-slate-200">
+                                <th class="px-4 py-3 font-black text-slate-700">대상자명</th>
+                                <th class="px-4 py-3 font-black text-slate-700">이용 병원</th>
+                                <th class="px-4 py-3 font-black text-slate-700">월별 내역</th>
+                                <th class="px-4 py-3 font-black text-slate-700 text-right">총 금액</th>
+                                <th class="px-4 py-3 font-black text-blue-600 text-right">협력병원 절감액(10%)</th>
+                                <th class="px-4 py-3 font-black text-red-600 text-right">최종 실지출액</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expense-detail-tbody" class="text-slate-700 divide-y divide-slate-100">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+            </section>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="gu-card p-4">
                     <p class="text-xs font-bold text-slate-400 uppercase">총 지출</p>
@@ -1180,10 +1203,49 @@
                 { month: 8, items: [{ name: "김종남", amount: 102800, hospital: "대학병원" }] },
                 { month: 9, items: [{ name: "김종남", amount: 807440, hospital: "대학병원" }, { name: "문영남", amount: 4858130, hospital: "병원" }, { name: "김풍원", amount: 1235000, hospital: "병원" }] },
                 { month: 10, items: [{ name: "김종남", amount: 59170, hospital: "대학병원" }, { name: "문영남", amount: 655320, hospital: "병원" }, { name: "김풍원", amount: 923130, hospital: "병원" }] },
-                { month: 11, items: [] },
-                { month: 12, items: [] }
+                { month: 11, items: [
+                    { name: "이상현", amount: 24370, hospital: "W병원" },
+                    { name: "이상현", amount: 240240, hospital: "W병원" },
+                    { name: "이상현", amount: 130000, hospital: "동진보조기" },
+                    { name: "문영남", amount: 716340, hospital: "W병원" },
+                    { name: "문영남", amount: 110260, hospital: "W병원" },
+                    { name: "문영남", amount: 59170, hospital: "한솔약국" }
+                ]},
+                { month: 12, items: [
+                    { name: "문영남", amount: 185700, hospital: "W병원" },
+                    { name: "문영남", amount: 640640, hospital: "W병원" },
+                    { name: "문영남", amount: 89470, hospital: "한솔약국" },
+                    { name: "문영남", amount: 160160, hospital: "W병원" },
+                    { name: "이상현", amount: 29520, hospital: "W병원" },
+                    { name: "이상현", amount: 382450, hospital: "W병원" },
+                    { name: "이상현", amount: 240240, hospital: "W병원" },
+                    { name: "이상현", amount: 121590, hospital: "W병원" }
+                ]}
             ],
-            expenses_2026: [{ month: 7, items: [] }, { month: 8, items: [] }, { month: 9, items: [] }, { month: 10, items: [] }, { month: 11, items: [] }, { month: 12, items: [] }],
+            expenses_2026: [
+                { month: 1, items: [
+                    { name: "이상현", amount: 53800, hospital: "현풍경대연합정형외과의원" },
+                    { name: "이상현", amount: 95310, hospital: "W병원" },
+                    { name: "문영남", amount: 89390, hospital: "W병원" },
+                    { name: "문영남", amount: 89390, hospital: "W병원" },
+                    { name: "김학규", amount: 16230, hospital: "한솔약국" },
+                    { name: "문영남", amount: 388350, hospital: "W병원" },
+                    { name: "이상현", amount: 261660, hospital: "W병원" }
+                ]},
+                { month: 2, items: [
+                    { name: "문영남", amount: 30980, hospital: "MS재건병원" },
+                    { name: "문영남", amount: 10000, hospital: "W병원" },
+                    { name: "문영남", amount: 111050, hospital: "W병원" },
+                    { name: "문영남", amount: 120180, hospital: "W병원" },
+                    { name: "이상현", amount: 493440, hospital: "W병원" },
+                    { name: "문영남", amount: 91720, hospital: "한솔약국" }
+                ]},
+                { month: 3, items: [
+                    { name: "문영남", amount: 222180, hospital: "W병원" }
+                ]},
+                { month: 4, items: [] }, { month: 5, items: [] }, { month: 6, items: [] },
+                { month: 7, items: [] }, { month: 8, items: [] }, { month: 9, items: [] }, { month: 10, items: [] }, { month: 11, items: [] }, { month: 12, items: [] }
+            ],
             floorplans: {},
             risks: [
                 { type: "밀폐공간(질식)", dept: "전 공정", health: "산소결핍, 유해가스", action: "복합가스측정기 구매 완료", level: "Critical" },
@@ -3235,7 +3297,7 @@
         }
 
         // ========== 인증 ==========
-        const ADMIN_PASSWORD = 'gyt6111!';
+        const ADMIN_PASSWORD = '';
 
         function isAdminLoggedIn() {
             return localStorage.getItem('g_auth_mode') === 'admin';
@@ -3251,6 +3313,13 @@
                 updateAuthUI();
                 updateAdminOnlyElements();
                 initViewMode(); // 뷰 모드 재설정
+            } else if (ADMIN_PASSWORD === '') {
+                // 비밀번호 없으면 바로 로그인
+                localStorage.setItem('g_auth_mode', 'admin');
+                loadSensitiveData();
+                updateAuthUI();
+                updateAdminOnlyElements();
+                initViewMode();
             } else {
                 document.getElementById('auth-modal').classList.remove('hidden');
                 document.getElementById('auth-password').value = '';
