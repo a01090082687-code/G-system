@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Guyoungtech 체감온도 계산기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg-0:#eef3f9;
+    --bg-1:#dfeaf6;
+    --surface:#ffffff;
+    --line:#e2e8f0;
+    --navy:#0f2d4d;
+    --navy-2:#123a63;
+    --primary:#1d5fae;
+    --primary-dark:#0f4884;
+    --text:#152238;
+    --muted:#66748c;
+    --muted-2:#8896ab;
+
+    --interest:#2f80ed;    --interest-bg:#eaf2fe;   --interest-line:#c6dcfb;
+    --caution:#c98a05;     --caution-bg:#fff6e0;    --caution-line:#f3dfa0;
+    --warning:#e0621a;     --warning-bg:#ffece0;    --warning-line:#f5c6a3;
+    --danger:#d43d3d;      --danger-bg:#fdeaea;     --danger-line:#f3bcbc;
+
+    --radius:18px;
+    --shadow:0 2px 8px rgba(15,45,77,0.06), 0 10px 30px -12px rgba(15,45,77,0.12);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1200px 500px at 50% -10%, var(--bg-1), transparent),
+      linear-gradient(180deg, var(--bg-0), #f6f9fc 60%, #f6f9fc 100%);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px 80px;}
+
+  /* ---------- Header ---------- */
+  .topbar{
+    background:linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+    color:#fff;
+    padding:28px 0 34px;
+    margin-bottom:-40px;
+  }
+  .topbar-inner{max-width:920px;margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+  .brand-eyebrow{
+    font-size:12px;letter-spacing:.16em;font-weight:700;color:#9fc1e8;
+    text-transform:uppercase;margin:0 0 8px;
+  }
+  .brand-title{font-size:26px;font-weight:800;margin:0;letter-spacing:-0.02em;display:flex;align-items:center;gap:10px;}
+  .brand-sub{font-size:13px;color:#bcd3ec;margin:8px 0 0;}
+  .kosha-pill{
+    background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.28);
+    color:#fff;font-size:12px;font-weight:600;padding:7px 14px;border-radius:999px;
+    white-space:nowrap;
+  }
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:24px;
+    margin-top:20px;
+    position:relative;
+  }
+  .card-title{
+    font-size:15px;font-weight:700;margin:0 0 4px;display:flex;align-items:center;gap:8px;
+  }
+  .card-title .num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:22px;height:22px;border-radius:7px;background:var(--primary);color:#fff;
+    font-size:12px;font-weight:800;flex:none;
+  }
+  .card-desc{font-size:13px;color:var(--muted);margin:0 0 18px;}
+
+  .hint{font-size:12px;color:var(--muted-2);margin-top:6px;}
+  .hint.warn{color:var(--warning);font-weight:600;}
+
+  input[type=text], input[type=number]{
+    padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);
+    font-size:15px;font-family:inherit;color:var(--text);background:#fbfcfe;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input:focus{
+    outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(29,95,174,0.13);
+    background:#fff;
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    border:none;border-radius:12px;padding:12px 18px;font-size:14px;font-weight:700;
+    cursor:pointer;transition:transform .08s, background .15s, box-shadow .15s;
+    font-family:inherit;white-space:nowrap;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-ghost{background:#fff;color:var(--primary);border:1.5px solid #cfe0f4;}
+  .btn-ghost:hover{background:#f2f7fd;}
+  .btn-outline{background:#fff;color:var(--muted);border:1.5px solid var(--line);}
+  .btn-outline:hover{background:#f7f9fb;}
+  .btn-danger-outline{background:#fff;color:var(--danger);border:1.5px solid var(--danger-line);}
+  .btn-danger-outline:hover{background:var(--danger-bg);}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn-lg{padding:15px 20px;font-size:15.5px;}
+
+  .status-line{font-size:12.5px;color:var(--muted);margin-top:8px;min-height:16px;}
+  .status-line.error{color:var(--danger);font-weight:600;}
+  .status-line.ok{color:#1f8a4c;font-weight:600;}
+
+  /* ---------- 1. 측정자 ---------- */
+  .writer-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    background:#f4f7fb;border:1.5px solid var(--line);border-radius:14px;padding:16px 18px;
+  }
+  .writer-bar.locked{background:var(--interest-bg);border-color:var(--interest-line);}
+  .writer-name-display{font-size:15.5px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;}
+  .writer-edit-row{display:flex;gap:10px;flex:1;min-width:240px;}
+  .writer-edit-row input{flex:1;width:100%;}
+
+  /* ---------- 2. 날씨 불러오기 ---------- */
+  .weather-row{display:flex;gap:10px;margin-bottom:0;flex-wrap:wrap;}
+  .weather-row input{flex:1;min-width:160px;width:100%;}
+  .weather-apply-row{display:none;margin-top:10px;}
+  .weather-apply-row.show{display:flex;}
+  .weather-apply-row .btn{font-size:13px;padding:10px 14px;}
+
+  /* ---------- 공장 탭 ---------- */
+  .plant-tabs{display:flex;gap:8px;margin:22px 0 16px;flex-wrap:wrap;}
+  .plant-tab{
+    padding:11px 20px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
+    font-size:14.5px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s;
+    font-family:inherit;
+  }
+  .plant-tab:hover{border-color:#cfe0f4;color:var(--primary-dark);}
+  .plant-tab.active{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 4px 14px -4px rgba(29,95,174,.5);}
+
+  /* ---------- 부서 행 ---------- */
+  .dept-panel{display:none;}
+  .dept-panel.active{display:block;}
+
+  .dept-row{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:13px 14px;border:1.5px solid var(--line);border-radius:14px;margin-bottom:10px;
+    background:#fff;transition:border-color .15s, background .15s;
+  }
+  .dept-row.filled{border-color:#cfe0f4;}
+  .dept-row.stage-caution{border-color:var(--caution-line);background:var(--caution-bg);}
+  .dept-row.stage-warning{border-color:var(--warning-line);background:var(--warning-bg);}
+  .dept-row.stage-danger{border-color:var(--danger-line);background:var(--danger-bg);}
+
+  .dept-name{width:56px;flex:none;font-size:14.5px;font-weight:800;color:var(--navy);}
+
+  .row-inputs{display:flex;gap:8px;flex:none;}
+  .row-field{position:relative;width:96px;}
+  .row-field input{width:100%;padding:9px 32px 9px 10px;border-radius:10px;border:1.5px solid var(--line);font-size:14.5px;font-family:inherit;background:#fbfcfe;}
+  .row-field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(29,95,174,.13);background:#fff;}
+  .row-field .unit{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11.5px;color:var(--muted);font-weight:700;pointer-events:none;}
+
+  .row-result{min-width:130px;flex:none;font-size:13px;}
+  .rr-felt{font-weight:800;font-size:15.5px;}
+  .rr-empty{color:var(--muted-2);font-weight:600;font-size:13px;}
+
+  .stage-tag{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:800;margin-left:4px;}
+  .stage-tag.interest{background:var(--interest-bg);color:var(--interest);}
+  .stage-tag.caution{background:var(--caution-bg);color:var(--caution);}
+  .stage-tag.warning{background:var(--warning-bg);color:var(--warning);}
+  .stage-tag.danger{background:var(--danger-bg);color:var(--danger);}
+
+  .row-action{flex:1 1 100%;display:none;margin-top:6px;padding-top:12px;border-top:1px dashed var(--line);}
+  .dept-row.show-action .row-action{display:block;}
+  .row-action-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+
+  .action-chip-default{
+    display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--primary);
+    border-radius:999px;padding:6px 12px 6px 10px;font-size:12.5px;font-weight:700;color:var(--primary-dark);cursor:pointer;
+  }
+  .action-chip-default input{width:15px;height:15px;accent-color:var(--primary);cursor:pointer;}
+  .action-chip-default.off{border-color:var(--line);color:var(--muted-2);background:#f4f7fb;}
+  .auto-badge{font-size:10px;font-weight:800;color:var(--primary);background:var(--interest-bg);padding:2px 6px;border-radius:5px;}
+  .action-chip-default.off .auto-badge{color:var(--muted-2);background:#eceff3;}
+
+  .more-actions-btn{
+    background:none;border:none;color:var(--muted);font-size:12.5px;font-weight:700;cursor:pointer;
+    text-decoration:underline;padding:4px 2px;font-family:inherit;
+  }
+
+  .extra-actions-panel{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+  .extra-actions-panel.hidden{display:none;}
+  .extra-action-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;cursor:pointer;background:#fff;}
+  .extra-action-item:hover{border-color:#cfe0f4;}
+  .extra-action-item input{margin-top:2px;width:15px;height:15px;accent-color:var(--primary);flex:none;cursor:pointer;}
+  .extra-action-item.checked{border-color:var(--primary);background:#eef5fd;}
+  .badge-required{
+    display:inline-block;background:var(--danger);color:#fff;font-size:10.5px;font-weight:800;
+    padding:2px 6px;border-radius:5px;margin-right:6px;vertical-align:1px;
+  }
+  .row-note-field{margin-top:8px;}
+  .row-note-field input{width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid var(--line);font-size:13px;font-family:inherit;background:#fbfcfe;}
+
+  .panel-savebar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    margin-top:18px;padding-top:18px;border-top:1.5px solid var(--line);
+  }
+  .save-info{font-size:13px;color:var(--muted);font-weight:600;}
+  .save-info strong{color:var(--primary-dark);}
+  .savebar-btns{display:flex;gap:8px;}
+
+  @media (max-width:640px){
+    .dept-row{padding:12px;}
+    .dept-name{width:100%;order:1;margin-bottom:2px;}
+    .row-inputs{flex:1;order:2;}
+    .row-field{width:auto;flex:1;}
+    .row-result{width:100%;order:3;margin-top:4px;}
+  }
+
+  /* ---------- 참고 정보 ---------- */
+  .stage-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  @media (max-width:560px){.stage-grid{grid-template-columns:1fr 1fr;}}
+  .stage-box{border-radius:12px;padding:12px;border:1.5px solid var(--line);background:#f9fafc;}
+  .stage-box .s-title{font-size:13.5px;font-weight:800;margin:0;}
+  .stage-box .s-range{font-size:11.5px;color:var(--muted);margin:2px 0 6px;font-weight:600;}
+  .stage-box .s-desc{font-size:11.5px;color:var(--muted);line-height:1.4;}
+  .stage-box.interest{border-color:var(--interest-line);background:var(--interest-bg);}
+  .stage-box.caution{border-color:var(--caution-line);background:var(--caution-bg);}
+  .stage-box.warning{border-color:var(--warning-line);background:var(--warning-bg);}
+  .stage-box.danger{border-color:var(--danger-line);background:var(--danger-bg);}
+
+  .toggle-btn{
+    display:flex;align-items:center;justify-content:space-between;width:100%;
+    background:none;border:none;cursor:pointer;padding:0;font-family:inherit;
+    font-size:14px;font-weight:700;color:var(--text);
+  }
+  .toggle-btn .chev{transition:transform .2s;color:var(--muted);}
+  .toggle-btn.open .chev{transform:rotate(180deg);}
+  .ref-table-wrap{overflow-x:auto;margin-top:16px;display:none;}
+  .ref-table-wrap.open{display:block;}
+  table.ref{border-collapse:collapse;width:100%;font-size:12.5px;}
+  table.ref th, table.ref td{
+    border:1px solid var(--line);padding:6px 8px;text-align:center;white-space:nowrap;
+  }
+  table.ref th{background:#f4f7fb;font-weight:700;color:var(--muted);}
+
+  /* ---------- Records ---------- */
+  .records-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+  .records-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;}
+  table.log{border-collapse:collapse;width:100%;font-size:13px;min-width:760px;}
+  table.log th{
+    background:#f4f7fb;color:var(--muted);font-weight:700;font-size:11.5px;
+    padding:10px 10px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line);
+  }
+  table.log td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top;}
+  table.log tr:last-child td{border-bottom:none;}
+  table.log tr:hover td{background:#f9fbfd;}
+  .cell-muted{color:var(--muted-2);font-size:12.5px;}
+  .row-del{background:none;border:none;color:var(--muted-2);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:6px;}
+  .row-del:hover{background:var(--danger-bg);color:var(--danger);}
+  .empty-state{padding:40px 20px;text-align:center;color:var(--muted-2);font-size:13.5px;}
+  .records-count{font-size:12.5px;color:var(--muted);font-weight:600;}
+  .persist-note{
+    font-size:12px;color:var(--muted);background:#f4f7fb;border-radius:10px;padding:10px 12px;
+    margin-top:14px;line-height:1.5;
+  }
+
+  /* ---------- Footer ---------- */
+  .footer{text-align:center;margin-top:34px;padding-top:20px;font-size:12.5px;color:var(--muted-2);}
+  .footer strong{color:var(--muted);}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--navy);color:#fff;padding:12px 22px;border-radius:999px;font-size:13.5px;font-weight:700;
+    box-shadow:0 10px 30px rgba(0,0,0,0.25);opacity:0;pointer-events:none;
+    transition:opacity .25s, transform .25s;z-index:50;max-width:88vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  ::selection{background:rgba(29,95,174,0.18);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div>
+      <p class="brand-eyebrow">GUYOUNGTECH · 안전보건팀</p>
+      <h1 class="brand-title">🌡️ 체감온도 계산기</h1>
+      <p class="brand-sub">기상청 · 안전보건공단(KOSHA) 공식 체감온도 산출식 기반 · 공장별 일괄 입력</p>
+    </div>
+    <span class="kosha-pill">KOSHA 산출식 기준</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- 1. 측정자 (최초 1회) -->
+  <div class="card">
+    <p class="card-title"><span class="num">1</span> 측정자 등록 <span style="font-weight:500;color:var(--muted-2);font-size:12.5px;">(최초 1회만 입력 · 이후 자동 적용)</span></p>
+    <div class="writer-bar" id="writerBar"></div>
+  </div>
+
+  <!-- 2. 공장별 기온·습도 입력 -->
+  <div class="card">
+    <p class="card-title"><span class="num">2</span> 공장별 기온 · 습도 입력</p>
+    <p class="card-desc">공장을 클릭하면 해당 공장의 전체 부서가 아래에 나열됩니다. 부서마다 기온·습도만 입력하면 체감온도가 자동 계산되고, 31°C 이상이면 조치사항이 자동 표시됩니다.</p>
+
+    <div class="weather-row">
+      <input type="text" id="cityInput" placeholder="지역명 검색 (예: 영천, 경산, 대구)">
+      <button class="btn btn-ghost" id="citySearchBtn" type="button">🔍 검색</button>
+      <button class="btn btn-outline" id="myLocBtn" type="button">📍 내 위치 날씨</button>
+    </div>
+    <div class="status-line" id="weatherStatus">날씨 출처: Open-Meteo.com</div>
+    <div class="weather-apply-row" id="weatherApplyRow">
+      <button class="btn btn-primary" id="weatherApplyBtn" type="button">↳ 현재 탭 빈 칸에 일괄 적용</button>
+    </div>
+
+    <div class="plant-tabs" id="plantTabs">
+      <button class="plant-tab active" data-plant="영천공장" type="button">영천공장</button>
+      <button class="plant-tab" data-plant="1공장" type="button">1공장</button>
+      <button class="plant-tab" data-plant="2공장" type="button">2공장</button>
+    </div>
+
+    <div id="deptPanels"></div>
+
+    <div class="panel-savebar">
+      <div class="save-info" id="panelSaveInfo"></div>
+      <div class="savebar-btns">
+        <button class="btn btn-outline" id="panelResetBtn" type="button">현재 탭 초기화</button>
+        <button class="btn btn-primary btn-lg" id="panelSaveBtn" type="button">✓ 전체 저장</button>
+      </div>
+    </div>
+    <p class="status-line error" id="saveError" style="text-align:right;"></p>
+  </div>
+
+  <!-- 3. 참고 정보 -->
+  <div class="card">
+    <p class="card-title"><span class="num">3</span> 참고 정보</p>
+    <p class="card-desc">체감온도 단계 기준입니다.</p>
+    <div class="stage-grid">
+      <div class="stage-box interest">
+        <p class="s-title">관심</p>
+        <p class="s-range">31°C 미만</p>
+        <p class="s-desc">야외 활동 모니터링</p>
+      </div>
+      <div class="stage-box caution">
+        <p class="s-title">주의</p>
+        <p class="s-range">31 ~ 32°C</p>
+        <p class="s-desc">장시간 야외활동 자제, 규칙적 수분 섭취</p>
+      </div>
+      <div class="stage-box warning">
+        <p class="s-title">경고</p>
+        <p class="s-range">33 ~ 37°C</p>
+        <p class="s-desc">야외활동 자제, 충분한 휴식 확보</p>
+      </div>
+      <div class="stage-box danger">
+        <p class="s-title">위험</p>
+        <p class="s-range">38°C 이상</p>
+        <p class="s-desc">실외 작업 중단, 즉시 시원한 곳 대피</p>
+      </div>
+    </div>
+    <div style="margin-top:18px;">
+      <button class="toggle-btn" id="refToggleBtn" type="button">
+        <span>📋 기온 × 습도 체감온도 산출표 보기</span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="ref-table-wrap" id="refTableWrap"></div>
+    </div>
+  </div>
+
+  <!-- 4. 측정 기록 -->
+  <div class="card">
+    <div class="records-head">
+      <p class="card-title" style="margin:0;"><span class="num">4</span> 측정 기록 <span class="records-count" id="recordsCount">(0건)</span></p>
+      <div class="records-actions">
+        <button class="btn btn-primary" id="exportBtn" type="button">📥 엑셀 내보내기</button>
+        <button class="btn btn-danger-outline" id="clearAllBtn" type="button">🗑 전체 삭제</button>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table class="log" id="logTable">
+        <thead>
+          <tr>
+            <th>날짜/시간</th><th>공장</th><th>부서</th><th>기온</th><th>습도</th><th>체감온도</th><th>단계</th><th>조치사항</th><th>특이사항</th><th>측정자</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="emptyState">저장된 기록이 없습니다.</div>
+    <p class="persist-note">※ 기록은 <strong>이 브라우저(이 기기)에만</strong> 저장됩니다. 다른 PC·휴대폰과 자동으로 합쳐지지 않으니, 측정이 끝나면 <strong>엑셀 내보내기</strong>로 주기적으로 백업하고 담당자에게 취합해 전달하세요.</p>
+  </div>
+
+  <div class="footer">
+    제작자: <strong>박기태</strong> · Guyoungtech &nbsp;|&nbsp; 안전보건공단(KOSHA) 및 기상청 공식 산출식 기반
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ 0. 유틸 ============ */
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function sanitizeId(s){ return String(s).replace(/[^a-zA-Z0-9가-힣]/g, '_'); }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function showToast(msg){
+    var toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function(){ toast.classList.remove('show'); }, 2600);
+  }
+
+  /* ============ 1. 공장 · 부서 매핑 ============ */
+  var departmentMap = {
+    "영천공장": ["1","2","3","4","5","6","7"],
+    "1공장": ["자재","조립","도장","프레스","금형"],
+    "2공장": ["도장","프레스"]
+  };
+
+  var DEFAULT_ACTION_TEXT = '2시간마다 휴식시간 부여';
+
+  var EXTRA_ACTIONS = [
+    {text:'냉방·통풍 또는 그늘·차양 등 온열환경 개선', required:true},
+    {text:'작업시간대 조정 또는 폭염시간대 작업 단축', required:true},
+    {text:'적절한 휴식시간 부여', required:true},
+    {text:'시원하고 깨끗한 물 준비·제공', required:false},
+    {text:'민감군 사전 확인 및 상태 확인', required:false},
+    {text:'매시간 15분 이상 휴식', required:true},
+    {text:'오후 2시~5시 옥외작업 중지', required:false},
+    {text:'민감군 옥외작업 중지', required:false},
+    {text:'아이스조끼·아이스팩 등 보냉장구 준비', required:true}
+  ];
+
+  /* ============ 2. 체감온도 계산 (기상청 · KOSHA 여름철 체감온도 산출식) ============ */
+  // 출처: 기상청 2022.6.2 개정 산출식 / 습구온도는 Stull(2011) 근사식 사용
+  function wetBulb(Ta, RH){
+    var term1 = Ta * Math.atan(0.151977 * Math.sqrt(RH + 8.313659));
+    var term2 = Math.atan(Ta + RH);
+    var term3 = -Math.atan(RH - 1.676331);
+    var term4 = 0.00391838 * Math.pow(RH, 1.5) * Math.atan(0.023101 * RH);
+    var term5 = -4.686035;
+    return term1 + term2 + term3 + term4 + term5;
+  }
+  function feelsLike(Ta, RH){
+    var Tw = wetBulb(Ta, RH);
+    return -0.2442 + 0.55399*Tw + 0.45535*Ta - 0.0022*(Tw*Tw) + 0.00278*Tw*Ta + 3.0;
+  }
+  function getStage(f){
+    if(f >= 38) return {key:'danger', label:'위험'};
+    if(f >= 33) return {key:'warning', label:'경고'};
+    if(f >= 31) return {key:'caution', label:'주의'};
+    return {key:'interest', label:'관심'};
+  }
+
+  /* ============ 3. 측정자 (최초 1회 등록) ============ */
+  var WRITER_KEY = 'gyt_writer_name_v1';
+  var writerBar = document.getElementById('writerBar');
+
+  function getWriter(){ return localStorage.getItem(WRITER_KEY) || ''; }
+  function setWriter(name){ localStorage.setItem(WRITER_KEY, name); }
+
+  function renderWriterBar(){
+    var w = getWriter();
+    if(w){
+      writerBar.className = 'writer-bar locked';
+      writerBar.innerHTML =
+        '<div class="writer-name-display">👤 측정자: ' + escapeHtml(w) + '</div>' +
+        '<button class="btn btn-outline" id="writerChangeBtn" type="button">변경</button>';
+      document.getElementById('writerChangeBtn').addEventListener('click', function(){ showWriterEdit(w); });
+    } else {
+      showWriterEdit('');
+    }
+  }
+  function showWriterEdit(prefill){
+    writerBar.className = 'writer-bar';
+    writerBar.innerHTML =
+      '<div class="writer-edit-row">' +
+        '<input type="text" id="writerInput" placeholder="측정자 이름 입력" value="' + escapeHtml(prefill) + '">' +
+        '<button class="btn btn-primary" id="writerConfirmBtn" type="button">확인</button>' +
+      '</div>';
+    var input = document.getElementById('writerInput');
+    document.getElementById('writerConfirmBtn').addEventListener('click', confirmWriter);
+    input.addEventListener('keydown', function(e){ if(e.key === 'Enter') confirmWriter(); });
+    input.focus();
+  }
+  function confirmWriter(){
+    var input = document.getElementById('writerInput');
+    var val = input.value.trim();
+    if(!val){ input.focus(); return; }
+    setWriter(val);
+    renderWriterBar();
+    showToast('✓ 측정자가 "' + val + '"(으)로 등록되었습니다.');
+  }
+
+  /* ============ 4. 부서 행 렌더링 ============ */
+  function buildExtraActionsHTML(){
+    return EXTRA_ACTIONS.map(function(a){
+      return '<label class="extra-action-item"><input type="checkbox" value="' + escapeHtml(a.text) + '">' +
+        (a.required ? '<span class="badge-required">필수군</span>' : '') +
+        '<span>' + escapeHtml(a.text) + '</span></label>';
+    }).join('');
+  }
+
+  function buildRow(plant, dept){
+    var rid = 'row_' + sanitizeId(plant) + '_' + sanitizeId(dept);
+    return (
+      '<div class="dept-row" id="' + rid + '" data-plant="' + escapeHtml(plant) + '" data-dept="' + escapeHtml(dept) + '">' +
+        '<div class="dept-name">' + escapeHtml(dept) + '</div>' +
+        '<div class="row-inputs">' +
+          '<div class="row-field"><input type="number" class="row-temp" step="0.1" inputmode="decimal" placeholder="기온"><span class="unit">°C</span></div>' +
+          '<div class="row-field"><input type="number" class="row-humid" step="1" inputmode="decimal" placeholder="습도"><span class="unit">%</span></div>' +
+        '</div>' +
+        '<div class="row-result"><span class="rr-empty">입력 대기</span></div>' +
+        '<div class="row-action">' +
+          '<div class="row-action-top">' +
+            '<label class="action-chip-default"><input type="checkbox" class="default-cb" checked><span>' + DEFAULT_ACTION_TEXT + '</span><span class="auto-badge">자동 적용</span></label>' +
+            '<button type="button" class="more-actions-btn">+ 추가 조치 선택</button>' +
+          '</div>' +
+          '<div class="extra-actions-panel hidden">' +
+            buildExtraActionsHTML() +
+            '<div class="row-note-field"><input type="text" class="row-note" placeholder="특이사항 · 추가 조치 (선택)"></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function buildDeptPanels(){
+    var container = document.getElementById('deptPanels');
+    var html = '';
+    var plants = Object.keys(departmentMap);
+    plants.forEach(function(plant, idx){
+      var hint = (plant === '영천공장')
+        ? '<p class="hint" style="margin-bottom:12px;">※ 영천공장 부서명은 추후 확정 예정 · 우선 번호로 구분합니다</p>'
+        : '';
+      html += '<div class="dept-panel' + (idx === 0 ? ' active' : '') + '" data-plant="' + escapeHtml(plant) + '">' +
+        hint + departmentMap[plant].map(function(d){ return buildRow(plant, d); }).join('') +
+      '</div>';
+    });
+    container.innerHTML = html;
+  }
+
+  function updateRow(row){
+    var tVal = row.querySelector('.row-temp').value.trim();
+    var hVal = row.querySelector('.row-humid').value.trim();
+    var resultEl = row.querySelector('.row-result');
+    row.classList.remove('filled','stage-caution','stage-warning','stage-danger','show-action');
+
+    if(tVal === '' || hVal === '' || isNaN(tVal) || isNaN(hVal)){
+      resultEl.innerHTML = '<span class="rr-empty">입력 대기</span>';
+      row.dataset.felt = '';
+      return;
+    }
+    var t = parseFloat(tVal);
+    var h = clamp(parseFloat(hVal), 0, 100);
+    var felt = feelsLike(t, h);
+    var stage = getStage(felt);
+
+    row.dataset.felt = felt.toFixed(1);
+    row.dataset.stageKey = stage.key;
+    row.dataset.stageLabel = stage.label;
+
+    resultEl.innerHTML = '<span class="rr-felt">' + felt.toFixed(1) + '°C</span><span class="stage-tag ' + stage.key + '">' + stage.label + '</span>';
+    row.classList.add('filled');
+    if(stage.key !== 'interest'){ row.classList.add('stage-' + stage.key); }
+    if(felt >= 31){ row.classList.add('show-action'); }
+  }
+
+  function updateTabBadges(){
+    document.querySelectorAll('.dept-panel').forEach(function(panel){
+      var plant = panel.getAttribute('data-plant');
+      var count = panel.querySelectorAll('.dept-row.filled').length;
+      var tab = document.querySelector('.plant-tab[data-plant="' + plant.replace(/"/g,'') + '"]');
+      if(tab){ tab.textContent = plant + (count > 0 ? ' (' + count + ')' : ''); }
+    });
+  }
+
+  var panelSaveInfo = document.getElementById('panelSaveInfo');
+  var panelSaveBtn = document.getElementById('panelSaveBtn');
+  var saveError = document.getElementById('saveError');
+
+  function updateSaveBar(){
+    var panel = document.querySelector('.dept-panel.active');
+    if(!panel){ panelSaveInfo.textContent = ''; panelSaveBtn.disabled = true; return; }
+    var plant = panel.getAttribute('data-plant');
+    var count = panel.querySelectorAll('.dept-row.filled').length;
+    panelSaveInfo.innerHTML = count > 0
+      ? (escapeHtml(plant) + ' · <strong>' + count + '개 부서</strong> 입력됨 · 저장 대기중')
+      : (escapeHtml(plant) + ' · 기온·습도를 입력하세요');
+    panelSaveBtn.textContent = '✓ ' + plant + ' 전체 저장' + (count > 0 ? ' (' + count + ')' : '');
+    panelSaveBtn.disabled = count === 0;
+  }
+
+  var deptPanels = document.getElementById('deptPanels');
+
+  deptPanels.addEventListener('input', function(e){
+    if(e.target.classList.contains('row-temp') || e.target.classList.contains('row-humid')){
+      updateRow(e.target.closest('.dept-row'));
+      updateSaveBar();
+      updateTabBadges();
+    }
+  });
+
+  deptPanels.addEventListener('click', function(e){
+    if(e.target.classList.contains('more-actions-btn')){
+      var wrap = e.target.closest('.row-action');
+      var panel = wrap.querySelector('.extra-actions-panel');
+      var hidden = panel.classList.toggle('hidden');
+      e.target.textContent = hidden ? '+ 추가 조치 선택' : '− 추가 조치 닫기';
+    }
+  });
+
+  deptPanels.addEventListener('change', function(e){
+    if(e.target.classList.contains('default-cb')){
+      e.target.closest('.action-chip-default').classList.toggle('off', !e.target.checked);
+    } else if(e.target.type === 'checkbox' && e.target.closest('.extra-action-item')){
+      e.target.closest('.extra-action-item').classList.toggle('checked', e.target.checked);
+    }
+  });
+
+  /* ============ 5. 공장 탭 전환 ============ */
+  document.querySelectorAll('.plant-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var plant = btn.getAttribute('data-plant');
+      document.querySelectorAll('.plant-tab').forEach(function(b){
+        b.classList.toggle('active', b === btn);
+      });
+      document.querySelectorAll('.dept-panel').forEach(function(p){
+        p.classList.toggle('active', p.getAttribute('data-plant') === plant);
+      });
+      saveError.textContent = '';
+      updateSaveBar();
+    });
+  });
+
+  /* ============ 6. 현재 탭 초기화 ============ */
+  document.getElementById('panelResetBtn').addEventListener('click', function(){
+    var panel = document.querySelector('.dept-panel.active');
+    if(!panel) return;
+    panel.querySelectorAll('.dept-row').forEach(function(row){
+      row.querySelector('.row-temp').value = '';
+      row.querySelector('.row-humid').value = '';
+      var defaultCb = row.querySelector('.default-cb');
+      defaultCb.checked = true;
+      defaultCb.closest('.action-chip-default').classList.remove('off');
+      row.querySelectorAll('.extra-action-item input:checked').forEach(function(cb){
+        cb.checked = false;
+        cb.closest('.extra-action-item').classList.remove('checked');
+      });
+      var note = row.querySelector('.row-note');
+      if(note) note.value = '';
+      var extraPanel = row.querySelector('.extra-actions-panel');
+      if(!extraPanel.classList.contains('hidden')){
+        extraPanel.classList.add('hidden');
+        row.querySelector('.more-actions-btn').textContent = '+ 추가 조치 선택';
+      }
+      updateRow(row);
+    });
+    saveError.textContent = '';
+    updateSaveBar();
+    updateTabBadges();
+    showToast('현재 탭의 입력값이 초기화되었습니다.');
+  });
+
+  /* ============ 7. 전체 저장 ============ */
+  panelSaveBtn.addEventListener('click', function(){
+    saveError.textContent = '';
+    var writer = getWriter();
+    if(!writer){
+      saveError.textContent = '먼저 측정자를 등록해주세요.';
+      writerBar.scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+    var panel = document.querySelector('.dept-panel.active');
+    if(!panel) return;
+    var plant = panel.getAttribute('data-plant');
+    var rows = Array.prototype.slice.call(panel.querySelectorAll('.dept-row.filled'));
+    if(rows.length === 0){
+      saveError.textContent = '입력된 부서가 없습니다. 기온과 습도를 입력해주세요.';
+      return;
+    }
+
+    var now = new Date();
+    var savedCount = 0;
+    var skipped = [];
+
+    rows.forEach(function(row){
+      var dept = row.getAttribute('data-dept');
+      var felt = parseFloat(row.dataset.felt);
+      var stageLabel = row.dataset.stageLabel;
+      var t = parseFloat(row.querySelector('.row-temp').value);
+      var h = parseFloat(row.querySelector('.row-humid').value);
+
+      var actions = [];
+      var defaultCb = row.querySelector('.default-cb');
+      if(defaultCb.checked) actions.push(DEFAULT_ACTION_TEXT);
+      row.querySelectorAll('.extra-action-item input:checked').forEach(function(cb){ actions.push(cb.value); });
+
+      if(felt >= 31 && actions.length === 0){
+        skipped.push(dept);
+        return;
+      }
+
+      var noteEl = row.querySelector('.row-note');
+      var note = noteEl ? noteEl.value.trim() : '';
+
+      var rec = {
+        id: now.getTime() + '_' + sanitizeId(dept) + '_' + Math.random().toString(36).slice(2,7),
+        createdAt: now.getTime(),
+        displayTime: now.toLocaleString('ko-KR', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}),
+        plant: plant,
+        dept: dept,
+        writer: writer,
+        temp: t,
+        humid: h,
+        felt: felt,
+        stage: stageLabel,
+        actions: actions,
+        note: note
+      };
+      records.push(rec);
+      savedCount++;
+
+      // 저장된 행만 다음 측정을 위해 초기화
+      row.querySelector('.row-temp').value = '';
+      row.querySelector('.row-humid').value = '';
+      defaultCb.checked = true;
+      defaultCb.closest('.action-chip-default').classList.remove('off');
+      row.querySelectorAll('.extra-action-item input:checked').forEach(function(cb){
+        cb.checked = false;
+        cb.closest('.extra-action-item').classList.remove('checked');
+      });
+      if(noteEl) noteEl.value = '';
+      var extraPanel = row.querySelector('.extra-actions-panel');
+      if(!extraPanel.classList.contains('hidden')){
+        extraPanel.classList.add('hidden');
+        row.querySelector('.more-actions-btn').textContent = '+ 추가 조치 선택';
+      }
+      updateRow(row);
+    });
+
+    if(savedCount > 0){
+      saveRecordsToStorage();
+      renderRecords();
+    }
+    updateSaveBar();
+    updateTabBadges();
+
+    if(savedCount > 0 && skipped.length === 0){
+      showToast('✓ ' + plant + ' ' + savedCount + '개 부서 저장 완료');
+    } else if(savedCount > 0 && skipped.length > 0){
+      showToast('✓ ' + savedCount + '개 부서 저장 완료 · ⚠ ' + skipped.join(', ') + ' 조치 미선택으로 제외');
+      saveError.textContent = skipped.join(', ') + '은(는) 체감온도 31°C 이상이지만 조치사항이 선택되지 않아 저장되지 않았습니다.';
+    } else if(savedCount === 0 && skipped.length > 0){
+      saveError.textContent = '체감온도 31°C 이상 부서(' + skipped.join(', ') + ')는 조치사항을 1개 이상 선택해야 저장됩니다.';
+    }
+  });
+
+  /* ============ 8. 참고표 (기온 x 습도) 동적 생성 ============ */
+  var refToggleBtn = document.getElementById('refToggleBtn');
+  var refTableWrap = document.getElementById('refTableWrap');
+  var refBuilt = false;
+  refToggleBtn.addEventListener('click', function(){
+    var open = refTableWrap.classList.toggle('open');
+    refToggleBtn.classList.toggle('open', open);
+    if(open && !refBuilt){
+      buildRefTable();
+      refBuilt = true;
+    }
+  });
+  function buildRefTable(){
+    var temps = [25,27,29,31,33,35,37,39,40];
+    var humids = [30,40,50,60,70,80,90,100];
+    var html = '<table class="ref"><thead><tr><th>기온＼습도</th>';
+    humids.forEach(function(h){ html += '<th>'+h+'%</th>'; });
+    html += '</tr></thead><tbody>';
+    temps.forEach(function(t){
+      html += '<tr><th>'+t+'°C</th>';
+      humids.forEach(function(h){
+        var f = feelsLike(t,h);
+        html += '<td>'+f.toFixed(1)+'</td>';
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    refTableWrap.innerHTML = html;
+  }
+
+  /* ============ 9. 날씨 자동 불러오기 (Open-Meteo) ============ */
+  var weatherStatus = document.getElementById('weatherStatus');
+  var cityInput = document.getElementById('cityInput');
+  var citySearchBtn = document.getElementById('citySearchBtn');
+  var myLocBtn = document.getElementById('myLocBtn');
+  var weatherApplyRow = document.getElementById('weatherApplyRow');
+  var weatherApplyBtn = document.getElementById('weatherApplyBtn');
+  var lastWeather = null;
+
+  function fetchWeatherByCoords(lat, lon, label){
+    weatherStatus.textContent = '날씨 정보를 불러오는 중...';
+    weatherStatus.classList.remove('ok','error');
+    weatherApplyRow.classList.remove('show');
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,relative_humidity_2m')
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if(data && data.current){
+          lastWeather = {temp:data.current.temperature_2m, humid:data.current.relative_humidity_2m, label:label};
+          weatherStatus.textContent = '✓ ' + label + ' 날씨 확인됨 (기온 ' + lastWeather.temp.toFixed(1) + '°C, 습도 ' + Math.round(lastWeather.humid) + '%)';
+          weatherStatus.classList.add('ok');
+          weatherApplyBtn.textContent = '↳ 현재 탭 빈 칸에 일괄 적용 (' + lastWeather.temp.toFixed(1) + '°C · ' + Math.round(lastWeather.humid) + '%)';
+          weatherApplyRow.classList.add('show');
+        } else {
+          throw new Error('no data');
+        }
+      })
+      .catch(function(){
+        weatherStatus.textContent = '⚠ 날씨 정보를 불러오지 못했습니다. 아래에 직접 입력해주세요.';
+        weatherStatus.classList.add('error');
+      });
+  }
+
+  citySearchBtn.addEventListener('click', function(){
+    var q = cityInput.value.trim();
+    if(!q){ return; }
+    weatherStatus.textContent = '"' + q + '" 검색 중...';
+    weatherStatus.classList.remove('ok','error');
+    weatherApplyRow.classList.remove('show');
+    fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(q) + '&count=1&language=ko')
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if(data && data.results && data.results.length > 0){
+          var place = data.results[0];
+          fetchWeatherByCoords(place.latitude, place.longitude, place.name);
+        } else {
+          weatherStatus.textContent = '⚠ "' + q + '" 지역을 찾을 수 없습니다. 다른 지역명으로 검색해보세요.';
+          weatherStatus.classList.add('error');
+        }
+      })
+      .catch(function(){
+        weatherStatus.textContent = '⚠ 지역 검색에 실패했습니다. 아래에 직접 입력해주세요.';
+        weatherStatus.classList.add('error');
+      });
+  });
+
+  cityInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ citySearchBtn.click(); }
+  });
+
+  myLocBtn.addEventListener('click', function(){
+    if(!navigator.geolocation){
+      weatherStatus.textContent = '⚠ 이 브라우저는 위치 정보를 지원하지 않습니다.';
+      weatherStatus.classList.add('error');
+      return;
+    }
+    weatherStatus.textContent = '내 위치를 확인하는 중...';
+    weatherStatus.classList.remove('ok','error');
+    weatherApplyRow.classList.remove('show');
+    navigator.geolocation.getCurrentPosition(function(pos){
+      fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude, '내 위치');
+    }, function(){
+      weatherStatus.textContent = '⚠ 위치 정보를 가져올 수 없습니다. 지역명 검색을 이용하거나 직접 입력해주세요.';
+      weatherStatus.classList.add('error');
+    });
+  });
+
+  weatherApplyBtn.addEventListener('click', function(){
+    if(!lastWeather) return;
+    var panel = document.querySelector('.dept-panel.active');
+    if(!panel) return;
+    var count = 0;
+    panel.querySelectorAll('.dept-row').forEach(function(row){
+      var tIn = row.querySelector('.row-temp');
+      var hIn = row.querySelector('.row-humid');
+      if(tIn.value.trim() === '' && hIn.value.trim() === ''){
+        tIn.value = Math.round(lastWeather.temp * 10) / 10;
+        hIn.value = Math.round(lastWeather.humid);
+        updateRow(row);
+        count++;
+      }
+    });
+    updateSaveBar();
+    updateTabBadges();
+    showToast(count > 0 ? ('✓ ' + count + '개 부서에 날씨 값을 적용했습니다.') : '이미 모든 부서에 값이 입력되어 있습니다.');
+  });
+
+  /* ============ 10. 기록 저장 / 불러오기 (localStorage) ============ */
+  var STORAGE_KEY = 'gyt_heatindex_records_v1';
+  var records = [];
+
+  function loadRecords(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      records = raw ? JSON.parse(raw) : [];
+    }catch(e){
+      records = [];
+    }
+  }
+  function saveRecordsToStorage(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    }catch(e){
+      showToast('⚠ 저장 공간이 부족하거나 오류가 발생했습니다.');
+    }
+  }
+
+  var logBody = document.getElementById('logBody');
+  var emptyState = document.getElementById('emptyState');
+  var recordsCount = document.getElementById('recordsCount');
+  var logTable = document.getElementById('logTable');
+
+  function stageKeyFromLabel(label){
+    if(label === '위험') return 'danger';
+    if(label === '경고') return 'warning';
+    if(label === '주의') return 'caution';
+    return 'interest';
+  }
+
+  function renderRecords(){
+    logBody.innerHTML = '';
+    recordsCount.textContent = '(' + records.length + '건)';
+    if(records.length === 0){
+      logTable.style.display = 'none';
+      emptyState.style.display = 'block';
+      return;
+    }
+    logTable.style.display = 'table';
+    emptyState.style.display = 'none';
+
+    var sorted = records.slice().sort(function(a,b){ return b.createdAt - a.createdAt; });
+    sorted.forEach(function(rec){
+      var tr = document.createElement('tr');
+      var actionsStr = (rec.actions && rec.actions.length) ? escapeHtml(rec.actions.join(', ')) : '<span class="cell-muted">-</span>';
+      var noteStr = rec.note ? escapeHtml(rec.note) : '<span class="cell-muted">-</span>';
+      var writerStr = rec.writer ? escapeHtml(rec.writer) : '<span class="cell-muted">-</span>';
+      tr.innerHTML =
+        '<td>' + rec.displayTime + '</td>' +
+        '<td>' + escapeHtml(rec.plant) + '</td>' +
+        '<td>' + escapeHtml(rec.dept) + '</td>' +
+        '<td>' + rec.temp.toFixed(1) + '°C</td>' +
+        '<td>' + rec.humid + '%</td>' +
+        '<td><strong>' + rec.felt.toFixed(1) + '°C</strong></td>' +
+        '<td><span class="stage-tag ' + stageKeyFromLabel(rec.stage) + '">' + rec.stage + '</span></td>' +
+        '<td style="max-width:220px;">' + actionsStr + '</td>' +
+        '<td style="max-width:160px;">' + noteStr + '</td>' +
+        '<td>' + writerStr + '</td>' +
+        '<td><button class="row-del" data-id="' + rec.id + '" title="삭제">✕</button></td>';
+      logBody.appendChild(tr);
+    });
+  }
+
+  logBody.addEventListener('click', function(e){
+    if(e.target.classList.contains('row-del')){
+      var id = e.target.getAttribute('data-id');
+      if(confirm('이 기록을 삭제할까요?')){
+        records = records.filter(function(r){ return String(r.id) !== String(id); });
+        saveRecordsToStorage();
+        renderRecords();
+        showToast('기록이 삭제되었습니다.');
+      }
+    }
+  });
+
+  /* ============ 11. 엑셀 내보내기 / 전체 삭제 ============ */
+  document.getElementById('exportBtn').addEventListener('click', function(){
+    if(records.length === 0){
+      alert('내보낼 기록이 없습니다. 먼저 값을 저장해주세요.');
+      return;
+    }
+    var sorted = records.slice().sort(function(a,b){ return a.createdAt - b.createdAt; });
+    var data = sorted.map(function(r){
+      return {
+        '날짜/시간': r.displayTime,
+        '공장': r.plant,
+        '부서': r.dept,
+        '기온(°C)': r.temp,
+        '습도(%)': r.humid,
+        '체감온도(°C)': r.felt,
+        '단계': r.stage,
+        '조치사항': r.actions.join(', '),
+        '특이사항': r.note,
+        '측정자': r.writer
+      };
+    });
+    var ws = XLSX.utils.json_to_sheet(data);
+    ws['!cols'] = [{wch:16},{wch:10},{wch:10},{wch:9},{wch:8},{wch:11},{wch:7},{wch:40},{wch:24},{wch:10}];
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '체감온도기록');
+    var d = new Date();
+    var stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+    XLSX.writeFile(wb, 'Guyoungtech_체감온도기록_' + stamp + '.xlsx');
+    showToast('엑셀 파일이 다운로드되었습니다.');
+  });
+
+  document.getElementById('clearAllBtn').addEventListener('click', function(){
+    if(records.length === 0){
+      alert('삭제할 기록이 없습니다.');
+      return;
+    }
+    if(confirm('저장된 모든 기록(' + records.length + '건)을 삭제할까요? 이 작업은 되돌릴 수 없습니다.')){
+      records = [];
+      saveRecordsToStorage();
+      renderRecords();
+      showToast('모든 기록이 삭제되었습니다.');
+    }
+  });
+
+  /* ============ 초기화 ============ */
+  loadRecords();
+  renderWriterBar();
+  buildDeptPanels();
+  renderRecords();
+  updateSaveBar();
+  updateTabBadges();
+
+})();
+</script>
+</body>
+</html>
